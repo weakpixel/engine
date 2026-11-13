@@ -1,0 +1,88 @@
+{
+  "version": 0,
+  "generator": "weakpixel gen",
+  "package": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/entityref",
+  "components": [
+    {
+      "group": "entityref",
+      "name": "Links",
+      "doc": "Links holds every shape an entity reference can take.",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/entityref.Links",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "ByName": {
+            "type": "object",
+            "nullable": true,
+            "additionalProperties": {
+              "type": "string",
+              "format": "entity",
+              "nullable": true
+            }
+          },
+          "Distance": {
+            "type": "number",
+            "format": "double"
+          },
+          "Group": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string",
+              "format": "entity",
+              "nullable": true
+            }
+          },
+          "Nested": {
+            "type": "object",
+            "properties": {
+              "Parent": {
+                "type": "string",
+                "format": "entity",
+                "nullable": true
+              }
+            }
+          },
+          "Owner": {
+            "type": "string",
+            "format": "entity",
+            "nullable": true
+          },
+          "Pair": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "entity",
+              "nullable": true
+            },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "Target": {
+            "type": "string",
+            "format": "entity",
+            "nullable": true
+          }
+        },
+        "required": [
+          "Pair",
+          "Nested",
+          "Distance"
+        ]
+      }
+    }
+  ],
+  "objects": [
+    {
+      "group": "entityref",
+      "class": "Follower",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/entityref.Follower",
+      "components": [
+        {
+          "component": "entityref:Links",
+          "field": "Links"
+        }
+      ]
+    }
+  ]
+}

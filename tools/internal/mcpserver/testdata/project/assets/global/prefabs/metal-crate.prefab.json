@@ -1,0 +1,11 @@
+{
+  "name": "metal crate",
+  "objects": [
+    {
+      "prefab": "global/prefabs/crate.prefab.json",
+      "components": {
+        "demo:Health": {"Kind": 1}
+      }
+    }
+  ]
+}

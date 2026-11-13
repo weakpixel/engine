@@ -1,0 +1,73 @@
+[
+  {
+    "class": "Visual",
+    "components": {
+      "gfx:Sprite": {
+        "Blend": 0,
+        "FlipX": false,
+        "FlipY": false,
+        "Hidden": false,
+        "Layer": 0,
+        "Origin": {
+          "X": 0,
+          "Y": 0
+        },
+        "Tint": 0
+      },
+      "gfx:Transform": {
+        "Pos": {
+          "X": 30,
+          "Y": 40
+        },
+        "PrevPos": {
+          "X": 30,
+          "Y": 40
+        },
+        "Rot": 0,
+        "Scale": {
+          "X": 1,
+          "Y": 1
+        }
+      }
+    },
+    "group": "gfx",
+    "id": "visual-2"
+  },
+  {
+    "class": "AnimatedVisual",
+    "components": {
+      "gfx:Animator": {
+        "Speed": 1
+      },
+      "gfx:Sprite": {
+        "Blend": 0,
+        "FlipX": false,
+        "FlipY": false,
+        "Hidden": false,
+        "Layer": 0,
+        "Origin": {
+          "X": 0,
+          "Y": 0
+        },
+        "Tint": 0
+      },
+      "gfx:Transform": {
+        "Pos": {
+          "X": 30,
+          "Y": 40
+        },
+        "PrevPos": {
+          "X": 30,
+          "Y": 40
+        },
+        "Rot": 0,
+        "Scale": {
+          "X": 1,
+          "Y": 1
+        }
+      }
+    },
+    "group": "gfx",
+    "id": "animatedvisual-1"
+  }
+]

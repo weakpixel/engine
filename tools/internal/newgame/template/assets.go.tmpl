@@ -1,0 +1,17 @@
+//go:build !editor && !(js && webassets)
+
+package main
+
+import (
+	"embed"
+	"io/fs"
+)
+
+// assets is the game's asset library (doc/guide/engine/asset-library.md),
+// embedded in the binary so that it runs anywhere, the browser included.
+//
+//go:embed assets
+var assets embed.FS
+
+// gameAssets is the library the game runs on: the embedded assets folder.
+func gameAssets() (fs.FS, error) { return fs.Sub(assets, "assets") }

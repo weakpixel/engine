@@ -1,0 +1,33 @@
+{
+  "name": "Level A",
+  "objects": [
+    {
+      "id": "left",
+      "prefab": "global/prefabs/metal-crate.prefab.json",
+      "components": {
+        "gfx:Transform": {
+          "Pos": {"X": 10, "Y": 20}
+        }
+      }
+    },
+    {
+      "id": "bare",
+      "prefab": "global/prefabs/crate.prefab.json",
+      "components": {
+        "demo:Health": null
+      }
+    },
+    {
+      "group": "demo",
+      "class": "Crate",
+      "components": {
+        "gfx:Transform": {
+          "Pos": {"X": 1, "Y": 2},
+          "PrevPos": {"X": 1, "Y": 2},
+          "Rot": 0,
+          "Scale": {"X": 1, "Y": 1}
+        }
+      }
+    }
+  ]
+}

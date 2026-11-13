@@ -1,0 +1,47 @@
+//go:build editor
+
+package main
+
+import (
+	"io/fs"
+	"log"
+	"os"
+
+	"github.com/weakpixel/engine/editor/host"
+	engine "github.com/weakpixel/engine/game"
+
+	"{{.Module}}/game"
+)
+
+// main is the editor build's entry: the VSCode extension builds this
+// package with -tags editor to WebAssembly and shows the game in the level
+// editor (go run -tags editor . opens the editor in a window). The host
+// connects the editor and opens the level; the game only adds its systems.
+// See doc/guide/engine/editor.md#making-a-game-editable-in-vscode.
+func main() {
+	if err := host.Run(editorGame()); err != nil {
+		log.Fatal(err)
+	}
+}
+
+// editorGame describes the game to the editor host.
+func editorGame() host.Game {
+	return host.Game{
+		FS:    diskAssets,
+		Level: game.FirstLevel,
+		Config: func(fsys fs.FS) (engine.Config, error) {
+			return game.Config(engine.Config{}, fsys)
+		},
+		Setup: game.AddSystems,
+	}
+}
+
+// diskAssets is the assets folder on disk: the editor build embeds nothing.
+// In VSCode the workspace's files are read over HTTP instead and there is no
+// folder.
+func diskAssets() (fs.FS, error) {
+	if st, err := os.Stat("assets"); err == nil && st.IsDir() {
+		return os.DirFS("assets"), nil
+	}
+	return nil, nil
+}

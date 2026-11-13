@@ -1,0 +1,20 @@
+//go:build !editor && js && webassets
+
+package main
+
+import (
+	"io/fs"
+	"syscall/js"
+
+	"github.com/weakpixel/asset/httpfs"
+)
+
+// gameAssets is the library a browser build with the webassets tag runs on:
+// the packed build (go run . -pack) served in assets/ next to the page and
+// read over HTTP, one pack per group as the game loads it. The game embeds
+// nothing, so the download starts sooner (make web-packed).
+func gameAssets() (fs.FS, error) {
+	href := js.Global().Get("location").Get("href").String()
+	base := js.Global().Get("URL").New("assets/", href).Get("href").String()
+	return httpfs.New(base, nil)
+}

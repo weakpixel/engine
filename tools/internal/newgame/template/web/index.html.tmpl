@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{.Title}}</title>
+<!--
+  Web shell for an game build (doc/guide/engine/web.md). build.sh puts
+  this file next to game.wasm and Go's wasm_exec.js. Ebiten adds its own
+  canvas to <body> and scales it to the window.
+-->
+<style>
+  html, body { margin: 0; height: 100%; background: #141218; color: #ddd; font: 14px system-ui, sans-serif; }
+  #overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+             background: rgba(20, 18, 24, 0.85); cursor: pointer; z-index: 10; text-align: center; }
+  #overlay.hidden { display: none; }
+  #error { position: fixed; left: 0; right: 0; bottom: 0; max-height: 50%; overflow: auto; margin: 0;
+           padding: 8px 12px; background: #3a0d12; color: #ffd7d7; white-space: pre-wrap; z-index: 20; }
+  #error:empty { display: none; }
+</style>
+</head>
+<body>
+<div id="overlay"><div id="status">Loading…</div></div>
+<pre id="error"></pre>
+<script src="wasm_exec.js"></script>
+<script>
+"use strict";
+const overlay = document.getElementById("overlay");
+const statusText = document.getElementById("status");
+const errorBox = document.getElementById("error");
+
+// Go writes panics and log output through console.log/console.error (see
+// wasm_exec.js). Once a panic starts, every following line goes to the
+// error box too, so the stack trace is readable on the page.
+let failing = false;
+for (const name of ["log", "error"]) {
+  const orig = console[name].bind(console);
+  console[name] = (...args) => {
+    const line = args.join(" ");
+    if (/^(panic: |fatal error: |exit code: [1-9])/.test(line)) failing = true;
+    if (failing) errorBox.textContent += line + "\n";
+    orig(...args);
+  };
+}
+
+// The first click (or key) starts the game. It focuses the page and counts
+// as the user gesture browsers require before audio may play (Ebiten resumes
+// its AudioContext on the first input it sees). Starting the game only then
+// means its startup screen and minimum time run in view, not behind this
+// overlay (doc/guide/engine/engine.md#startup-screen).
+const clicked = new Promise((resolve) => {
+  const start = () => {
+    overlay.classList.add("hidden");
+    window.focus();
+    resolve();
+  };
+  overlay.addEventListener("click", start, { once: true });
+  window.addEventListener("keydown", start, { once: true });
+});
+
+// fetchWithProgress downloads the module and shows how much has arrived.
+async function fetchWithProgress(url) {
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`${url}: HTTP ${resp.status}`);
+  const total = Number(resp.headers.get("Content-Length")) || 0;
+  const reader = resp.body.getReader();
+  const chunks = [];
+  let got = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    got += value.length;
+    statusText.textContent = total
+      ? `Loading… ${Math.round(got / total * 100)}%`
+      : `Loading… ${(got / 1048576).toFixed(1)} MB`;
+  }
+  return new Blob(chunks).arrayBuffer();
+}
+
+(async () => {
+  try {
+    const go = new Go();
+    const bytes = await fetchWithProgress("game.wasm");
+    const { instance } = await WebAssembly.instantiate(bytes, go.importObject);
+    statusText.textContent = "Click to start";
+    await clicked;
+    // go.run creates Ebiten's canvas before it first yields.
+    const run = go.run(instance);
+    const canvas = document.querySelector("canvas");
+    if (canvas) canvas.focus();
+    await run;
+    if (!failing) statusText.textContent = "The game has ended.";
+    overlay.classList.remove("hidden");
+  } catch (err) {
+    errorBox.textContent += String(err && err.stack || err) + "\n";
+  }
+})();
+</script>
+</body>
+</html>

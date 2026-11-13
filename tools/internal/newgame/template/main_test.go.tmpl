@@ -1,0 +1,65 @@
+//go:build !editor
+
+package main
+
+import (
+	"testing"
+	"time"
+
+	engine "github.com/weakpixel/engine/game"
+	"github.com/weakpixel/engine/gfx"
+	"github.com/weakpixel/engine/input"
+
+	"{{.Module}}/game"
+)
+
+// TestPlayerWalks runs the game without a window: it waits until the first
+// level has spawned the player, then holds D for half a second and checks
+// that the player walked right. Copy it for your own systems.
+func TestPlayerWalks(t *testing.T) {
+	src := &input.ManualSource{}
+	src.Frame.Width, src.Frame.Height = 320, 180
+	fsys, err := gameAssets()
+	if err != nil {
+		t.Fatal(err)
+	}
+	e, err := newGame(engine.Config{NoAudio: true, Input: engine.InputConfig{Source: src}}, fsys)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer e.Close()
+	players := game.NewPlayerView(e.World())
+
+	// Assets load on worker goroutines: wait in real time, not in ticks.
+	deadline := time.Now().Add(10 * time.Second)
+	start, ok := playerPos(players)
+	for !ok {
+		if time.Now().After(deadline) {
+			t.Fatal("the first level never spawned a player")
+		}
+		if err := e.Update(); err != nil {
+			t.Fatal(err)
+		}
+		time.Sleep(time.Millisecond)
+		start, ok = playerPos(players)
+	}
+
+	src.Frame.Keys.Set(input.KeyD)
+	for range 30 {
+		if err := e.Update(); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if got, _ := playerPos(players); got.X <= start.X || got.Y != start.Y {
+		t.Errorf("the player moved from %v to %v, want to the right", start, got)
+	}
+}
+
+// playerPos is the position of the first player; ok is false while there
+// is none.
+func playerPos(players game.PlayerView) (pos gfx.Vec2, ok bool) {
+	for _, p := range players.Each() {
+		return p.Transform.Pos, true
+	}
+	return gfx.Vec2{}, false
+}

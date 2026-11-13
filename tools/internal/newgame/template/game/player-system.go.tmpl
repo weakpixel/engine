@@ -1,0 +1,41 @@
+package game
+
+import (
+	"github.com/weakpixel/ecs/system"
+	engine "github.com/weakpixel/engine/game"
+)
+
+// PlayerSystem walks every Player in the direction of the move action, and
+// quits the game on the quit action. It is a system.Runner: Init runs once
+// before the first tick, Run every tick.
+type PlayerSystem struct {
+	e       *engine.Engine
+	players PlayerView
+}
+
+// Init creates the typed view of the Player objects (generated in
+// zz__gen.go; create views once, not every tick) and turns on the bindings
+// of the gameplay mapping for player 0.
+func (s *PlayerSystem) Init(ctx *system.Context) {
+	s.e = engine.EngineOf(ctx)
+	s.players = NewPlayerView(ctx.World)
+	s.e.Input().Player(0).Push(gameplay)
+}
+
+// Run moves the players by this tick's input.
+func (s *PlayerSystem) Run(ctx *system.Context) {
+	st := s.e.Input().Player(0).State()
+	if st.JustPressed(actions.Quit) {
+		s.e.Quit()
+	}
+	x, y := st.Vec2(actions.Move)
+	dt := float32(ctx.Time.Delta.Seconds())
+	for _, p := range s.players.Each() {
+		speed := p.Control.Speed
+		if st.Down(actions.Run) {
+			speed = p.Control.RunSpeed
+		}
+		p.Transform.Pos.X += x * speed * dt
+		p.Transform.Pos.Y += y * speed * dt
+	}
+}

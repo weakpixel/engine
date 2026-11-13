@@ -1,0 +1,45 @@
+{
+  "version": 0,
+  "generator": "weakpixel gen",
+  "package": "example.com/demo",
+  "components": [
+    {
+      "group": "demo",
+      "name": "Health",
+      "doc": "Health is what a crate can take.\n\nIt never goes below zero.",
+      "goType": "example.com/demo.Health",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "HP": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0,
+            "default": 3
+          },
+          "Kind": {
+            "type": "integer",
+            "format": "int32",
+            "x-enum": [
+              {"value": 0, "name": "Wood"},
+              {"value": 1, "name": "Metal"}
+            ]
+          }
+        },
+        "required": ["HP", "Kind"]
+      }
+    }
+  ],
+  "objects": [
+    {
+      "group": "demo",
+      "class": "Crate",
+      "doc": "Crate is a box that breaks.",
+      "goType": "example.com/demo.Crate",
+      "components": [
+        {"component": "gfx:Transform", "field": "Transform"},
+        {"component": "demo:Health", "field": "Health", "optional": true}
+      ]
+    }
+  ]
+}

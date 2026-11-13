@@ -1,0 +1,44 @@
+{
+  "name": "player",
+  "objects": [
+    {
+      "id": "player",
+      "group": "{{.Name}}",
+      "class": "Player",
+      "components": {
+        "gfx:Transform": {
+          "Pos": {
+            "X": 0,
+            "Y": 0
+          },
+          "PrevPos": {
+            "X": 0,
+            "Y": 0
+          },
+          "Rot": 0,
+          "Scale": {
+            "X": 1,
+            "Y": 1
+          }
+        },
+        "gfx:Sprite": {
+          "ID": "global/sprites/player.png",
+          "Layer": 1,
+          "Origin": {
+            "X": 0.5,
+            "Y": 0.5
+          },
+          "FlipX": false,
+          "FlipY": false,
+          "Tint": 0,
+          "Blend": 0,
+          "Hidden": false
+        },
+        "{{.Name}}:PlayerControl": {
+          "Speed": 60,
+          "RunSpeed": 120
+        }
+      }
+    }
+  ]
+}

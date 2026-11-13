@@ -1,0 +1,131 @@
+{
+  "version": 0,
+  "generator": "weakpixel gen",
+  "package": "extmod",
+  "components": [
+    {
+      "group": "extmod",
+      "name": "Pos",
+      "doc": "Pos is a position local to the extension module.",
+      "goType": "extmod.Pos",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "X": {
+            "type": "number",
+            "format": "double"
+          },
+          "Y": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "required": [
+          "X",
+          "Y"
+        ]
+      }
+    },
+    {
+      "group": "gfx",
+      "name": "Transform",
+      "doc": "Transform places an entity in the world.\n\nThe zero Scale means (1, 1), so a zero-valued Transform is valid.",
+      "goType": "github.com/weakpixel/engine/gfx.Transform",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Pos": {
+            "type": "object",
+            "description": "Pos is the position in world units at the current tick.",
+            "properties": {
+              "X": {
+                "type": "number",
+                "format": "float"
+              },
+              "Y": {
+                "type": "number",
+                "format": "float"
+              }
+            },
+            "required": [
+              "X",
+              "Y"
+            ]
+          },
+          "PrevPos": {
+            "type": "object",
+            "description": "PrevPos is Pos at the start of the tick. The extract.SnapshotTransforms\nsystem copies Pos here, and the renderer blends PrevPos to Pos so that\n60 TPS looks smooth on faster displays.",
+            "properties": {
+              "X": {
+                "type": "number",
+                "format": "float"
+              },
+              "Y": {
+                "type": "number",
+                "format": "float"
+              }
+            },
+            "required": [
+              "X",
+              "Y"
+            ]
+          },
+          "Rot": {
+            "type": "number",
+            "format": "float",
+            "description": "Rot is the rotation in radians, clockwise on screen.",
+            "x-editor": {
+              "step": 5,
+              "unit": "deg"
+            }
+          },
+          "Scale": {
+            "type": "object",
+            "description": "Scale multiplies the sprite size. Zero means (1, 1); the editor starts a\nnew Transform at (1, 1).",
+            "properties": {
+              "X": {
+                "type": "number",
+                "format": "float",
+                "default": 1
+              },
+              "Y": {
+                "type": "number",
+                "format": "float",
+                "default": 1
+              }
+            },
+            "required": [
+              "X",
+              "Y"
+            ]
+          }
+        },
+        "required": [
+          "Pos",
+          "PrevPos",
+          "Rot",
+          "Scale"
+        ]
+      }
+    }
+  ],
+  "objects": [
+    {
+      "group": "extmod",
+      "class": "Thing",
+      "doc": "Thing mixes a local component with one of the engine.",
+      "goType": "extmod.Thing",
+      "components": [
+        {
+          "component": "extmod:Pos",
+          "field": "Pos"
+        },
+        {
+          "component": "gfx:Transform",
+          "field": "Transform",
+          "doc": "Position as the engine sees it."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,193 @@
+{
+  "version": 0,
+  "generator": "weakpixel gen",
+  "package": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/editor",
+  "components": [
+    {
+      "group": "editor",
+      "name": "Light",
+      "doc": "Light shows each hint.",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/editor.Light",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Angle": {
+            "type": "number",
+            "format": "float",
+            "description": "Angle is in radians.",
+            "x-editor": {
+              "min": 0,
+              "max": 360,
+              "step": 5,
+              "unit": "deg"
+            }
+          },
+          "Cache": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Cache is internal bookkeeping.",
+            "minimum": -2147483648,
+            "maximum": 2147483647,
+            "x-editor": {
+              "hidden": true
+            }
+          },
+          "Fade": {
+            "type": "number",
+            "format": "float",
+            "description": "Fade is the fade time.",
+            "x-editor": {
+              "min": 0,
+              "unit": "s"
+            }
+          },
+          "Flicker": {
+            "type": "boolean",
+            "description": "Flicker turns the flicker on."
+          },
+          "Packed": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Packed is the same color as 0xRRGGBBAA.",
+            "minimum": 0,
+            "maximum": 4294967295,
+            "x-editor": {
+              "color": true
+            }
+          },
+          "Power": {
+            "type": "number",
+            "format": "float",
+            "description": "Power is how bright the light is.",
+            "x-editor": {
+              "name": "Brightness",
+              "min": 0,
+              "max": 10,
+              "step": 0.5,
+              "order": 0
+            }
+          },
+          "Radius": {
+            "type": "number",
+            "format": "float",
+            "description": "Radius is the disc radius.",
+            "x-editor": {
+              "showIf": {
+                "field": "Shape",
+                "equals": 2
+              }
+            }
+          },
+          "Rate": {
+            "type": "number",
+            "format": "float",
+            "description": "Rate is the flicker speed.",
+            "x-editor": {
+              "showIf": {
+                "field": "Flicker"
+              }
+            }
+          },
+          "Shape": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Shape is the covered area.",
+            "minimum": 0,
+            "maximum": 255,
+            "x-enum": [
+              {
+                "value": 0,
+                "name": "ShapePoint"
+              },
+              {
+                "value": 1,
+                "name": "ShapeBox"
+              },
+              {
+                "value": 2,
+                "name": "ShapeDisc"
+              }
+            ]
+          },
+          "Size": {
+            "type": "object",
+            "description": "Size is the box size.",
+            "properties": {
+              "H": {
+                "type": "number",
+                "format": "float"
+              },
+              "W": {
+                "type": "number",
+                "format": "float"
+              }
+            },
+            "required": [
+              "W",
+              "H"
+            ],
+            "x-editor": {
+              "min": 1,
+              "showIf": {
+                "field": "Shape",
+                "equals": 1
+              }
+            }
+          },
+          "Steady": {
+            "type": "number",
+            "format": "float",
+            "description": "Steady is the flicker-free brightness.",
+            "x-editor": {
+              "showIf": {
+                "field": "Flicker",
+                "not": true
+              }
+            }
+          },
+          "Tint": {
+            "type": "array",
+            "description": "Tint is the light color.",
+            "items": {
+              "type": "number",
+              "format": "float"
+            },
+            "minItems": 4,
+            "maxItems": 4,
+            "x-editor": {
+              "order": 1,
+              "color": true
+            }
+          }
+        },
+        "required": [
+          "Tint",
+          "Packed",
+          "Power",
+          "Angle",
+          "Fade",
+          "Shape",
+          "Size",
+          "Radius",
+          "Flicker",
+          "Rate",
+          "Steady",
+          "Cache"
+        ]
+      }
+    }
+  ],
+  "objects": [
+    {
+      "group": "editor",
+      "class": "Lamp",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/editor.Lamp",
+      "components": [
+        {
+          "component": "editor:Light",
+          "field": "Light"
+        }
+      ]
+    }
+  ]
+}

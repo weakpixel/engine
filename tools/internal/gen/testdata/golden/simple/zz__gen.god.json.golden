@@ -1,0 +1,68 @@
+{
+  "version": 0,
+  "generator": "weakpixel gen",
+  "package": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/simple",
+  "components": [
+    {
+      "group": "simple",
+      "name": "Pos",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/simple.Pos",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "X": {
+            "type": "number",
+            "format": "double"
+          },
+          "Y": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "required": [
+          "X",
+          "Y"
+        ]
+      }
+    },
+    {
+      "group": "simple",
+      "name": "Vel",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/simple.Vel",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "X": {
+            "type": "number",
+            "format": "double"
+          },
+          "Y": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "required": [
+          "X",
+          "Y"
+        ]
+      }
+    }
+  ],
+  "objects": [
+    {
+      "group": "simple",
+      "class": "Thing",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/simple.Thing",
+      "components": [
+        {
+          "component": "simple:Pos",
+          "field": "Pos"
+        },
+        {
+          "component": "simple:Vel",
+          "field": "Vel"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,226 @@
+{
+  "version": 0,
+  "generator": "weakpixel gen",
+  "package": "github.com/weakpixel/engine/room",
+  "components": [
+    {
+      "group": "gfx",
+      "name": "Transform",
+      "doc": "Transform places an entity in the world.\n\nThe zero Scale means (1, 1), so a zero-valued Transform is valid.",
+      "goType": "github.com/weakpixel/engine/gfx.Transform",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Pos": {
+            "type": "object",
+            "description": "Pos is the position in world units at the current tick.",
+            "properties": {
+              "X": {
+                "type": "number",
+                "format": "float"
+              },
+              "Y": {
+                "type": "number",
+                "format": "float"
+              }
+            },
+            "required": [
+              "X",
+              "Y"
+            ]
+          },
+          "PrevPos": {
+            "type": "object",
+            "description": "PrevPos is Pos at the start of the tick. The extract.SnapshotTransforms\nsystem copies Pos here, and the renderer blends PrevPos to Pos so that\n60 TPS looks smooth on faster displays.",
+            "properties": {
+              "X": {
+                "type": "number",
+                "format": "float"
+              },
+              "Y": {
+                "type": "number",
+                "format": "float"
+              }
+            },
+            "required": [
+              "X",
+              "Y"
+            ]
+          },
+          "Rot": {
+            "type": "number",
+            "format": "float",
+            "description": "Rot is the rotation in radians, clockwise on screen.",
+            "x-editor": {
+              "step": 5,
+              "unit": "deg"
+            }
+          },
+          "Scale": {
+            "type": "object",
+            "description": "Scale multiplies the sprite size. Zero means (1, 1); the editor starts a\nnew Transform at (1, 1).",
+            "properties": {
+              "X": {
+                "type": "number",
+                "format": "float",
+                "default": 1
+              },
+              "Y": {
+                "type": "number",
+                "format": "float",
+                "default": 1
+              }
+            },
+            "required": [
+              "X",
+              "Y"
+            ]
+          }
+        },
+        "required": [
+          "Pos",
+          "PrevPos",
+          "Rot",
+          "Scale"
+        ]
+      }
+    },
+    {
+      "group": "room",
+      "name": "Exit",
+      "doc": "Exit is an area that sends the travelers to another room. The area is the\nrectangle from the entity's Transform.Pos (its top-left corner) with Size,\nas a gfx.DebugShape rect draws it; rotation and scale are ignored. The\ndirector gives every exit such a debug shape, so the debug overlay and the\neditor show the area.",
+      "goType": "github.com/weakpixel/engine/room.Exit",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Action": {
+            "type": "string",
+            "description": "Action is the input action an OnAction exit waits for (\"interact\"),\npressed by the traveler's PlayerSlot player (player 0 without one)."
+          },
+          "Size": {
+            "type": "object",
+            "description": "Size is the width and height of the area, in world units.",
+            "properties": {
+              "X": {
+                "type": "number",
+                "format": "float"
+              },
+              "Y": {
+                "type": "number",
+                "format": "float"
+              }
+            },
+            "required": [
+              "X",
+              "Y"
+            ]
+          },
+          "Spawn": {
+            "type": "string",
+            "description": "Spawn names the arrival point in the target room: a room:Spawn with\nthat Name, else a Tiled object with that name."
+          },
+          "Target": {
+            "type": "string",
+            "description": "Target is the room to go to: a level's base key (\"cave/cave\", see\ngame.Engine.LoadLevelBase). Empty means the current room (a teleport)."
+          },
+          "Transition": {
+            "type": "string",
+            "description": "Transition is the name of a registered transition; empty uses the\ndefault (\"fade\" unless Config.Default says otherwise)."
+          },
+          "Trigger": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Trigger says what fires the exit: 0 walking in (OnEnter), 1 an input\naction (OnAction).",
+            "minimum": 0,
+            "maximum": 255,
+            "x-enum": [
+              {
+                "value": 0,
+                "name": "OnEnter",
+                "doc": "OnEnter fires when a Traveler walks into the area: it is inside this\ntick and was outside the tick before, so a traveler that arrives on a\nspawn inside an exit does not leave at once."
+              },
+              {
+                "value": 1,
+                "name": "OnAction",
+                "doc": "OnAction fires when a Traveler inside the area presses the input\naction named Exit.Action (a door that needs a button)."
+              }
+            ]
+          }
+        },
+        "required": [
+          "Target",
+          "Spawn",
+          "Size",
+          "Trigger",
+          "Action",
+          "Transition"
+        ]
+      }
+    },
+    {
+      "group": "room",
+      "name": "Spawn",
+      "doc": "Spawn names an arrival point at the entity's Transform.Pos.",
+      "goType": "github.com/weakpixel/engine/room.Spawn",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Name": {
+            "type": "string",
+            "description": "Name is what Exit.Spawn and Rooms.GoTo look for."
+          }
+        },
+        "required": [
+          "Name"
+        ]
+      }
+    },
+    {
+      "group": "room",
+      "name": "Traveler",
+      "doc": "Traveler marks an entity that triggers exits, is moved to the spawn\npoint and survives the room swap (the director takes it out of the old\nroom's levels before unloading them). The hero is a traveler.",
+      "goType": "github.com/weakpixel/engine/room.Traveler",
+      "schema": {
+        "type": "object"
+      }
+    }
+  ],
+  "objects": [
+    {
+      "group": "room",
+      "class": "ExitArea",
+      "doc": "ExitArea is the Game Object of an exit: where it is and where it leads.",
+      "goType": "github.com/weakpixel/engine/room.ExitArea",
+      "components": [
+        {
+          "component": "gfx:Transform",
+          "field": "Transform",
+          "doc": "The top-left corner of the area."
+        },
+        {
+          "component": "room:Exit",
+          "field": "Exit",
+          "doc": "The target room and spawn."
+        }
+      ]
+    },
+    {
+      "group": "room",
+      "class": "SpawnPoint",
+      "doc": "SpawnPoint is the Game Object of a named arrival point.",
+      "goType": "github.com/weakpixel/engine/room.SpawnPoint",
+      "components": [
+        {
+          "component": "gfx:Transform",
+          "field": "Transform",
+          "doc": "Where travelers arrive."
+        },
+        {
+          "component": "room:Spawn",
+          "field": "Spawn",
+          "doc": "The point's name."
+        }
+      ]
+    }
+  ]
+}

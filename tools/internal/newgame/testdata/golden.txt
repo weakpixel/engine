@@ -1,0 +1,860 @@
+-- .gitignore --
+/build/
+*.wasm
+/screenshots/
+-- .vscode/extensions.json --
+{
+  "recommendations": ["weakpixel.vscode-weakpixel", "golang.go"]
+}
+-- .weakpixel.json --
+{
+  "god": {
+    "out": "build/god/project.god.json"
+  },
+  "godDoc": {
+    "out": "build/god-doc"
+  },
+  "assets": {
+    "root": "assets"
+  },
+  "editor": {
+    "snap": 8
+  }
+}
+-- CLAUDE.md --
+# mygame
+
+A 2D game on the Weakpixel Engine (`github.com/weakpixel/engine`, an ECS plus a runtime on Ebiten). README.md lists the files and commands.
+
+## Where things are
+
+- `game/`: the game. Components and Game Objects (`+game:*` markers) in `components.go`, one system per file, settings and actions in `game.go`.
+- `main.go`: window only. `editor.go`: the VSCode editor build (`-tags editor`).
+- `assets/`: the asset library. Asset keys are paths from `assets/`. Levels are `*.level.json`, prefabs `*.prefab.json`.
+
+## Rules
+
+- Never edit generated files by hand: `game/zz__gen.go` and `build/god/*.god.json`. Change the markers and run `go generate ./...`; commit `game/zz__gen.go` (the GOD files in `build/god/` are build output and stay out of git).
+- Systems read input actions (`game.go`, bound in `assets/global/input/player.bindings.json`), never keys.
+- Run `go test ./...` after a change, and `GOOS=js GOARCH=wasm go build .` when it touches the browser build.
+
+## Engine docs
+
+The engine's documentation is the spec: https://github.com/weakpixel/engine/tree/main/doc/guide. Start with `engine/getting-started.md`, `ecs/api-game-object.md`, `engine/asset-library.md`, `engine/input.md` and `engine/editor.md`.
+-- Makefile --
+# The game's everyday commands. Every tool runs through "go tool weakpixel",
+# at the engine version in go.mod.
+
+GOROOT := $(shell go env GOROOT)
+
+.PHONY: run dev generate test check doc web web-packed web-dev editor serve clean
+
+# The game in a window, with the embedded assets.
+run:
+	go run .
+
+# The game reading assets/ from disk: saved changes reload while it runs.
+dev:
+	go run . -assets assets
+
+# Game Object code (game/zz__gen.go) and GOD files (build/god/, not committed) from the +game markers.
+generate:
+	go generate ./...
+
+# The game's tests, and the editor build's (editor_test.go).
+test:
+	go test ./...
+	go test -tags editor .
+
+# Checks the asset library: file names, groups, broken references.
+check:
+	go tool weakpixel assets check
+
+# The merged GOD (build/god/project.god.json) and HTML docs of every Game Object (build/god-doc).
+doc:
+	go tool weakpixel doc --format god
+	go tool weakpixel doc
+
+# The browser build in build/web, assets embedded. Serve it with make serve.
+web:
+	mkdir -p build/web
+	GOOS=js GOARCH=wasm go build -o build/web/game.wasm .
+	cp "$(GOROOT)/lib/wasm/wasm_exec.js" web/index.html build/web/
+
+# The browser build in build/web-packed: the assets as packs, fetched over HTTP.
+web-packed:
+	rm -rf build/web-packed
+	mkdir -p build/web-packed
+	GOOS=js GOARCH=wasm go build -tags webassets -o build/web-packed/game.wasm .
+	cp "$(GOROOT)/lib/wasm/wasm_exec.js" web/index.html build/web-packed/
+	go run . -pack build/web-packed/assets
+
+# The browser build for development, at http://localhost:8080: it reads the loose
+# files of assets/ from a dev server that pushes changes, so a file you save
+# (a shader, a texture, a map) reloads in the open page without a refresh.
+web-dev:
+	rm -rf build/web-dev
+	mkdir -p build/web-dev
+	GOOS=js GOARCH=wasm go build -tags webassets,webdev -o build/web-dev/game.wasm .
+	cp "$(GOROOT)/lib/wasm/wasm_exec.js" web/index.html build/web-dev/
+	go tool weakpixel serve --assets assets build/web-dev
+
+# The level editor in a window, without VSCode.
+editor:
+	go run -tags editor .
+
+# Serves build/web on http://localhost:8080 (any static file server works).
+serve:
+	python3 -m http.server 8080 -d build/web
+
+clean:
+	rm -rf build
+-- README.md --
+# mygame
+
+A game on the [Weakpixel Engine](https://github.com/weakpixel/engine), created with `weakpixel new`.
+
+```sh
+make run      # play: WASD or the arrow keys walk, Shift runs, Esc quits
+make test     # the game's tests, without a window
+```
+
+## Commands
+
+| Command | Does |
+| --- | --- |
+| `make run` | The game in a window, with the assets embedded in the binary |
+| `make dev` | The game reading `assets/` from disk: files you save reload while it runs |
+| `make generate` | `go generate ./...`: Game Object code (`game/zz__gen.go`) and the GOD file (`build/god/mygame.god.json`) from the `+game` markers. Run it after changing a component |
+| `make test` | `go test ./...`, then the editor build's test (`go test -tags editor .`) |
+| `make check` | Checks the asset library: file names, groups and broken references |
+| `make doc` | The merged GOD (`build/god/project.god.json`) and HTML docs of the Game Objects (`build/god-doc/`) |
+| `make web` | The browser build in `build/web/`; `make serve` serves it on http://localhost:8080 |
+| `make web-packed` | The browser build with the assets as packs, fetched over HTTP, in `build/web-packed/` |
+| `make web-dev` | The browser build for development: serves it on http://localhost:8080 and reloads the assets you save in the open page |
+| `make editor` | The level editor in a window, without VSCode |
+
+The engine's command-line tools run as `go tool weakpixel <command>` at the engine version in `go.mod` (`go tool weakpixel help` lists them). `go tool weakpixel-editor view assets/<file>.png` opens a texture in the engine's viewer, with a grid, pan and zoom.
+
+## Files
+
+| Path | What |
+| --- | --- |
+| `main.go` | Opens the window and runs the game; `-assets <dir>` reads loose files, `-pack <dir>` writes the packed build |
+| `assets.go`, `assets_web.go` | Where the assets come from: embedded, or packs over HTTP in the `webassets` browser build |
+| `watch.go`, `watch_web.go` | Pushed asset changes for hot reload: none, or from the dev server in the `webdev` browser build |
+| `editor.go` | The editor build (`-tags editor`) that the VSCode extension runs |
+| `main_test.go`, `editor_test.go` | Run the game, and the editor build, without a window: the player walks, the editor opens the level |
+| `game/game.go` | Settings, input actions, `AddSystems` and the first level |
+| `game/components.go` | The `PlayerControl` component and the `Player` Game Object |
+| `game/player-system.go` | Moves the player by the move action |
+| `assets/` | The [asset library](https://github.com/weakpixel/engine/blob/main/doc/guide/engine/asset-library.md#the-layout): `global/` loads at start, every other folder is a package (`start/` holds the first level) |
+| `assets/start/start.level.json` | The first level. Open it in VSCode to edit it |
+| `assets/global/prefabs/player.prefab.json` | The player prefab the level places |
+| `assets/global/input/player.bindings.json` | Keys and gamepad buttons of the actions |
+| `build/god/` | Generated GOD files (not committed): the schema of every Game Object, read by the editor extension. Run `go generate ./...` once after cloning |
+| `web/index.html` | The page of the browser build |
+| `.weakpixel.json` | [Project settings](https://github.com/weakpixel/engine/blob/main/doc/guide/project-file.md) for the tools and the editor |
+
+## Editing levels in VSCode
+
+Install the [Weakpixel VSCode extension](https://github.com/weakpixel/weakpixel-engine-vscode) (`.vscode/extensions.json` recommends it) and open `assets/start/start.level.json`: the game runs in the editor tab, and every change is written into the file.
+
+## Learn more
+
+- [Getting started](https://github.com/weakpixel/engine/blob/main/doc/guide/engine/getting-started.md) and the [engine guide](https://github.com/weakpixel/engine/blob/main/doc/guide/engine/README.md)
+- [Game Objects and markers](https://github.com/weakpixel/engine/blob/main/doc/guide/ecs/api-game-object.md)
+- [Input actions](https://github.com/weakpixel/engine/blob/main/doc/guide/engine/input.md)
+- [Tools](https://github.com/weakpixel/engine/blob/main/doc/guide/tools.md)
+-- assets.go --
+//go:build !editor && !(js && webassets)
+
+package main
+
+import (
+	"embed"
+	"io/fs"
+)
+
+// assets is the game's asset library (doc/guide/engine/asset-library.md),
+// embedded in the binary so that it runs anywhere, the browser included.
+//
+//go:embed assets
+var assets embed.FS
+
+// gameAssets is the library the game runs on: the embedded assets folder.
+func gameAssets() (fs.FS, error) { return fs.Sub(assets, "assets") }
+-- assets/global/input/player.bindings.json --
+{
+  "version": 1,
+  "mappings": {
+    "gameplay": {
+      "bindings": {
+        "move": [
+          { "composite": "dpad", "up": "key:W", "down": "key:S", "left": "key:A", "right": "key:D" },
+          { "composite": "dpad", "up": "key:ArrowUp", "down": "key:ArrowDown", "left": "key:ArrowLeft", "right": "key:ArrowRight" },
+          { "control": "pad:leftstick", "processors": [{ "deadzone": 0.2 }, { "normalize": true }] },
+          { "composite": "dpad", "up": "pad:up", "down": "pad:down", "left": "pad:left", "right": "pad:right" }
+        ],
+        "run": [{ "control": "key:ShiftLeft" }, { "control": "key:ShiftRight" }, { "control": "pad:west" }],
+        "quit": [{ "control": "key:Escape" }, { "control": "pad:select" }]
+      }
+    }
+  }
+}
+-- assets/global/prefabs/player.prefab.json --
+{
+  "name": "player",
+  "objects": [
+    {
+      "id": "player",
+      "group": "mygame",
+      "class": "Player",
+      "components": {
+        "gfx:Transform": {
+          "Pos": {
+            "X": 0,
+            "Y": 0
+          },
+          "PrevPos": {
+            "X": 0,
+            "Y": 0
+          },
+          "Rot": 0,
+          "Scale": {
+            "X": 1,
+            "Y": 1
+          }
+        },
+        "gfx:Sprite": {
+          "ID": "global/sprites/player.png",
+          "Layer": 1,
+          "Origin": {
+            "X": 0.5,
+            "Y": 0.5
+          },
+          "FlipX": false,
+          "FlipY": false,
+          "Tint": 0,
+          "Blend": 0,
+          "Hidden": false
+        },
+        "mygame:PlayerControl": {
+          "Speed": 60,
+          "RunSpeed": 120
+        }
+      }
+    }
+  ]
+}
+-- assets/global/sprites/player.png --
+sha256 c1792893a0fdf6752a414d3d287b1c108de5c0035cb4cc86c6de004b06be4000
+-- assets/start/start.level.json --
+{
+  "name": "Start",
+  "objects": [
+    {
+      "id": "player",
+      "prefab": "global/prefabs/player.prefab.json"
+    }
+  ]
+}
+-- assets_web.go --
+//go:build !editor && js && webassets
+
+package main
+
+import (
+	"io/fs"
+	"syscall/js"
+
+	"github.com/weakpixel/asset/httpfs"
+)
+
+// gameAssets is the library a browser build with the webassets tag runs on:
+// the packed build (go run . -pack) served in assets/ next to the page and
+// read over HTTP, one pack per group as the game loads it. The game embeds
+// nothing, so the download starts sooner (make web-packed).
+func gameAssets() (fs.FS, error) {
+	href := js.Global().Get("location").Get("href").String()
+	base := js.Global().Get("URL").New("assets/", href).Get("href").String()
+	return httpfs.New(base, nil)
+}
+-- editor.go --
+//go:build editor
+
+package main
+
+import (
+	"io/fs"
+	"log"
+	"os"
+
+	"github.com/weakpixel/engine/editor/host"
+	engine "github.com/weakpixel/engine/game"
+
+	"example.com/mygame/game"
+)
+
+// main is the editor build's entry: the VSCode extension builds this
+// package with -tags editor to WebAssembly and shows the game in the level
+// editor (go run -tags editor . opens the editor in a window). The host
+// connects the editor and opens the level; the game only adds its systems.
+// See doc/guide/engine/editor.md#making-a-game-editable-in-vscode.
+func main() {
+	if err := host.Run(editorGame()); err != nil {
+		log.Fatal(err)
+	}
+}
+
+// editorGame describes the game to the editor host.
+func editorGame() host.Game {
+	return host.Game{
+		FS:    diskAssets,
+		Level: game.FirstLevel,
+		Config: func(fsys fs.FS) (engine.Config, error) {
+			return game.Config(engine.Config{}, fsys)
+		},
+		Setup: game.AddSystems,
+	}
+}
+
+// diskAssets is the assets folder on disk: the editor build embeds nothing.
+// In VSCode the workspace's files are read over HTTP instead and there is no
+// folder.
+func diskAssets() (fs.FS, error) {
+	if st, err := os.Stat("assets"); err == nil && st.IsDir() {
+		return os.DirFS("assets"), nil
+	}
+	return nil, nil
+}
+-- editor_test.go --
+//go:build editor
+
+package main
+
+import (
+	"io/fs"
+	"slices"
+	"testing"
+	"time"
+
+	"github.com/weakpixel/engine/editor/host"
+	engine "github.com/weakpixel/engine/game"
+)
+
+// TestEditorBuild builds the editor build without a window (go test -tags
+// editor .): the game starts paused on the first level, whose objects belong
+// to the editor session.
+func TestEditorBuild(t *testing.T) {
+	g := editorGame()
+	config := g.Config
+	g.Config = func(fsys fs.FS) (engine.Config, error) {
+		cfg, err := config(fsys)
+		cfg.NoAudio = true
+		return cfg, err
+	}
+	e, s, err := host.Build(g, host.Page{}) // no VSCode page outside a browser
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer e.Close()
+	// The level spawns once its prefab has loaded on a worker goroutine:
+	// wait in real time, not in ticks.
+	deadline := time.Now().Add(10 * time.Second)
+	for !slices.Contains(s.IDs(), "player") {
+		if time.Now().After(deadline) {
+			t.Fatalf("editor objects %v, want the player", s.IDs())
+		}
+		if err := e.Update(); err != nil {
+			t.Fatal(err)
+		}
+		time.Sleep(time.Millisecond)
+	}
+	if !e.Paused() {
+		t.Error("the editor build does not start paused")
+	}
+}
+-- game/components.go --
+package game
+
+import "github.com/weakpixel/engine/gfx"
+
+// Components are plain structs. A +game:component marker makes one a Game
+// Object component: levels and prefabs can set it, and the editor's
+// inspector shows its fields. A +game:object groups components into a class
+// with a typed view (zz__gen.go). See doc/guide/ecs/api-game-object.md.
+
+// PlayerControl makes an entity walk where the player steers it.
+// +game:component
+type PlayerControl struct {
+	// Speed is the walking speed in world units per second.
+	Speed float32
+	// RunSpeed is the speed while the run action is held.
+	RunSpeed float32
+}
+
+// Player is the character the player steers: a sprite that walks.
+// global/prefabs/player.prefab.json is one, and the first level places it.
+// +game:object
+type Player struct {
+	// Where the player is and how it looks.
+	// +game:embed
+	gfx.Visual
+	// How fast it walks.
+	// +game:component
+	Control *PlayerControl
+}
+-- game/game.go --
+// +game:group:name=mygame
+//
+// Package game is the game: its components and Game Objects, its systems and
+// its input actions. The main package only opens a window around it, and the
+// editor build (editor.go) runs the same systems inside the VSCode level
+// editor.
+package game
+
+import (
+	"image/color"
+	"io/fs"
+	"log"
+
+	"github.com/weakpixel/ecs/system"
+	"github.com/weakpixel/engine/asset/library"
+	engine "github.com/weakpixel/engine/game"
+	"github.com/weakpixel/engine/input"
+	"github.com/weakpixel/engine/render"
+)
+
+// go generate writes zz__gen.go (the typed views of the Game Objects in
+// components.go) and the GOD file god/mygame.god.json, which the level
+// editor reads.
+//go:generate go tool weakpixel gen
+
+// Asset keys: paths from the library root, assets/.
+const (
+	// FirstLevel is the level the game starts in and the editor opens. It
+	// lives in the library package start/.
+	FirstLevel = "start/start.level.json"
+	// bindings binds the actions below to keys and gamepad buttons.
+	bindings = "global/input/player.bindings.json"
+)
+
+// gameplay is the mapping of the bindings file that holds the bindings of
+// the actions while the game is played (a menu would get its own).
+const gameplay = "gameplay"
+
+// Actions is what the player can do, declared in Go and bound to devices in
+// the bindings file. Systems read action state, never keys
+// (doc/guide/engine/input.md).
+type Actions struct {
+	*input.Actions
+	Move input.Action // Vec2: walking direction
+	Run  input.Action // Button: hold to run
+	Quit input.Action // Button: leave the game
+}
+
+// actions is the game's action table. It is frozen, so every engine can
+// share it.
+var actions = newActions()
+
+func newActions() *Actions {
+	a := &Actions{Actions: &input.Actions{}}
+	a.Move = a.Vec2("move", "Walk.")
+	a.Run = a.Button("run", "Hold to run.")
+	a.Quit = a.Button("quit", "Leave the game.")
+	a.Freeze()
+	return a
+}
+
+// Config adds the game's settings to cfg: the asset library at the root of
+// fsys, the resolution, the camera and the input actions.
+func Config(cfg engine.Config, fsys fs.FS) (engine.Config, error) {
+	lib, err := library.Open(fsys)
+	if err != nil {
+		return cfg, err
+	}
+	cfg.Library = lib
+	cfg.Width, cfg.Height = 320, 180
+	cfg.Background = color.RGBA{R: 20, G: 18, B: 26, A: 255}
+	cfg.Camera = render.Camera{Zoom: 1}
+	cfg.Input.Actions = actions.Actions
+	cfg.Input.Bindings = bindings
+	// Development hotkey: F12 saves the frame as a PNG in screenshots/ (F9
+	// in a browser, which keeps F12 for its developer tools). Under the
+	// editor the PNG goes to VSCode. Delete the line to turn it off.
+	cfg.Screenshots.Key = engine.DevScreenshotKey()
+	return cfg, nil
+}
+
+// AddSystems adds the game's systems to e. The editor build calls it too:
+// there the systems run when you press Play.
+func AddSystems(e *engine.Engine) {
+	e.AddRunner(engine.StageSimulate, &PlayerSystem{})
+}
+
+// LoadFirstLevel loads FirstLevel. The editor build does not call it: the
+// editor opens the level itself.
+func LoadFirstLevel(e *engine.Engine) {
+	e.AddRunner(engine.StageSimulate, levelLoader{})
+}
+
+// levelLoader loads FirstLevel before the first tick: at once from loose or
+// embedded files, a few ticks later from a pack (the webassets build), once
+// the pack of its package is mounted. It is a system.Runner.
+type levelLoader struct{}
+
+// Init starts loading the level.
+func (levelLoader) Init(ctx *system.Context) {
+	if _, err := engine.EngineOf(ctx).LoadLevel(FirstLevel); err != nil {
+		log.Fatal(err)
+	}
+}
+
+// Run does nothing: the engine spawns the level.
+func (levelLoader) Run(*system.Context) {}
+-- game/player-system.go --
+package game
+
+import (
+	"github.com/weakpixel/ecs/system"
+	engine "github.com/weakpixel/engine/game"
+)
+
+// PlayerSystem walks every Player in the direction of the move action, and
+// quits the game on the quit action. It is a system.Runner: Init runs once
+// before the first tick, Run every tick.
+type PlayerSystem struct {
+	e       *engine.Engine
+	players PlayerView
+}
+
+// Init creates the typed view of the Player objects (generated in
+// zz__gen.go; create views once, not every tick) and turns on the bindings
+// of the gameplay mapping for player 0.
+func (s *PlayerSystem) Init(ctx *system.Context) {
+	s.e = engine.EngineOf(ctx)
+	s.players = NewPlayerView(ctx.World)
+	s.e.Input().Player(0).Push(gameplay)
+}
+
+// Run moves the players by this tick's input.
+func (s *PlayerSystem) Run(ctx *system.Context) {
+	st := s.e.Input().Player(0).State()
+	if st.JustPressed(actions.Quit) {
+		s.e.Quit()
+	}
+	x, y := st.Vec2(actions.Move)
+	dt := float32(ctx.Time.Delta.Seconds())
+	for _, p := range s.players.Each() {
+		speed := p.Control.Speed
+		if st.Down(actions.Run) {
+			speed = p.Control.RunSpeed
+		}
+		p.Transform.Pos.X += x * speed * dt
+		p.Transform.Pos.Y += y * speed * dt
+	}
+}
+-- go.mod --
+module example.com/mygame
+
+go 1.27
+
+require (
+	github.com/weakpixel/asset v0.0.1
+	github.com/weakpixel/ecs v0.0.1
+	github.com/weakpixel/engine v0.1.2
+)
+
+tool (
+	github.com/weakpixel/engine/tools/weakpixel-editor
+	github.com/weakpixel/engine/tools/weakpixel
+)
+-- main.go --
+//go:build !editor
+
+// Command mygame runs the game in a window:
+//
+//	go run .                  the assets embedded in the binary
+//	go run . -assets assets   the assets folder, reloading files you change
+//	go run . -pack <dir>      write the packed build of the assets and exit
+//
+// The game itself is in package game; this file only opens the window.
+package main
+
+import (
+	"flag"
+	"fmt"
+	"io/fs"
+	"log"
+	"os"
+	"time"
+
+	"github.com/hajimehoshi/ebiten/v2"
+
+	"github.com/weakpixel/engine/asset/library"
+	engine "github.com/weakpixel/engine/game"
+
+	"example.com/mygame/game"
+)
+
+func main() {
+	dir := flag.String("assets", "", "read the assets from this folder instead of the embedded ones, and reload changed files")
+	pack := flag.String("pack", "", "write the packed build of the assets to this empty directory and exit")
+	flag.Parse()
+
+	var cfg engine.Config
+	// The startup screen shows while the first assets load, for at least 5
+	// seconds. Replace or add screens in StartupConfig; delete this line to
+	// start the game at once. Tests and the editor build leave it off.
+	cfg.Startup = &engine.StartupConfig{}
+	cfg.AssetChanges = assetChanges()
+	fsys, err := gameAssets()
+	if *dir != "" {
+		fsys, err = os.DirFS(*dir), nil
+		cfg.WatchInterval = time.Second / 2
+	}
+	if err != nil {
+		log.Fatal(err)
+	}
+	if *pack != "" {
+		packAssets(fsys, *pack)
+		return
+	}
+
+	e, err := newGame(cfg, fsys)
+	if err != nil {
+		log.Fatal(err)
+	}
+	ebiten.SetWindowSize(1280, 720)
+	ebiten.SetWindowTitle("mygame")
+	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
+	runErr := ebiten.RunGame(e)
+	e.Close()
+	if runErr != nil {
+		log.Fatal(runErr)
+	}
+}
+
+// newGame builds the engine on the asset library at the root of fsys and
+// starts the first level. main runs it in a window; main_test.go ticks it
+// without one. cfg adds to the game's own settings (the test sets its input
+// source).
+func newGame(cfg engine.Config, fsys fs.FS) (*engine.Engine, error) {
+	cfg, err := game.Config(cfg, fsys)
+	if err != nil {
+		return nil, err
+	}
+	e := engine.New(cfg)
+	game.AddSystems(e)
+	game.LoadFirstLevel(e)
+	return e, nil
+}
+
+// packAssets writes the packed build of fsys to dir: one pack per group and
+// a catalog, which the browser build with the webassets tag reads over HTTP
+// (make web-packed).
+func packAssets(fsys fs.FS, dir string) {
+	cat, _, err := library.WritePacks(fsys, dir)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, g := range cat.Packages {
+		fmt.Printf("%s -> %s\n", g.Name, g.Pack)
+	}
+}
+-- main_test.go --
+//go:build !editor
+
+package main
+
+import (
+	"testing"
+	"time"
+
+	engine "github.com/weakpixel/engine/game"
+	"github.com/weakpixel/engine/gfx"
+	"github.com/weakpixel/engine/input"
+
+	"example.com/mygame/game"
+)
+
+// TestPlayerWalks runs the game without a window: it waits until the first
+// level has spawned the player, then holds D for half a second and checks
+// that the player walked right. Copy it for your own systems.
+func TestPlayerWalks(t *testing.T) {
+	src := &input.ManualSource{}
+	src.Frame.Width, src.Frame.Height = 320, 180
+	fsys, err := gameAssets()
+	if err != nil {
+		t.Fatal(err)
+	}
+	e, err := newGame(engine.Config{NoAudio: true, Input: engine.InputConfig{Source: src}}, fsys)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer e.Close()
+	players := game.NewPlayerView(e.World())
+
+	// Assets load on worker goroutines: wait in real time, not in ticks.
+	deadline := time.Now().Add(10 * time.Second)
+	start, ok := playerPos(players)
+	for !ok {
+		if time.Now().After(deadline) {
+			t.Fatal("the first level never spawned a player")
+		}
+		if err := e.Update(); err != nil {
+			t.Fatal(err)
+		}
+		time.Sleep(time.Millisecond)
+		start, ok = playerPos(players)
+	}
+
+	src.Frame.Keys.Set(input.KeyD)
+	for range 30 {
+		if err := e.Update(); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if got, _ := playerPos(players); got.X <= start.X || got.Y != start.Y {
+		t.Errorf("the player moved from %v to %v, want to the right", start, got)
+	}
+}
+
+// playerPos is the position of the first player; ok is false while there
+// is none.
+func playerPos(players game.PlayerView) (pos gfx.Vec2, ok bool) {
+	for _, p := range players.Each() {
+		return p.Transform.Pos, true
+	}
+	return gfx.Vec2{}, false
+}
+-- watch.go --
+//go:build !editor && !(js && webassets && webdev)
+
+package main
+
+// assetChanges is the source of pushed asset changes (game.Config.AssetChanges):
+// none here. The browser dev build (make web-dev) has one, see watch_web.go.
+func assetChanges() <-chan []string { return nil }
+-- watch_web.go --
+//go:build !editor && js && webassets && webdev
+
+package main
+
+import (
+	"syscall/js"
+
+	"github.com/weakpixel/asset/httpfs"
+)
+
+// assetChanges listens to the dev server (go tool weakpixel serve), which
+// sends the keys of the asset files you save, so the open page reloads them
+// without a refresh (make web-dev).
+func assetChanges() <-chan []string {
+	href := js.Global().Get("location").Get("href").String()
+	url := js.Global().Get("URL").New("_weakpixel/changes", href).Get("href").String()
+	return httpfs.WatchChanges(url)
+}
+-- web/index.html --
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mygame</title>
+<!--
+  Web shell for an game build (doc/guide/engine/web.md). build.sh puts
+  this file next to game.wasm and Go's wasm_exec.js. Ebiten adds its own
+  canvas to <body> and scales it to the window.
+-->
+<style>
+  html, body { margin: 0; height: 100%; background: #141218; color: #ddd; font: 14px system-ui, sans-serif; }
+  #overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+             background: rgba(20, 18, 24, 0.85); cursor: pointer; z-index: 10; text-align: center; }
+  #overlay.hidden { display: none; }
+  #error { position: fixed; left: 0; right: 0; bottom: 0; max-height: 50%; overflow: auto; margin: 0;
+           padding: 8px 12px; background: #3a0d12; color: #ffd7d7; white-space: pre-wrap; z-index: 20; }
+  #error:empty { display: none; }
+</style>
+</head>
+<body>
+<div id="overlay"><div id="status">Loading…</div></div>
+<pre id="error"></pre>
+<script src="wasm_exec.js"></script>
+<script>
+"use strict";
+const overlay = document.getElementById("overlay");
+const statusText = document.getElementById("status");
+const errorBox = document.getElementById("error");
+
+// Go writes panics and log output through console.log/console.error (see
+// wasm_exec.js). Once a panic starts, every following line goes to the
+// error box too, so the stack trace is readable on the page.
+let failing = false;
+for (const name of ["log", "error"]) {
+  const orig = console[name].bind(console);
+  console[name] = (...args) => {
+    const line = args.join(" ");
+    if (/^(panic: |fatal error: |exit code: [1-9])/.test(line)) failing = true;
+    if (failing) errorBox.textContent += line + "\n";
+    orig(...args);
+  };
+}
+
+// The first click (or key) starts the game. It focuses the page and counts
+// as the user gesture browsers require before audio may play (Ebiten resumes
+// its AudioContext on the first input it sees). Starting the game only then
+// means its startup screen and minimum time run in view, not behind this
+// overlay (doc/guide/engine/engine.md#startup-screen).
+const clicked = new Promise((resolve) => {
+  const start = () => {
+    overlay.classList.add("hidden");
+    window.focus();
+    resolve();
+  };
+  overlay.addEventListener("click", start, { once: true });
+  window.addEventListener("keydown", start, { once: true });
+});
+
+// fetchWithProgress downloads the module and shows how much has arrived.
+async function fetchWithProgress(url) {
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`${url}: HTTP ${resp.status}`);
+  const total = Number(resp.headers.get("Content-Length")) || 0;
+  const reader = resp.body.getReader();
+  const chunks = [];
+  let got = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    got += value.length;
+    statusText.textContent = total
+      ? `Loading… ${Math.round(got / total * 100)}%`
+      : `Loading… ${(got / 1048576).toFixed(1)} MB`;
+  }
+  return new Blob(chunks).arrayBuffer();
+}
+
+(async () => {
+  try {
+    const go = new Go();
+    const bytes = await fetchWithProgress("game.wasm");
+    const { instance } = await WebAssembly.instantiate(bytes, go.importObject);
+    statusText.textContent = "Click to start";
+    await clicked;
+    // go.run creates Ebiten's canvas before it first yields.
+    const run = go.run(instance);
+    const canvas = document.querySelector("canvas");
+    if (canvas) canvas.focus();
+    await run;
+    if (!failing) statusText.textContent = "The game has ended.";
+    overlay.classList.remove("hidden");
+  } catch (err) {
+    errorBox.textContent += String(err && err.stack || err) + "\n";
+  }
+})();
+</script>
+</body>
+</html>

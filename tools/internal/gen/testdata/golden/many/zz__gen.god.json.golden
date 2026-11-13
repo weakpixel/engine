@@ -1,0 +1,373 @@
+{
+  "version": 0,
+  "generator": "weakpixel gen",
+  "package": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/many",
+  "components": [
+    {
+      "group": "many",
+      "name": "C1",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/many.C1",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "V": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "V"
+        ]
+      }
+    },
+    {
+      "group": "many",
+      "name": "C10",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/many.C10",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "V": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "V"
+        ]
+      }
+    },
+    {
+      "group": "many",
+      "name": "C11",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/many.C11",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "V": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "V"
+        ]
+      }
+    },
+    {
+      "group": "many",
+      "name": "C12",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/many.C12",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "V": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "V"
+        ]
+      }
+    },
+    {
+      "group": "many",
+      "name": "C13",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/many.C13",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "V": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "V"
+        ]
+      }
+    },
+    {
+      "group": "many",
+      "name": "C14",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/many.C14",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "V": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "V"
+        ]
+      }
+    },
+    {
+      "group": "many",
+      "name": "C15",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/many.C15",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "V": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "V"
+        ]
+      }
+    },
+    {
+      "group": "many",
+      "name": "C16",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/many.C16",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "V": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "V"
+        ]
+      }
+    },
+    {
+      "group": "many",
+      "name": "C17",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/many.C17",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "V": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "V"
+        ]
+      }
+    },
+    {
+      "group": "many",
+      "name": "C2",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/many.C2",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "V": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "V"
+        ]
+      }
+    },
+    {
+      "group": "many",
+      "name": "C3",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/many.C3",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "V": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "V"
+        ]
+      }
+    },
+    {
+      "group": "many",
+      "name": "C4",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/many.C4",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "V": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "V"
+        ]
+      }
+    },
+    {
+      "group": "many",
+      "name": "C5",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/many.C5",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "V": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "V"
+        ]
+      }
+    },
+    {
+      "group": "many",
+      "name": "C6",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/many.C6",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "V": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "V"
+        ]
+      }
+    },
+    {
+      "group": "many",
+      "name": "C7",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/many.C7",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "V": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "V"
+        ]
+      }
+    },
+    {
+      "group": "many",
+      "name": "C8",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/many.C8",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "V": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "V"
+        ]
+      }
+    },
+    {
+      "group": "many",
+      "name": "C9",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/many.C9",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "V": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "V"
+        ]
+      }
+    }
+  ],
+  "objects": [
+    {
+      "group": "many",
+      "class": "Big",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/many.Big",
+      "components": [
+        {
+          "component": "many:C1",
+          "field": "C1"
+        },
+        {
+          "component": "many:C2",
+          "field": "C2"
+        },
+        {
+          "component": "many:C3",
+          "field": "C3"
+        },
+        {
+          "component": "many:C4",
+          "field": "C4"
+        },
+        {
+          "component": "many:C5",
+          "field": "C5"
+        },
+        {
+          "component": "many:C6",
+          "field": "C6"
+        },
+        {
+          "component": "many:C7",
+          "field": "C7"
+        },
+        {
+          "component": "many:C8",
+          "field": "C8"
+        },
+        {
+          "component": "many:C9",
+          "field": "C9"
+        },
+        {
+          "component": "many:C10",
+          "field": "C10"
+        },
+        {
+          "component": "many:C11",
+          "field": "C11"
+        },
+        {
+          "component": "many:C12",
+          "field": "C12"
+        },
+        {
+          "component": "many:C13",
+          "field": "C13"
+        },
+        {
+          "component": "many:C14",
+          "field": "C14"
+        },
+        {
+          "component": "many:C15",
+          "field": "C15"
+        },
+        {
+          "component": "many:C16",
+          "field": "C16"
+        },
+        {
+          "component": "many:C17",
+          "field": "C17"
+        }
+      ]
+    }
+  ]
+}

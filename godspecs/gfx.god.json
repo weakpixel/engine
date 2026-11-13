@@ -1,0 +1,1048 @@
+{
+  "version": 0,
+  "generator": "weakpixel gen",
+  "package": "github.com/weakpixel/engine/gfx",
+  "components": [
+    {
+      "group": "gfx",
+      "name": "Animator",
+      "doc": "Animator plays an animation clip on the entity's Sprite: the anim\npackage's AnimationSystem advances Time and writes Sprite.ID each tick.\n\nAnimator is a standalone Game Object component; objects opt in by marking\na field of this type as a component. Clip and Speed are authored data (Clip\nis an asset key such as \"chars/hero.aseprite.json#run\"); Time, Frame and\nDone are runtime state, in the schema but marked x-runtime, so they are\nnever serialized.\n\nRestart a clip by setting Clip to the new handle and zeroing Time, Frame\nand Done.",
+      "goType": "github.com/weakpixel/engine/gfx.Animator",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Clip": {
+            "type": "string",
+            "format": "asset",
+            "description": "Clip selects the clip. The zero handle, and a clip that is not loaded\nyet, leave the Sprite untouched.",
+            "x-asset": "clip"
+          },
+          "Done": {
+            "type": "boolean",
+            "description": "Done is set when a non-looping clip has reached its last frame. The\nsystem then stops advancing the entity.",
+            "x-runtime": true
+          },
+          "Frame": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Frame is the index of the current frame in the clip, written by the\nsystem so that gameplay can react to it.",
+            "minimum": -2147483648,
+            "maximum": 2147483647,
+            "x-runtime": true
+          },
+          "Speed": {
+            "type": "number",
+            "format": "float",
+            "description": "Speed scales the playback rate. Zero means 1; negative values are\ntreated as 1 too, because the clip's direction comes from the clip. The\neditor starts a new Animator at 1.",
+            "default": 1
+          },
+          "Time": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Time is how long the clip has played, scaled by Speed.",
+            "x-runtime": true
+          }
+        },
+        "required": [
+          "Speed"
+        ]
+      }
+    },
+    {
+      "group": "gfx",
+      "name": "Label",
+      "doc": "Label draws text at the entity's Transform in screen space.",
+      "goType": "github.com/weakpixel/engine/gfx.Label",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Color": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Color is the text color. Zero means white.",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "Font": {
+            "type": "string",
+            "format": "asset",
+            "description": "Font selects the font face. In the Game Object schema it is an asset key\n(\"fonts/ui.json\"); the handle is runtime-only (json:\"-\").",
+            "x-asset": "font"
+          },
+          "Layer": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Layer is the draw order, as for Sprite.",
+            "minimum": -32768,
+            "maximum": 32767
+          },
+          "Text": {
+            "type": "string",
+            "description": "Text is the string to draw."
+          }
+        },
+        "required": [
+          "Text",
+          "Layer",
+          "Color"
+        ]
+      }
+    },
+    {
+      "group": "gfx",
+      "name": "NineSlice",
+      "doc": "NineSlice draws an image at any size without distorting its border: the\nfour corners keep their pixel size, the four edges stretch along one axis\nand the center stretches along both (or repeats, with Tile). The same\n24x24 panel image then serves a dialog, a button and a health-bar frame.\nResize a panel by writing Size; that never moves the entity between\narchetypes.\n\nZero values draw normally: a zero Size is the image's own size, a zero\nOrigin the top-left corner, a zero Tint white and zero Insets stretch the\nwhole image. Transform.Scale multiplies everything, corners included, and\nTransform.Rot rotates the panel around its origin. Insets that exceed the\nimage are clamped; when Size is smaller than the borders together, the\nborders shrink in proportion and the center is empty.\n\nInsets are measured on the frame as stored: use untrimmed art for\natlas frames.",
+      "goType": "github.com/weakpixel/engine/gfx.NineSlice",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Blend": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Blend is how the panel is composited onto what is below it. Zero is\nBlendNormal.",
+            "minimum": 0,
+            "maximum": 255,
+            "x-enum": [
+              {
+                "value": 0,
+                "name": "BlendNormal",
+                "doc": "BlendNormal draws the source over what is below (alpha blending)."
+              },
+              {
+                "value": 1,
+                "name": "BlendAdditive",
+                "doc": "BlendAdditive adds the source color to what is below: glows, fire,\nsparks."
+              },
+              {
+                "value": 2,
+                "name": "BlendMultiply",
+                "doc": "BlendMultiply multiplies what is below by the source color: white\nkeeps it, black darkens it to black."
+              },
+              {
+                "value": 3,
+                "name": "BlendScreen",
+                "doc": "BlendScreen brightens like BlendAdditive but never exceeds white:\nsoft glows, light shafts, flashes."
+              },
+              {
+                "value": 4,
+                "name": "BlendSubtract",
+                "doc": "BlendSubtract subtracts the source color from what is below:\ndarkening tints, negative light."
+              },
+              {
+                "value": 5,
+                "name": "BlendLighten",
+                "doc": "BlendLighten keeps the brighter of source and destination per\nchannel: overlapping glows that do not add up."
+              },
+              {
+                "value": 6,
+                "name": "BlendErase",
+                "doc": "BlendErase removes what is below by the source's alpha. Use it inside\na layer group to cut holes (fog of war, flashlight masks)."
+              }
+            ]
+          },
+          "Hidden": {
+            "type": "boolean",
+            "description": "Hidden skips the panel. It is a field and not a tag so that toggling it\ndoes not move the entity between archetypes."
+          },
+          "ID": {
+            "type": "string",
+            "format": "asset",
+            "description": "ID selects the image. In the Game Object schema it is an asset key\n(\"ui/panel.png\"); the handle is runtime-only (json:\"-\").",
+            "x-asset": "sprite"
+          },
+          "Insets": {
+            "type": "object",
+            "description": "Insets are the border widths in source pixels.",
+            "properties": {
+              "Bottom": {
+                "type": "integer",
+                "format": "int32",
+                "minimum": 0,
+                "maximum": 65535
+              },
+              "Left": {
+                "type": "integer",
+                "format": "int32",
+                "minimum": 0,
+                "maximum": 65535
+              },
+              "Right": {
+                "type": "integer",
+                "format": "int32",
+                "minimum": 0,
+                "maximum": 65535
+              },
+              "Top": {
+                "type": "integer",
+                "format": "int32",
+                "minimum": 0,
+                "maximum": 65535
+              }
+            },
+            "required": [
+              "Left",
+              "Top",
+              "Right",
+              "Bottom"
+            ]
+          },
+          "Layer": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Layer is the draw order, as for Sprite.",
+            "minimum": -32768,
+            "maximum": 32767
+          },
+          "Origin": {
+            "type": "object",
+            "description": "Origin is the pivot as a fraction of Size. The zero Origin is the\ntop-left corner.",
+            "properties": {
+              "X": {
+                "type": "number",
+                "format": "float"
+              },
+              "Y": {
+                "type": "number",
+                "format": "float"
+              }
+            },
+            "required": [
+              "X",
+              "Y"
+            ]
+          },
+          "Size": {
+            "type": "object",
+            "description": "Size is the drawn size in pixels before Transform.Scale. Zero means the\nimage's own size.",
+            "properties": {
+              "X": {
+                "type": "number",
+                "format": "float"
+              },
+              "Y": {
+                "type": "number",
+                "format": "float"
+              }
+            },
+            "required": [
+              "X",
+              "Y"
+            ]
+          },
+          "Tile": {
+            "type": "boolean",
+            "description": "Tile repeats the edges and the center at the image's pixel size instead\nof stretching them. The last repeat in a row or column is cropped."
+          },
+          "Tint": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Tint multiplies the image color. Zero means no tint.",
+            "minimum": 0,
+            "maximum": 4294967295
+          }
+        },
+        "required": [
+          "Insets",
+          "Size",
+          "Layer",
+          "Origin",
+          "Tint",
+          "Blend",
+          "Tile",
+          "Hidden"
+        ]
+      }
+    },
+    {
+      "group": "gfx",
+      "name": "Particles",
+      "doc": "Particles plays a particle effect at the entity's Transform: the particles\npackage's System simulates it every tick and its Extract draws the\nparticles as batched sprites. The effect itself (image, colors, rate,\nlifetimes, speeds, shape, gravity) is an asset, an *.fx.json file; the\ncomponent holds its handle, as Animator holds a clip, plus the few things\nthat differ per placed instance. Particles are not entities; they live in\npools owned by the system, so thousands of them cost no archetype churn.\n\nThe Transform's Rot turns the emission direction, the spawn shape and the\nparticles' start rotation; its Scale stretches the spawn shape and the\nparticle size. Both apply when a particle spawns, not to live particles.\nAn effect that is still loading spawns nothing; editing its file restarts\nthe particles of every entity that plays it.\n\nAn effect may hold several emitters (up to fxfile.MaxEmitters, in package\nparticles/fxfile); they play together, and Layer, Stop, Seed and the\noverrides below apply to all of them.\n\nRandomness is deterministic: the same Seed (or entity) and inputs give\nthe same particles. Pool, Time, Live and Done are runtime state, never\nserialized. Restart a finished effect by zeroing Time and Done.",
+      "goType": "github.com/weakpixel/engine/gfx.Particles",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Angle": {
+            "type": "number",
+            "format": "float",
+            "nullable": true,
+            "description": "Angle overrides the emission direction.",
+            "x-editor": {
+              "step": 5,
+              "unit": "deg"
+            }
+          },
+          "Blend": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true,
+            "description": "Blend overrides the blend mode.",
+            "minimum": 0,
+            "maximum": 255,
+            "x-enum": [
+              {
+                "value": 0,
+                "name": "BlendNormal",
+                "doc": "BlendNormal draws the source over what is below (alpha blending)."
+              },
+              {
+                "value": 1,
+                "name": "BlendAdditive",
+                "doc": "BlendAdditive adds the source color to what is below: glows, fire,\nsparks."
+              },
+              {
+                "value": 2,
+                "name": "BlendMultiply",
+                "doc": "BlendMultiply multiplies what is below by the source color: white\nkeeps it, black darkens it to black."
+              },
+              {
+                "value": 3,
+                "name": "BlendScreen",
+                "doc": "BlendScreen brightens like BlendAdditive but never exceeds white:\nsoft glows, light shafts, flashes."
+              },
+              {
+                "value": 4,
+                "name": "BlendSubtract",
+                "doc": "BlendSubtract subtracts the source color from what is below:\ndarkening tints, negative light."
+              },
+              {
+                "value": 5,
+                "name": "BlendLighten",
+                "doc": "BlendLighten keeps the brighter of source and destination per\nchannel: overlapping glows that do not add up."
+              },
+              {
+                "value": 6,
+                "name": "BlendErase",
+                "doc": "BlendErase removes what is below by the source's alpha. Use it inside\na layer group to cut holes (fog of war, flashlight masks)."
+              }
+            ]
+          },
+          "Burst": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true,
+            "description": "Burst overrides the particles spawned at the start of each cycle.",
+            "minimum": 0,
+            "maximum": 65535
+          },
+          "Color": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true,
+            "description": "Color overrides the tint at birth.",
+            "minimum": 0,
+            "maximum": 4294967295,
+            "x-editor": {
+              "color": true
+            }
+          },
+          "Done": {
+            "type": "boolean",
+            "description": "Done is set when every emitter of a non-looping effect has finished\nand its last particle died.",
+            "x-runtime": true
+          },
+          "Drag": {
+            "type": "number",
+            "format": "float",
+            "nullable": true,
+            "description": "Drag overrides the slowdown factor per second."
+          },
+          "Duration": {
+            "type": "number",
+            "format": "float",
+            "nullable": true,
+            "description": "Duration overrides the cycle length in seconds; zero is forever.",
+            "x-editor": {
+              "unit": "s"
+            }
+          },
+          "Effect": {
+            "type": "string",
+            "format": "asset",
+            "description": "Effect is the particle effect to play. The zero handle plays nothing.",
+            "x-asset": "effect"
+          },
+          "EndColor": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true,
+            "description": "EndColor overrides the tint at death.",
+            "minimum": 0,
+            "maximum": 4294967295,
+            "x-editor": {
+              "color": true
+            }
+          },
+          "EndScale": {
+            "type": "number",
+            "format": "float",
+            "nullable": true,
+            "description": "EndScale overrides the size at death."
+          },
+          "FadeIn": {
+            "type": "number",
+            "format": "float",
+            "nullable": true,
+            "description": "FadeIn overrides the fraction of the life over which alpha ramps up.",
+            "x-editor": {
+              "min": 0,
+              "max": 1,
+              "step": 0.05
+            }
+          },
+          "FadeOut": {
+            "type": "number",
+            "format": "float",
+            "nullable": true,
+            "description": "FadeOut overrides the fraction of the life over which alpha ramps down.",
+            "x-editor": {
+              "min": 0,
+              "max": 1,
+              "step": 0.05
+            }
+          },
+          "Gravity": {
+            "type": "object",
+            "nullable": true,
+            "description": "Gravity overrides the constant acceleration in units/s².",
+            "properties": {
+              "X": {
+                "type": "number",
+                "format": "float"
+              },
+              "Y": {
+                "type": "number",
+                "format": "float"
+              }
+            },
+            "required": [
+              "X",
+              "Y"
+            ]
+          },
+          "Layer": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Layer is the draw order, as for Sprite. Give additive particles their\nown layer so they batch.",
+            "minimum": -32768,
+            "maximum": 32767
+          },
+          "LifeMax": {
+            "type": "number",
+            "format": "float",
+            "nullable": true,
+            "description": "LifeMax overrides the longest lifetime in seconds.",
+            "x-editor": {
+              "unit": "s"
+            }
+          },
+          "LifeMin": {
+            "type": "number",
+            "format": "float",
+            "nullable": true,
+            "description": "LifeMin overrides the shortest lifetime in seconds.",
+            "x-editor": {
+              "unit": "s"
+            }
+          },
+          "Live": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Live is the number of live particles of all emitters, written by the\nsystem for gameplay and the inspector.",
+            "minimum": 0,
+            "maximum": 65535,
+            "x-runtime": true
+          },
+          "Local": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Local overrides whether particles move with the emitter."
+          },
+          "Loop": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Loop overrides whether the cycle restarts after Duration."
+          },
+          "Max": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true,
+            "description": "Max overrides the pool capacity; zero means 256.",
+            "minimum": 0,
+            "maximum": 65535
+          },
+          "Params": {
+            "type": "array",
+            "nullable": true,
+            "description": "Params override the shader's Params vec4.",
+            "items": {
+              "type": "number",
+              "format": "float"
+            },
+            "minItems": 4,
+            "maxItems": 4
+          },
+          "Pool": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Pool identifies the particle pool in the system; zero means none.",
+            "minimum": 0,
+            "maximum": 4294967295,
+            "x-runtime": true
+          },
+          "RandomRotation": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "RandomRotation overrides whether particles start rotated at random."
+          },
+          "Rate": {
+            "type": "number",
+            "format": "float",
+            "nullable": true,
+            "description": "Rate overrides the particles spawned per second.",
+            "x-editor": {
+              "unit": "/s"
+            }
+          },
+          "Scale": {
+            "type": "number",
+            "format": "float",
+            "nullable": true,
+            "description": "Scale overrides the particle size at birth."
+          },
+          "Seed": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Seed seeds the random numbers. Zero derives it from the entity.",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "Shader": {
+            "type": "string",
+            "format": "asset",
+            "description": "Shader overrides the effect's shader. The zero handle uses the\neffect's own; an instance cannot override to no shader.",
+            "x-asset": "shader"
+          },
+          "Shape": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true,
+            "description": "Shape overrides the spawn area.",
+            "minimum": 0,
+            "maximum": 255,
+            "x-enum": [
+              {
+                "value": 0,
+                "name": "EmitPoint",
+                "doc": "EmitPoint spawns every particle at the emitter's position."
+              },
+              {
+                "value": 1,
+                "name": "EmitCircle",
+                "doc": "EmitCircle spawns inside a disc of radius ShapeSize.X."
+              },
+              {
+                "value": 2,
+                "name": "EmitRect",
+                "doc": "EmitRect spawns inside a rectangle of ShapeSize.X by ShapeSize.Y\ncentered on the emitter."
+              }
+            ]
+          },
+          "ShapeSize": {
+            "type": "object",
+            "nullable": true,
+            "description": "ShapeSize overrides the spawn area's size.",
+            "properties": {
+              "X": {
+                "type": "number",
+                "format": "float"
+              },
+              "Y": {
+                "type": "number",
+                "format": "float"
+              }
+            },
+            "required": [
+              "X",
+              "Y"
+            ]
+          },
+          "SpeedMax": {
+            "type": "number",
+            "format": "float",
+            "nullable": true,
+            "description": "SpeedMax overrides the fastest initial speed in units/s.",
+            "x-editor": {
+              "unit": "u/s"
+            }
+          },
+          "SpeedMin": {
+            "type": "number",
+            "format": "float",
+            "nullable": true,
+            "description": "SpeedMin overrides the slowest initial speed in units/s.",
+            "x-editor": {
+              "unit": "u/s"
+            }
+          },
+          "SpinMax": {
+            "type": "number",
+            "format": "float",
+            "nullable": true,
+            "description": "SpinMax overrides the fastest rotation speed.",
+            "x-editor": {
+              "step": 5,
+              "unit": "deg"
+            }
+          },
+          "SpinMin": {
+            "type": "number",
+            "format": "float",
+            "nullable": true,
+            "description": "SpinMin overrides the slowest rotation speed.",
+            "x-editor": {
+              "step": 5,
+              "unit": "deg"
+            }
+          },
+          "Spread": {
+            "type": "number",
+            "format": "float",
+            "nullable": true,
+            "description": "Spread overrides the full cone width around Angle.",
+            "x-editor": {
+              "step": 5,
+              "unit": "deg"
+            }
+          },
+          "Sprite": {
+            "type": "string",
+            "format": "asset",
+            "description": "Sprite overrides the effect's particle image. The zero handle uses the\neffect's own; an instance cannot override back to the placeholder.",
+            "x-asset": "sprite"
+          },
+          "Stop": {
+            "type": "boolean",
+            "description": "Stop stops spawning; live particles finish their life."
+          },
+          "Time": {
+            "type": "number",
+            "format": "float",
+            "description": "Time is how long the current cycle of the effect's first emitter has\nrun, in seconds. Zeroing it restarts the cycle of every emitter.",
+            "x-runtime": true
+          }
+        },
+        "required": [
+          "Layer",
+          "Stop",
+          "Seed"
+        ]
+      }
+    },
+    {
+      "group": "gfx",
+      "name": "PlayerSlot",
+      "doc": "PlayerSlot says which input player controls the entity: the index of an\ninput.Player (Router.Player). Game systems read the player's State through\nit, so the same controller system drives every player's character.",
+      "goType": "github.com/weakpixel/engine/gfx.PlayerSlot",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Player": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Player is the player index, 0..input.MaxPlayers-1.",
+            "minimum": 0,
+            "maximum": 255
+          }
+        },
+        "required": [
+          "Player"
+        ]
+      }
+    },
+    {
+      "group": "gfx",
+      "name": "SoundEmitter",
+      "doc": "SoundEmitter plays a sound at the entity: the sound package's AudioSystem\nstarts it once the sound is loaded. A one-shot emitter starts once, sets\nDone, and plays to its end even if the entity is deleted; a looping one\nplays for as long as the entity has the component, and stops when the\nentity is deleted, the component removed or Done set.\nIf the entity has a Transform, the sound is panned (and, with a listener\nrange, attenuated) by its position relative to the sound.Listener.\n\nSound, Volume, Bus and Loop are authored data (Sound is an asset key such\nas \"sfx/waterfall.ogg\"); Voice and Done are runtime state, never\nserialized. Replay a one-shot emitter by zeroing Done.",
+      "goType": "github.com/weakpixel/engine/gfx.SoundEmitter",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Bus": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Bus is the mixer bus (a sound.Bus) whose volume applies. Zero is\nsound.BusSFX.",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "Done": {
+            "type": "boolean",
+            "description": "Done is set when a one-shot sound has started (or the sound failed to\nload). The system then ignores the emitter.",
+            "x-runtime": true
+          },
+          "Loop": {
+            "type": "boolean",
+            "description": "Loop repeats the sound while the emitter exists."
+          },
+          "Sound": {
+            "type": "string",
+            "format": "asset",
+            "description": "Sound selects the effect. The zero handle plays nothing; a sound that\nis still loading starts when it is ready, a failed one sets Done.",
+            "x-asset": "sound"
+          },
+          "Voice": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Voice identifies the playing voice in the AudioSystem; zero means none.",
+            "minimum": 0,
+            "maximum": 4294967295,
+            "x-runtime": true
+          },
+          "Volume": {
+            "type": "number",
+            "format": "float",
+            "description": "Volume scales the sound. Zero means 1 (full volume), like\nAnimator.Speed; a negative value is silent. The editor starts a new\nemitter at 1.",
+            "default": 1
+          }
+        },
+        "required": [
+          "Volume",
+          "Bus",
+          "Loop"
+        ]
+      }
+    },
+    {
+      "group": "gfx",
+      "name": "Sprite",
+      "doc": "Sprite draws an image at the entity's Transform.",
+      "goType": "github.com/weakpixel/engine/gfx.Sprite",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Blend": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Blend is how the sprite is composited onto what is below it. The zero\nvalue is BlendNormal. Give blended sprites a layer of their own so they\nbatch.",
+            "minimum": 0,
+            "maximum": 255,
+            "x-enum": [
+              {
+                "value": 0,
+                "name": "BlendNormal",
+                "doc": "BlendNormal draws the source over what is below (alpha blending)."
+              },
+              {
+                "value": 1,
+                "name": "BlendAdditive",
+                "doc": "BlendAdditive adds the source color to what is below: glows, fire,\nsparks."
+              },
+              {
+                "value": 2,
+                "name": "BlendMultiply",
+                "doc": "BlendMultiply multiplies what is below by the source color: white\nkeeps it, black darkens it to black."
+              },
+              {
+                "value": 3,
+                "name": "BlendScreen",
+                "doc": "BlendScreen brightens like BlendAdditive but never exceeds white:\nsoft glows, light shafts, flashes."
+              },
+              {
+                "value": 4,
+                "name": "BlendSubtract",
+                "doc": "BlendSubtract subtracts the source color from what is below:\ndarkening tints, negative light."
+              },
+              {
+                "value": 5,
+                "name": "BlendLighten",
+                "doc": "BlendLighten keeps the brighter of source and destination per\nchannel: overlapping glows that do not add up."
+              },
+              {
+                "value": 6,
+                "name": "BlendErase",
+                "doc": "BlendErase removes what is below by the source's alpha. Use it inside\na layer group to cut holes (fog of war, flashlight masks)."
+              }
+            ]
+          },
+          "FlipX": {
+            "type": "boolean",
+            "description": "FlipX mirrors the sprite horizontally."
+          },
+          "FlipY": {
+            "type": "boolean",
+            "description": "FlipY mirrors the sprite vertically."
+          },
+          "Hidden": {
+            "type": "boolean",
+            "description": "Hidden skips the sprite. It is a field and not a tag so that toggling\nit does not move the entity between archetypes."
+          },
+          "ID": {
+            "type": "string",
+            "format": "asset",
+            "description": "ID selects the image. Animation systems change it per frame. The zero\nhandle draws the placeholder. In the Game Object schema it is an asset\nkey (\"chars/hero.aseprite.json#idle_0\"); the handle itself is\nruntime-only (json:\"-\"), and the resolver package converts the two.",
+            "x-asset": "sprite"
+          },
+          "Layer": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Layer is the draw order: higher layers draw on top.",
+            "minimum": -32768,
+            "maximum": 32767
+          },
+          "Origin": {
+            "type": "object",
+            "description": "Origin is the pivot as a fraction of the sprite size: (0.5,0.5) is the\ncenter. The zero Origin means the sprite's own default pivot, so\ntop-left needs a tiny non-zero value such as (0.0001, 0.0001).",
+            "properties": {
+              "X": {
+                "type": "number",
+                "format": "float"
+              },
+              "Y": {
+                "type": "number",
+                "format": "float"
+              }
+            },
+            "required": [
+              "X",
+              "Y"
+            ]
+          },
+          "Params": {
+            "type": "array",
+            "description": "Params are passed to Shader as its \"Params\" vec4 uniform; their meaning\nis up to the shader. Animate them instead of swapping shaders: changing\na field does not move the entity between archetypes.",
+            "items": {
+              "type": "number",
+              "format": "float"
+            },
+            "minItems": 4,
+            "maxItems": 4
+          },
+          "Shader": {
+            "type": "string",
+            "format": "asset",
+            "description": "Shader draws the sprite through a Kage shader (hit flash, outline,\npalette swap). The zero handle, and a shader that is still loading or\nfailed, draw the sprite normally. In the Game Object schema it is an\nasset key (\"fx/flash.kage\"); the handle is runtime-only (json:\"-\").",
+            "x-asset": "shader"
+          },
+          "Tint": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Tint multiplies the sprite's color. Zero means no tint.",
+            "minimum": 0,
+            "maximum": 4294967295
+          }
+        },
+        "required": [
+          "Layer",
+          "Origin",
+          "FlipX",
+          "FlipY",
+          "Tint",
+          "Blend",
+          "Hidden"
+        ]
+      }
+    },
+    {
+      "group": "gfx",
+      "name": "Transform",
+      "doc": "Transform places an entity in the world.\n\nThe zero Scale means (1, 1), so a zero-valued Transform is valid.",
+      "goType": "github.com/weakpixel/engine/gfx.Transform",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Pos": {
+            "type": "object",
+            "description": "Pos is the position in world units at the current tick.",
+            "properties": {
+              "X": {
+                "type": "number",
+                "format": "float"
+              },
+              "Y": {
+                "type": "number",
+                "format": "float"
+              }
+            },
+            "required": [
+              "X",
+              "Y"
+            ]
+          },
+          "PrevPos": {
+            "type": "object",
+            "description": "PrevPos is Pos at the start of the tick. The extract.SnapshotTransforms\nsystem copies Pos here, and the renderer blends PrevPos to Pos so that\n60 TPS looks smooth on faster displays.",
+            "properties": {
+              "X": {
+                "type": "number",
+                "format": "float"
+              },
+              "Y": {
+                "type": "number",
+                "format": "float"
+              }
+            },
+            "required": [
+              "X",
+              "Y"
+            ]
+          },
+          "Rot": {
+            "type": "number",
+            "format": "float",
+            "description": "Rot is the rotation in radians, clockwise on screen.",
+            "x-editor": {
+              "step": 5,
+              "unit": "deg"
+            }
+          },
+          "Scale": {
+            "type": "object",
+            "description": "Scale multiplies the sprite size. Zero means (1, 1); the editor starts a\nnew Transform at (1, 1).",
+            "properties": {
+              "X": {
+                "type": "number",
+                "format": "float",
+                "default": 1
+              },
+              "Y": {
+                "type": "number",
+                "format": "float",
+                "default": 1
+              }
+            },
+            "required": [
+              "X",
+              "Y"
+            ]
+          }
+        },
+        "required": [
+          "Pos",
+          "PrevPos",
+          "Rot",
+          "Scale"
+        ]
+      }
+    }
+  ],
+  "objects": [
+    {
+      "group": "gfx",
+      "class": "AnimatedVisual",
+      "doc": "AnimatedVisual is a Visual that plays animation clips: the Game Object of\nan animated sprite. Animator stays a standalone component, so plain Visual\nobjects (and their serialized data) are unchanged.",
+      "goType": "github.com/weakpixel/engine/gfx.AnimatedVisual",
+      "components": [
+        {
+          "component": "gfx:Transform",
+          "field": "Transform",
+          "doc": "Where the entity is.",
+          "embeddedVia": [
+            "Visual"
+          ]
+        },
+        {
+          "component": "gfx:Sprite",
+          "field": "Sprite",
+          "doc": "How the entity looks.",
+          "embeddedVia": [
+            "Visual"
+          ]
+        },
+        {
+          "component": "gfx:Animator",
+          "field": "Animator",
+          "doc": "Which clip plays and how fast."
+        }
+      ]
+    },
+    {
+      "group": "gfx",
+      "class": "Panel",
+      "doc": "Panel is a NineSlice placed by a Transform: the Game Object of a UI panel\nor frame that resizes without distorting its border.",
+      "goType": "github.com/weakpixel/engine/gfx.Panel",
+      "components": [
+        {
+          "component": "gfx:Transform",
+          "field": "Transform",
+          "doc": "Where the panel is."
+        },
+        {
+          "component": "gfx:NineSlice",
+          "field": "NineSlice",
+          "doc": "The image, its insets and size."
+        }
+      ]
+    },
+    {
+      "group": "gfx",
+      "class": "ParticleSource",
+      "doc": "ParticleSource is a particle effect placed in the world: dust, embers,\nsparks. Particles stays a standalone component too, so other objects\nand prefabs can carry one.",
+      "goType": "github.com/weakpixel/engine/gfx.ParticleSource",
+      "components": [
+        {
+          "component": "gfx:Transform",
+          "field": "Transform",
+          "doc": "Where the particles spawn."
+        },
+        {
+          "component": "gfx:Particles",
+          "field": "Particles",
+          "doc": "The effect to play."
+        }
+      ]
+    },
+    {
+      "group": "gfx",
+      "class": "SoundSource",
+      "doc": "SoundSource is a sound placed in the world: a waterfall loop, a one-shot\nstinger at a spot. SoundEmitter stays a standalone component too, so other\nobjects can carry one.",
+      "goType": "github.com/weakpixel/engine/gfx.SoundSource",
+      "components": [
+        {
+          "component": "gfx:Transform",
+          "field": "Transform",
+          "doc": "Where the sound is; it pans by this position."
+        },
+        {
+          "component": "gfx:SoundEmitter",
+          "field": "SoundEmitter",
+          "doc": "What plays and how loud."
+        }
+      ]
+    },
+    {
+      "group": "gfx",
+      "class": "Text",
+      "doc": "Text is a Label placed by a Transform: the Game Object of a text entity.\nThe Label is drawn in screen space, so Transform.Pos is in logical pixels.",
+      "goType": "github.com/weakpixel/engine/gfx.Text",
+      "components": [
+        {
+          "component": "gfx:Transform",
+          "field": "Transform",
+          "doc": "Where the text is."
+        },
+        {
+          "component": "gfx:Label",
+          "field": "Label",
+          "doc": "The string and how it is drawn."
+        }
+      ]
+    },
+    {
+      "group": "gfx",
+      "class": "Visual",
+      "doc": "Visual is a positioned, drawn thing: the minimal Game Object of the\nrenderer. Game-specific objects embed it with +game:embed.",
+      "goType": "github.com/weakpixel/engine/gfx.Visual",
+      "components": [
+        {
+          "component": "gfx:Transform",
+          "field": "Transform",
+          "doc": "Where the entity is."
+        },
+        {
+          "component": "gfx:Sprite",
+          "field": "Sprite",
+          "doc": "How the entity looks."
+        }
+      ]
+    }
+  ]
+}

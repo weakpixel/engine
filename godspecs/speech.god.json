@@ -1,0 +1,244 @@
+{
+  "version": 0,
+  "generator": "weakpixel gen",
+  "package": "github.com/weakpixel/engine/speech",
+  "components": [
+    {
+      "group": "gfx",
+      "name": "Label",
+      "doc": "Label draws text at the entity's Transform in screen space.",
+      "goType": "github.com/weakpixel/engine/gfx.Label",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Color": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Color is the text color. Zero means white.",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "Font": {
+            "type": "string",
+            "format": "asset",
+            "description": "Font selects the font face. In the Game Object schema it is an asset key\n(\"fonts/ui.json\"); the handle is runtime-only (json:\"-\").",
+            "x-asset": "font"
+          },
+          "Layer": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Layer is the draw order, as for Sprite.",
+            "minimum": -32768,
+            "maximum": 32767
+          },
+          "Text": {
+            "type": "string",
+            "description": "Text is the string to draw."
+          }
+        },
+        "required": [
+          "Text",
+          "Layer",
+          "Color"
+        ]
+      }
+    },
+    {
+      "group": "gfx",
+      "name": "Transform",
+      "doc": "Transform places an entity in the world.\n\nThe zero Scale means (1, 1), so a zero-valued Transform is valid.",
+      "goType": "github.com/weakpixel/engine/gfx.Transform",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Pos": {
+            "type": "object",
+            "description": "Pos is the position in world units at the current tick.",
+            "properties": {
+              "X": {
+                "type": "number",
+                "format": "float"
+              },
+              "Y": {
+                "type": "number",
+                "format": "float"
+              }
+            },
+            "required": [
+              "X",
+              "Y"
+            ]
+          },
+          "PrevPos": {
+            "type": "object",
+            "description": "PrevPos is Pos at the start of the tick. The extract.SnapshotTransforms\nsystem copies Pos here, and the renderer blends PrevPos to Pos so that\n60 TPS looks smooth on faster displays.",
+            "properties": {
+              "X": {
+                "type": "number",
+                "format": "float"
+              },
+              "Y": {
+                "type": "number",
+                "format": "float"
+              }
+            },
+            "required": [
+              "X",
+              "Y"
+            ]
+          },
+          "Rot": {
+            "type": "number",
+            "format": "float",
+            "description": "Rot is the rotation in radians, clockwise on screen.",
+            "x-editor": {
+              "step": 5,
+              "unit": "deg"
+            }
+          },
+          "Scale": {
+            "type": "object",
+            "description": "Scale multiplies the sprite size. Zero means (1, 1); the editor starts a\nnew Transform at (1, 1).",
+            "properties": {
+              "X": {
+                "type": "number",
+                "format": "float",
+                "default": 1
+              },
+              "Y": {
+                "type": "number",
+                "format": "float",
+                "default": 1
+              }
+            },
+            "required": [
+              "X",
+              "Y"
+            ]
+          }
+        },
+        "required": [
+          "Pos",
+          "PrevPos",
+          "Rot",
+          "Scale"
+        ]
+      }
+    },
+    {
+      "group": "speech",
+      "name": "DialogueBox",
+      "doc": "DialogueBox plays a *.dialogue.json file on its entity: the current\nline types out into the entity's gfx.Label in its speaker's voice, and\nthe speaker's display name goes into the Label of Name. [Speech.Play]\nstarts it, [Speech.Next] is the game's \"advance\" input. The state of the\nrunning dialogue lives in the [Speech], not here.",
+      "goType": "github.com/weakpixel/engine/speech.DialogueBox",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "AutoAdvance": {
+            "type": "boolean",
+            "description": "AutoAdvance goes on after every line by itself after the line's hold\ntime, whatever the dialogue file says (hands-free play)."
+          },
+          "AutoStart": {
+            "type": "boolean",
+            "description": "AutoStart plays the dialogue from its first line once the asset is\nready, without a call of Play: a box placed in a level speaks when\nthe level runs."
+          },
+          "Dialogue": {
+            "type": "string",
+            "format": "asset",
+            "description": "Dialogue is the *.dialogue.json file to play. The zero, a missing or\na failed dialogue plays nothing (Play sends DialogueFinished at once).",
+            "x-asset": "dialogue"
+          },
+          "Name": {
+            "type": "string",
+            "format": "entity",
+            "nullable": true,
+            "description": "Name, when set, is an entity with a gfx.Label that shows the name of\nthe current line's speaker. In a GOD level it is the id of an object\nof the same document."
+          }
+        },
+        "required": [
+          "AutoStart",
+          "AutoAdvance"
+        ]
+      }
+    },
+    {
+      "group": "speech",
+      "name": "Speaker",
+      "doc": "Speaker gives an entity a voice. [Speech.Say] speaks a line with it; if\nthe entity has a gfx.Label, the system sets Label.Text to the part of the\nline said so far while it speaks. The state of the running line lives in\nthe [Speech], not here, so the component is plain authored data.",
+      "goType": "github.com/weakpixel/engine/speech.Speaker",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Pan": {
+            "type": "number",
+            "format": "float",
+            "description": "Pan moves the voice in the stereo field, -1 (left) to 1 (right). It is\nadded to the pan of every note."
+          },
+          "Speed": {
+            "type": "number",
+            "format": "float",
+            "description": "Speed scales how fast the voice speaks: 2 is twice as fast. Zero\nmeans 1; the editor starts a new speaker at 1.",
+            "default": 1
+          },
+          "Voice": {
+            "type": "string",
+            "format": "asset",
+            "description": "Voice is a *.voice.json file or a starter voice by name (\"chirpy\").\nThe zero handle, a missing or a failed voice speaks silently, at the\ndefault speed. A voice that is still loading delays the line until it\nis ready.",
+            "x-asset": "voice"
+          }
+        },
+        "required": [
+          "Speed",
+          "Pan"
+        ]
+      }
+    }
+  ],
+  "objects": [
+    {
+      "group": "speech",
+      "class": "Box",
+      "doc": "Box is a dialogue box: a Label placed by a Transform that plays a\ndialogue file. The Label is drawn in screen space, so Transform.Pos is in\nlogical pixels. Put a gfx:Panel behind it for a frame, and point\nDialogueBox.Name at a gfx:Text for the speaker's name.",
+      "goType": "github.com/weakpixel/engine/speech.Box",
+      "components": [
+        {
+          "component": "gfx:Transform",
+          "field": "Transform",
+          "doc": "Where the text is."
+        },
+        {
+          "component": "gfx:Label",
+          "field": "Label",
+          "doc": "The line types into it."
+        },
+        {
+          "component": "speech:DialogueBox",
+          "field": "DialogueBox",
+          "doc": "The dialogue."
+        }
+      ]
+    },
+    {
+      "group": "speech",
+      "class": "Talker",
+      "doc": "Talker is a speaking text: a Label placed by a Transform, with a voice.\nThe Label is drawn in screen space, so Transform.Pos is in logical pixels.",
+      "goType": "github.com/weakpixel/engine/speech.Talker",
+      "components": [
+        {
+          "component": "gfx:Transform",
+          "field": "Transform",
+          "doc": "Where the text is."
+        },
+        {
+          "component": "gfx:Label",
+          "field": "Label",
+          "doc": "The text the line types into, and how it is drawn."
+        },
+        {
+          "component": "speech:Speaker",
+          "field": "Speaker",
+          "doc": "The voice."
+        }
+      ]
+    }
+  ]
+}

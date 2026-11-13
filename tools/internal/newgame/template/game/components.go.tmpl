@@ -1,0 +1,29 @@
+package game
+
+import "github.com/weakpixel/engine/gfx"
+
+// Components are plain structs. A +game:component marker makes one a Game
+// Object component: levels and prefabs can set it, and the editor's
+// inspector shows its fields. A +game:object groups components into a class
+// with a typed view (zz__gen.go). See doc/guide/ecs/api-game-object.md.
+
+// PlayerControl makes an entity walk where the player steers it.
+// +game:component
+type PlayerControl struct {
+	// Speed is the walking speed in world units per second.
+	Speed float32
+	// RunSpeed is the speed while the run action is held.
+	RunSpeed float32
+}
+
+// Player is the character the player steers: a sprite that walks.
+// global/prefabs/player.prefab.json is one, and the first level places it.
+// +game:object
+type Player struct {
+	// Where the player is and how it looks.
+	// +game:embed
+	gfx.Visual
+	// How fast it walks.
+	// +game:component
+	Control *PlayerControl
+}

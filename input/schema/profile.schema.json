@@ -1,0 +1,195 @@
+{
+  "type": "object",
+  "properties": {
+    "overrides": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string"
+          },
+          "binding": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "composite": {
+                "type": "string"
+              },
+              "control": {
+                "type": "string"
+              },
+              "controls": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "down": {
+                "type": "string"
+              },
+              "interaction": {
+                "type": "object",
+                "nullable": true,
+                "properties": {
+                  "doubleTap": {
+                    "type": "string"
+                  },
+                  "hold": {
+                    "type": "string"
+                  },
+                  "press": {
+                    "type": "boolean"
+                  },
+                  "release": {
+                    "type": "boolean"
+                  },
+                  "repeat": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                      "delay": {
+                        "type": "string"
+                      },
+                      "every": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "delay",
+                      "every"
+                    ]
+                  },
+                  "tap": {
+                    "type": "string"
+                  }
+                }
+              },
+              "left": {
+                "type": "string"
+              },
+              "locked": {
+                "type": "boolean"
+              },
+              "mods": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "neg": {
+                "type": "string"
+              },
+              "pos": {
+                "type": "string"
+              },
+              "processors": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "curve": {
+                      "type": "string"
+                    },
+                    "deadzone": {
+                      "type": "number",
+                      "format": "float",
+                      "nullable": true
+                    },
+                    "invert": {
+                      "type": "string"
+                    },
+                    "max": {
+                      "type": "number",
+                      "format": "float",
+                      "nullable": true
+                    },
+                    "normalize": {
+                      "type": "boolean"
+                    },
+                    "scale": {
+                      "type": "array",
+                      "items": {
+                        "type": "number",
+                        "format": "float"
+                      }
+                    },
+                    "sensitivity": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              },
+              "right": {
+                "type": "string"
+              },
+              "threshold": {
+                "type": "number",
+                "format": "float"
+              },
+              "up": {
+                "type": "string"
+              },
+              "whichWins": {
+                "type": "string"
+              }
+            }
+          },
+          "class": {
+            "type": "string"
+          },
+          "control": {
+            "type": "string"
+          },
+          "mapping": {
+            "type": "string"
+          },
+          "part": {
+            "type": "string"
+          },
+          "slot": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "unbind": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "mapping",
+          "action",
+          "class",
+          "slot"
+        ]
+      }
+    },
+    "settings": {
+      "type": "object",
+      "properties": {
+        "deadzone": {
+          "type": "number",
+          "format": "float"
+        },
+        "invertY": {
+          "type": "boolean"
+        },
+        "sensitivity": {
+          "type": "number",
+          "format": "float"
+        },
+        "vibration": {
+          "type": "number",
+          "format": "float"
+        }
+      }
+    },
+    "version": {
+      "type": "integer",
+      "format": "int64"
+    }
+  },
+  "required": [
+    "version",
+    "settings"
+  ]
+}

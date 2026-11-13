@@ -1,0 +1,18 @@
+//go:build !editor && js && webassets && webdev
+
+package main
+
+import (
+	"syscall/js"
+
+	"github.com/weakpixel/asset/httpfs"
+)
+
+// assetChanges listens to the dev server (go tool weakpixel serve), which
+// sends the keys of the asset files you save, so the open page reloads them
+// without a refresh (make web-dev).
+func assetChanges() <-chan []string {
+	href := js.Global().Get("location").Get("href").String()
+	url := js.Global().Get("URL").New("_weakpixel/changes", href).Get("href").String()
+	return httpfs.WatchChanges(url)
+}

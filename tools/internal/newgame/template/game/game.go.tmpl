@@ -1,0 +1,107 @@
+// +game:group:name={{.Name}}
+//
+// Package game is the game: its components and Game Objects, its systems and
+// its input actions. The main package only opens a window around it, and the
+// editor build (editor.go) runs the same systems inside the VSCode level
+// editor.
+package game
+
+import (
+	"image/color"
+	"io/fs"
+	"log"
+
+	"github.com/weakpixel/ecs/system"
+	"github.com/weakpixel/engine/asset/library"
+	engine "github.com/weakpixel/engine/game"
+	"github.com/weakpixel/engine/input"
+	"github.com/weakpixel/engine/render"
+)
+
+// go generate writes zz__gen.go (the typed views of the Game Objects in
+// components.go) and the GOD file god/{{.Name}}.god.json, which the level
+// editor reads.
+//go:generate go tool weakpixel gen
+
+// Asset keys: paths from the library root, assets/.
+const (
+	// FirstLevel is the level the game starts in and the editor opens. It
+	// lives in the library package start/.
+	FirstLevel = "start/start.level.json"
+	// bindings binds the actions below to keys and gamepad buttons.
+	bindings = "global/input/player.bindings.json"
+)
+
+// gameplay is the mapping of the bindings file that holds the bindings of
+// the actions while the game is played (a menu would get its own).
+const gameplay = "gameplay"
+
+// Actions is what the player can do, declared in Go and bound to devices in
+// the bindings file. Systems read action state, never keys
+// (doc/guide/engine/input.md).
+type Actions struct {
+	*input.Actions
+	Move input.Action // Vec2: walking direction
+	Run  input.Action // Button: hold to run
+	Quit input.Action // Button: leave the game
+}
+
+// actions is the game's action table. It is frozen, so every engine can
+// share it.
+var actions = newActions()
+
+func newActions() *Actions {
+	a := &Actions{Actions: &input.Actions{}}
+	a.Move = a.Vec2("move", "Walk.")
+	a.Run = a.Button("run", "Hold to run.")
+	a.Quit = a.Button("quit", "Leave the game.")
+	a.Freeze()
+	return a
+}
+
+// Config adds the game's settings to cfg: the asset library at the root of
+// fsys, the resolution, the camera and the input actions.
+func Config(cfg engine.Config, fsys fs.FS) (engine.Config, error) {
+	lib, err := library.Open(fsys)
+	if err != nil {
+		return cfg, err
+	}
+	cfg.Library = lib
+	cfg.Width, cfg.Height = 320, 180
+	cfg.Background = color.RGBA{R: 20, G: 18, B: 26, A: 255}
+	cfg.Camera = render.Camera{Zoom: 1}
+	cfg.Input.Actions = actions.Actions
+	cfg.Input.Bindings = bindings
+	// Development hotkey: F12 saves the frame as a PNG in screenshots/ (F9
+	// in a browser, which keeps F12 for its developer tools). Under the
+	// editor the PNG goes to VSCode. Delete the line to turn it off.
+	cfg.Screenshots.Key = engine.DevScreenshotKey()
+	return cfg, nil
+}
+
+// AddSystems adds the game's systems to e. The editor build calls it too:
+// there the systems run when you press Play.
+func AddSystems(e *engine.Engine) {
+	e.AddRunner(engine.StageSimulate, &PlayerSystem{})
+}
+
+// LoadFirstLevel loads FirstLevel. The editor build does not call it: the
+// editor opens the level itself.
+func LoadFirstLevel(e *engine.Engine) {
+	e.AddRunner(engine.StageSimulate, levelLoader{})
+}
+
+// levelLoader loads FirstLevel before the first tick: at once from loose or
+// embedded files, a few ticks later from a pack (the webassets build), once
+// the pack of its package is mounted. It is a system.Runner.
+type levelLoader struct{}
+
+// Init starts loading the level.
+func (levelLoader) Init(ctx *system.Context) {
+	if _, err := engine.EngineOf(ctx).LoadLevel(FirstLevel); err != nil {
+		log.Fatal(err)
+	}
+}
+
+// Run does nothing: the engine spawns the level.
+func (levelLoader) Run(*system.Context) {}

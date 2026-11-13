@@ -1,0 +1,46 @@
+//go:build editor
+
+package main
+
+import (
+	"io/fs"
+	"slices"
+	"testing"
+	"time"
+
+	"github.com/weakpixel/engine/editor/host"
+	engine "github.com/weakpixel/engine/game"
+)
+
+// TestEditorBuild builds the editor build without a window (go test -tags
+// editor .): the game starts paused on the first level, whose objects belong
+// to the editor session.
+func TestEditorBuild(t *testing.T) {
+	g := editorGame()
+	config := g.Config
+	g.Config = func(fsys fs.FS) (engine.Config, error) {
+		cfg, err := config(fsys)
+		cfg.NoAudio = true
+		return cfg, err
+	}
+	e, s, err := host.Build(g, host.Page{}) // no VSCode page outside a browser
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer e.Close()
+	// The level spawns once its prefab has loaded on a worker goroutine:
+	// wait in real time, not in ticks.
+	deadline := time.Now().Add(10 * time.Second)
+	for !slices.Contains(s.IDs(), "player") {
+		if time.Now().After(deadline) {
+			t.Fatalf("editor objects %v, want the player", s.IDs())
+		}
+		if err := e.Update(); err != nil {
+			t.Fatal(err)
+		}
+		time.Sleep(time.Millisecond)
+	}
+	if !e.Paused() {
+		t.Error("the editor build does not start paused")
+	}
+}

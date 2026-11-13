@@ -1,0 +1,16 @@
+# Build outputs: never commit them. `go build` in a main package directory writes the
+# binary there, `go test -c` writes <pkg>.test. Use -o build/... (build/ is ignored).
+build/
+*.test
+*.exe
+*.wasm
+/tools/weakpixel-editor/weakpixel-editor
+/tools/weakpixel/weakpixel
+# Go workspace files (cross-repository work, never committed)
+go.work
+go.work.sum
+# Plan files written by /plan
+/plan/
+.DS_Store
+# Tiled per-user editor state (open files, zoom, view)
+*.tiled-session

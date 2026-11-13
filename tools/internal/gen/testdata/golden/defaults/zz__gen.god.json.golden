@@ -1,0 +1,267 @@
+{
+  "version": 0,
+  "generator": "weakpixel gen",
+  "package": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/defaults",
+  "components": [
+    {
+      "group": "defaults",
+      "name": "Text",
+      "doc": "Text shows the field forms.",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/defaults.Text",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Alpha": {
+            "type": "number",
+            "format": "float",
+            "default": 0.1
+          },
+          "Caption": {
+            "type": "string",
+            "default": "Hello, world"
+          },
+          "Color": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0,
+            "maximum": 4294967295,
+            "default": 4278190335
+          },
+          "Deep": {
+            "type": "object",
+            "properties": {
+              "Offset": {
+                "type": "object",
+                "properties": {
+                  "X": {
+                    "type": "number",
+                    "format": "double",
+                    "default": 2
+                  },
+                  "Y": {
+                    "type": "number",
+                    "format": "double",
+                    "default": -1
+                  }
+                },
+                "required": [
+                  "X",
+                  "Y"
+                ]
+              },
+              "Rest": {
+                "type": "object",
+                "properties": {
+                  "Inner": {
+                    "type": "object",
+                    "properties": {
+                      "N": {
+                        "type": "integer",
+                        "format": "int64",
+                        "default": 7
+                      }
+                    },
+                    "required": [
+                      "N"
+                    ]
+                  }
+                },
+                "required": [
+                  "Inner"
+                ]
+              }
+            },
+            "required": [
+              "Offset",
+              "Rest"
+            ]
+          },
+          "Maybe": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true,
+            "default": 3
+          },
+          "Mode": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0,
+            "maximum": 255,
+            "default": 1,
+            "x-enum": [
+              {
+                "value": 0,
+                "name": "ModePlain"
+              },
+              {
+                "value": 1,
+                "name": "ModeBold"
+              }
+            ]
+          },
+          "Names": {
+            "type": "object",
+            "nullable": true,
+            "additionalProperties": {
+              "type": "string"
+            },
+            "default": {
+              "1": "one",
+              "2": "two"
+            }
+          },
+          "Override": {
+            "type": "object",
+            "properties": {
+              "X": {
+                "type": "number",
+                "format": "double",
+                "default": 10
+              },
+              "Y": {
+                "type": "number",
+                "format": "double",
+                "default": 2
+              }
+            },
+            "required": [
+              "X",
+              "Y"
+            ]
+          },
+          "Pair": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "format": "double"
+            },
+            "minItems": 2,
+            "maxItems": 2,
+            "default": [
+              1.5,
+              2.5
+            ]
+          },
+          "Pos": {
+            "type": "object",
+            "description": "Pos keeps the inner defaults of paint.Vec.",
+            "properties": {
+              "X": {
+                "type": "number",
+                "format": "double",
+                "default": 1
+              },
+              "Y": {
+                "type": "number",
+                "format": "double",
+                "default": 2
+              }
+            },
+            "required": [
+              "X",
+              "Y"
+            ]
+          },
+          "Size": {
+            "type": "number",
+            "format": "double",
+            "default": 1.5
+          },
+          "Speeds": {
+            "type": "object",
+            "nullable": true,
+            "additionalProperties": {
+              "type": "number",
+              "format": "float"
+            },
+            "default": {
+              "run": 4,
+              "walk": 2
+            }
+          },
+          "Step": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": -2147483648,
+            "maximum": 2147483647,
+            "default": 32
+          },
+          "Steps": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "default": [
+              1,
+              2,
+              3
+            ]
+          },
+          "Tags": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            },
+            "default": [
+              "a, b",
+              "c"
+            ]
+          },
+          "Visible": {
+            "type": "boolean",
+            "default": true
+          },
+          "Zeroed": {
+            "type": "object",
+            "properties": {
+              "X": {
+                "type": "number",
+                "format": "double",
+                "default": 0
+              },
+              "Y": {
+                "type": "number",
+                "format": "double",
+                "default": 0
+              }
+            },
+            "required": [
+              "X",
+              "Y"
+            ]
+          }
+        },
+        "required": [
+          "Caption",
+          "Size",
+          "Visible",
+          "Mode",
+          "Color",
+          "Step",
+          "Alpha",
+          "Pair",
+          "Pos",
+          "Override",
+          "Zeroed",
+          "Deep"
+        ]
+      }
+    }
+  ],
+  "objects": [
+    {
+      "group": "defaults",
+      "class": "Label",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/defaults.Label",
+      "components": [
+        {
+          "component": "defaults:Text",
+          "field": "Text"
+        }
+      ]
+    }
+  ]
+}

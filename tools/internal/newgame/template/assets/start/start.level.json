@@ -1,0 +1,9 @@
+{
+  "name": "Start",
+  "objects": [
+    {
+      "id": "player",
+      "prefab": "global/prefabs/player.prefab.json"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "name": "crate",
+  "objects": [
+    {
+      "id": "crate",
+      "group": "demo",
+      "class": "Crate",
+      "components": {
+        "gfx:Transform": {
+          "Pos": {"X": 0, "Y": 0},
+          "PrevPos": {"X": 0, "Y": 0},
+          "Rot": 0,
+          "Scale": {"X": 1, "Y": 1}
+        },
+        "demo:Health": {"HP": 3, "Kind": 0}
+      }
+    }
+  ]
+}

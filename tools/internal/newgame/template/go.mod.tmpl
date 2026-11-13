@@ -1,0 +1,25 @@
+module {{.Module}}
+
+go {{.GoVersion}}
+{{if or .ECSVersion .AssetVersion}}
+require (
+{{- if .AssetVersion}}
+	github.com/weakpixel/asset {{.AssetVersion}}
+{{- end}}
+{{- if .ECSVersion}}
+	github.com/weakpixel/ecs {{.ECSVersion}}
+{{- end}}
+	github.com/weakpixel/engine {{.Version}}
+)
+{{- else}}
+require github.com/weakpixel/engine {{.Version}}
+{{- end}}
+
+tool (
+	github.com/weakpixel/engine/tools/weakpixel-editor
+	github.com/weakpixel/engine/tools/weakpixel
+)
+{{- if .Replace}}
+
+replace github.com/weakpixel/engine => {{.Replace}}
+{{- end}}

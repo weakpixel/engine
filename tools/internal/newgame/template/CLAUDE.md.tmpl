@@ -1,0 +1,19 @@
+# {{.Title}}
+
+A 2D game on the Weakpixel Engine (`github.com/weakpixel/engine`, an ECS plus a runtime on Ebiten). README.md lists the files and commands.
+
+## Where things are
+
+- `game/`: the game. Components and Game Objects (`+game:*` markers) in `components.go`, one system per file, settings and actions in `game.go`.
+- `main.go`: window only. `editor.go`: the VSCode editor build (`-tags editor`).
+- `assets/`: the asset library. Asset keys are paths from `assets/`. Levels are `*.level.json`, prefabs `*.prefab.json`.
+
+## Rules
+
+- Never edit generated files by hand: `game/zz__gen.go` and `build/god/*.god.json`. Change the markers and run `go generate ./...`; commit `game/zz__gen.go` (the GOD files in `build/god/` are build output and stay out of git).
+- Systems read input actions (`game.go`, bound in `assets/global/input/player.bindings.json`), never keys.
+- Run `go test ./...` after a change, and `GOOS=js GOARCH=wasm go build .` when it touches the browser build.
+
+## Engine docs
+
+The engine's documentation is the spec: https://github.com/weakpixel/engine/tree/main/doc/guide. Start with `engine/getting-started.md`, `ecs/api-game-object.md`, `engine/asset-library.md`, `engine/input.md` and `engine/editor.md`.
