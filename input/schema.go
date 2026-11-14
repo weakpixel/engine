@@ -7,5 +7,5 @@ var bindingsSchema []byte
 
 // BindingsSchema returns schema/bindings.schema.json: the JSON shape of a
 // bindings file in the GOD TypeSchema dialect. Tools such as
-// `weakpixel schema` convert it for editors. The slice is a copy.
+// `wpix schema` convert it for editors. The slice is a copy.
 func BindingsSchema() []byte { return append([]byte(nil), bindingsSchema...) }

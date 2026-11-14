@@ -1,10 +1,10 @@
-// Package framelog implements `weakpixel framelog`. It summarizes a frame log written by game.Engine
+// Package framelog implements `wpix framelog`. It summarizes a frame log written by game.Engine
 // (Config.FrameLog or WEAKPIXEL_FRAMELOG, see doc/guide/engine/engine.md#frame-log)
 // and lists the frames that look like a stutter.
 //
 // Usage:
 //
-//	weakpixel framelog [--skip n] <frames.csv>
+//	wpix framelog [--skip n] <frames.csv>
 //
 // --skip drops the first n rows (default 60, one second at 60 FPS), where
 // window creation and asset loading make every frame late.
@@ -33,7 +33,7 @@ import (
 	"github.com/weakpixel/engine/tools/internal/cli"
 )
 
-// Options are the arguments of `weakpixel framelog`.
+// Options are the arguments of `wpix framelog`.
 type Options struct {
 	File string // the frame log, a CSV file
 	Skip int    // rows to drop at the start; the command's default is 60

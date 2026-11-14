@@ -11,7 +11,7 @@ import (
 
 	"github.com/weakpixel/engine/editor/host"
 	"github.com/weakpixel/engine/game"
-	"github.com/weakpixel/engine/tools/weakpixel-editor/testdata/game/testgame"
+	"github.com/weakpixel/engine/tools/wpix-editor/testdata/game/testgame"
 )
 
 // TestEditorTestGameOpens builds the editor test game natively the way an

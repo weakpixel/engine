@@ -79,7 +79,7 @@ var packEpoch = time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)
 // deterministic: the same files give the same bytes and names.
 //
 // It returns the catalog and Scan's findings; it writes even when there
-// are findings (weakpixel assets pack refuses errors before calling it).
+// are findings (wpix assets pack refuses errors before calling it).
 func WritePacks(src fs.FS, out string) (*Catalog, []Finding, error) {
 	cat, findings, err := Scan(src)
 	if err != nil {

@@ -12,7 +12,7 @@ import (
 	"github.com/weakpixel/engine/anim/animfile"
 )
 
-// CreateOptions are the arguments of `weakpixel anim create`.
+// CreateOptions are the arguments of `wpix anim create`.
 type CreateOptions struct {
 	File  string // the Aseprite sheet JSON
 	Out   string // output file, "-" for stdout; empty means File with .json replaced by .anim.json
@@ -53,7 +53,7 @@ func create(sheetPath, outPath string, force bool, stdout, stderr io.Writer) err
 		return err
 	}
 	if !strings.HasSuffix(outPath, animfile.Suffix) {
-		fmt.Fprintf(stderr, "weakpixel anim create: warning: %s does not end in %s, so the anim loader reads it as an Aseprite export\n", outPath, animfile.Suffix)
+		fmt.Fprintf(stderr, "wpix anim create: warning: %s does not end in %s, so the anim loader reads it as an Aseprite export\n", outPath, animfile.Suffix)
 	}
 	if !force {
 		if _, err := os.Stat(outPath); err == nil {

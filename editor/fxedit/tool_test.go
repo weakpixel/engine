@@ -31,7 +31,7 @@ type toolRig struct {
 }
 
 // newToolRig runs the tool on the untitled effect in a headless engine, the
-// way weakpixel-editor fx does with no file.
+// way wpix-editor fx does with no file.
 func newToolRig(t *testing.T, files fs.FS) *toolRig {
 	t.Helper()
 	r := &toolRig{t: t, src: &input.ManualSource{}, root: t.TempDir()}

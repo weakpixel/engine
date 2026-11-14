@@ -38,8 +38,8 @@ func TestCollect(t *testing.T) {
 		"other.txt",
 		"god/game.god.json",
 	)
-	// A merged GOD that weakpixel doc wrote is skipped by walks.
-	if err := os.WriteFile(filepath.Join(dir, "god", "project.god.json"), []byte(`{"generator":"weakpixel doc"}`), 0o644); err != nil {
+	// A merged GOD that wpix doc wrote is skipped by walks.
+	if err := os.WriteFile(filepath.Join(dir, "god", "project.god.json"), []byte(`{"generator":"wpix doc"}`), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	t.Chdir(dir)

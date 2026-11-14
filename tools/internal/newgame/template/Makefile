@@ -1,4 +1,4 @@
-# The game's everyday commands. Every tool runs through "go tool weakpixel",
+# The game's everyday commands. Every tool runs through "go tool wpix",
 # at the engine version in go.mod.
 
 GOROOT := $(shell go env GOROOT)
@@ -24,12 +24,12 @@ test:
 
 # Checks the asset library: file names, groups, broken references.
 check:
-	go tool weakpixel assets check
+	go tool wpix assets check
 
 # The merged GOD (build/god/project.god.json) and HTML docs of every Game Object (build/god-doc).
 doc:
-	go tool weakpixel doc --format god
-	go tool weakpixel doc
+	go tool wpix doc --format god
+	go tool wpix doc
 
 # The browser build in build/web, assets embedded. Serve it with make serve.
 web:
@@ -53,7 +53,7 @@ web-dev:
 	mkdir -p build/web-dev
 	GOOS=js GOARCH=wasm go build -tags webassets,webdev -o build/web-dev/game.wasm .
 	cp "$(GOROOT)/lib/wasm/wasm_exec.js" web/index.html build/web-dev/
-	go tool weakpixel serve --assets assets build/web-dev
+	go tool wpix serve --assets assets build/web-dev
 
 # The level editor in a window, without VSCode.
 editor:

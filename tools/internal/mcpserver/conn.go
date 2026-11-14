@@ -299,7 +299,7 @@ func (c *client) waitReady(ctx context.Context, d time.Duration, wantVersion int
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.version != wantVersion {
-		return fmt.Errorf("the game speaks editor protocol version %d, this server version %d: rebuild the game with the same weakpixel version", c.version, wantVersion)
+		return fmt.Errorf("the game speaks editor protocol version %d, this server version %d: rebuild the game with the same wpix version", c.version, wantVersion)
 	}
 	return nil
 }

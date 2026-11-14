@@ -1,6 +1,6 @@
 # Asset library (`asset/library`)
 
-An opt-in standard layout for a game's assets. Every top folder of the asset root is a **package**: a collection of assets that loads, mounts and packs together. The engine loads a level and mounts the packages it needs with one call, `weakpixel assets` checks references between packages, and each package ships as one pack file. You don't have to use it: any layout works with plain keys, as in [assets.md](assets.md).
+An opt-in standard layout for a game's assets. Every top folder of the asset root is a **package**: a collection of assets that loads, mounts and packs together. The engine loads a level and mounts the packages it needs with one call, `wpix assets` checks references between packages, and each package ships as one pack file. You don't have to use it: any layout works with plain keys, as in [assets.md](assets.md).
 
 ## The layout
 
@@ -53,7 +53,7 @@ A package loads without a list of files because the file name says the kind. Loa
 | `*.prefab.json` | prefab | [prefab](game-objects.md#prefabs) asset (`prefab`) |
 | `*.voice.json`, `*.lang.json`, `*.dialogue.json` | voice, language, dialogue | `speech.Voice`, `speech.Language`, `speech.Dialogue` (`speech`; a voice names its language and samples, a dialogue its voice files, relative to itself) |
 
-Use lower-case names of `[a-z0-9._-]`. Embedded files, zips and HTTP are case-sensitive while macOS and Windows are not, so `Hero.png` referenced as `player.png` works on your machine and fails in the browser. `weakpixel assets check` warns about both.
+Use lower-case names of `[a-z0-9._-]`. Embedded files, zips and HTTP are case-sensitive while macOS and Windows are not, so `Hero.png` referenced as `player.png` works on your machine and fails in the browser. `wpix assets check` warns about both.
 
 ## What a package loads
 
@@ -73,7 +73,7 @@ Entries load only when you ask for them with `LoadPackage` (and for `boot/` and 
 | Field | |
 | --- | --- |
 | `entries` | Keys added to a package's entries, by package name: font sizes, and files that something references but that should also load on their own. |
-| `packages.<name>.uses` | A fence: the packages `<name>` may use besides `global` and `boot`. A reference to any other package is an error in `weakpixel assets check`. Without it a package may use any package. |
+| `packages.<name>.uses` | A fence: the packages `<name>` may use besides `global` and `boot`. A reference to any other package is an error in `wpix assets check`. Without it a package may use any package. |
 
 ## Engine
 
@@ -141,7 +141,7 @@ lib.Update() // starts the entries once the packs are mounted
 
 ## Packs
 
-`weakpixel assets pack assets -o dist/assets` writes a packed build:
+`wpix assets pack assets -o dist/assets` writes a packed build:
 
 ```
 dist/assets/
@@ -159,10 +159,10 @@ Packs never hot-reload (zip entries have a fixed time). Develop with loose files
 
 ## Generated keys (optional)
 
-`weakpixel assets keys` writes Go constants for a library, so code names assets by identifier and a renamed file breaks the build instead of drawing a placeholder. Nothing requires it: plain key strings keep working, and a game opts in with one `go:generate` line.
+`wpix assets keys` writes Go constants for a library, so code names assets by identifier and a renamed file breaks the build instead of drawing a placeholder. Nothing requires it: plain key strings keep working, and a game opts in with one `go:generate` line.
 
 ```go
-//go:generate go run github.com/weakpixel/engine/tools/weakpixel assets keys assets --pkg main -o zz__gen.assets.go
+//go:generate go run github.com/weakpixel/engine/tools/wpix assets keys assets --pkg main -o zz__gen.assets.go
 ```
 
 | Constant | For | Example |
@@ -175,14 +175,14 @@ Two files that make the same identifier (`a-b.png`, `a_b.png`) are an error nami
 
 For a browser build the library is served as packs: see [packed assets over HTTP](web.md#packed-assets-over-http).
 
-## weakpixel assets
+## wpix assets
 
 ```bash
-go run ./tools/weakpixel assets check   [--json] [root]       # findings, exit 1 on errors
-go run ./tools/weakpixel assets ls      [root]                 # packages, sizes, entries, uses
-go run ./tools/weakpixel assets catalog [root] [-o file|-]     # catalog for a loose library served over HTTP
-go run ./tools/weakpixel assets pack    [root] [-o out]        # packed build; out (default build/assets) must be empty
-go run ./tools/weakpixel assets keys    [root] [--pkg p] [-o f] # optional Go constants, see above
+go run ./tools/wpix assets check   [--json] [root]       # findings, exit 1 on errors
+go run ./tools/wpix assets ls      [root]                 # packages, sizes, entries, uses
+go run ./tools/wpix assets catalog [root] [-o file|-]     # catalog for a loose library served over HTTP
+go run ./tools/wpix assets pack    [root] [-o out]        # packed build; out (default build/assets) must be empty
+go run ./tools/wpix assets keys    [root] [--pkg p] [-o f] # optional Go constants, see above
 ```
 
 `check` reports, all at once:

@@ -8,7 +8,7 @@ import (
 	"github.com/weakpixel/engine/god"
 )
 
-// jsonSchemaURL is the dialect of the files `weakpixel schema` writes; VSCode
+// jsonSchemaURL is the dialect of the files `wpix schema` writes; VSCode
 // reads draft-07.
 const jsonSchemaURL = "http://json-schema.org/draft-07/schema#"
 

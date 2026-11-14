@@ -15,7 +15,7 @@ func newMCPCmd() *cobra.Command {
 		Short: "Serve the project to an AI agent over the Model Context Protocol (stdio)",
 		Long: "mcp is an MCP server on stdin and stdout for an AI agent such as Claude Code. Its tools read the\n" +
 			"project's components, object types, assets, levels and prefabs. It serves until stdin closes;\n" +
-			"diagnostics go to stderr. Register it with: claude mcp add weakpixel -- go tool weakpixel mcp",
+			"diagnostics go to stderr. Register it with: claude mcp add weakpixel -- go tool wpix mcp",
 		Args: cli.Args(cobra.NoArgs),
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			opts.Version = cli.Version()

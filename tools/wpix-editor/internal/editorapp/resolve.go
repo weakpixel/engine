@@ -1,4 +1,4 @@
-// Package editorapp is what the native and the js/wasm weakpixel-editor share:
+// Package editorapp is what the native and the js/wasm wpix-editor share:
 // the tool table and the resolution of a file to its asset root and key. It
 // imports neither Cobra nor debugui, so the wasm build links neither.
 package editorapp

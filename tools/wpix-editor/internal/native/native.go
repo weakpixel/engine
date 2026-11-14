@@ -1,6 +1,6 @@
 //go:build !(js && wasm)
 
-// Package native is the weakpixel-editor window: the tool's panel drawn by
+// Package native is the wpix-editor window: the tool's panel drawn by
 // debugui in an Ebiten window. Only the native build links it.
 package native
 
@@ -17,7 +17,7 @@ import (
 	"github.com/weakpixel/engine/editor/toolshell"
 	"github.com/weakpixel/engine/editor/toolshell/debugpanel"
 	"github.com/weakpixel/engine/game"
-	"github.com/weakpixel/engine/tools/weakpixel-editor/internal/editorapp"
+	"github.com/weakpixel/engine/tools/wpix-editor/internal/editorapp"
 )
 
 // watchInterval is how often the asset folder is polled, so a PNG edited on
@@ -80,7 +80,7 @@ func Run(opts Options) error {
 		Screenshots:   game.ScreenshotConfig{Key: game.DevScreenshotKey()},
 	})
 	ebiten.SetWindowSize(1280, 720)
-	ebiten.SetWindowTitle(strings.TrimSpace("weakpixel-editor " + opts.Tool + " " + opts.File))
+	ebiten.SetWindowTitle(strings.TrimSpace("wpix-editor " + opts.Tool + " " + opts.File))
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 	runErr := ebiten.RunGame(physicalScreen{e, panel})
 	e.Close()

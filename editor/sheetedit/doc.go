@@ -1,4 +1,4 @@
-// Package sheetedit is the "sheet" tool of weakpixel-editor: an editor for
+// Package sheetedit is the "sheet" tool of wpix-editor: an editor for
 // *.sheet.json grid sheets (doc/guide/engine/asset-kinds.md#grid-sheet). It
 // shows the sheet's texture with the grid over it; the cell size, margin and
 // spacing are edited in the panel, which also shows the frame count and the

@@ -2,7 +2,7 @@
 
 A **GOD** describes a *Game Object*: a named set of components that together form one
 kind of entity (a `Hero`, a `Boss`, ...). Game Objects are declared as plain Go structs,
-and the generator `weakpixel gen` turns them into
+and the generator `wpix gen` turns them into
 
 - typed Go helpers (`NewHeroView` with `NewEntity`, `Get`, `Has`, `Set`, `Remove`, `Each`) in `zz__gen.go`,
 - a machine-readable definition per package, the package's **GOD file** (the **GOD JSON schema**):
@@ -73,7 +73,7 @@ Generator errors (all reported at once, with `file:line:col`):
 ### Generation
 
 ```
-//go:generate go run github.com/weakpixel/engine/tools/weakpixel gen
+//go:generate go run github.com/weakpixel/engine/tools/wpix gen
 ```
 
 ```
@@ -96,7 +96,7 @@ In the specs folder, a package's file is named by its **package group** (the
 (`"package"`). So two packages with the same group fail the second generation
 (`<specs>/game.god.json is generated from package A; package B has the same group "game"; set +game:group:name`)
 instead of overwriting each other, and a package whose group changed removes the file it
-wrote under the old name, leaving other packages' files alone. `weakpixel doc --format god`
+wrote under the old name, leaving other packages' files alone. `wpix doc --format god`
 merges the files into one project GOD (`god.out`, see [tools](../tools.md#doc)).
 
 ### Runtime API (`god`)
@@ -163,7 +163,7 @@ the same call are deleted again.
 
 ### Object identity
 
-`types.ObjectClass` is a component that says which object type an entity is. It is 4 bytes (an index into the process's registered schemas, never persisted) and belongs to no schema, so `Serialize`, Lua field access and `weakpixel doc` never see it. `Deserialize` and Lua's `world.spawn` add it; the generated `New<Object>View(...).NewEntity` does not, to keep that path allocation-free and unchanged.
+`types.ObjectClass` is a component that says which object type an entity is. It is 4 bytes (an index into the process's registered schemas, never persisted) and belongs to no schema, so `Serialize`, Lua field access and `wpix doc` never see it. `Deserialize` and Lua's `world.spawn` add it; the generated `New<Object>View(...).NewEntity` does not, to keep that path allocation-free and unchanged.
 
 `ClassOf` uses the tag when there is one. For an untagged entity it infers the type: the candidates are the schemas whose required components the entity all has, and the one with the most of its components (required and optional) present wins. So an entity with every component of `Boss` is a `Boss`, even though it also has everything a `Hero` needs. A tie (two schemas with the same component set) or no candidate returns `false`; a schema without components never matches. Inference costs a component lookup per schema component, so it is for tools, not per-tick code.
 
@@ -182,7 +182,7 @@ which refer to components by key.
 ```json
 {
   "version": 0,
-  "generator": "weakpixel gen",
+  "generator": "wpix gen",
   "package": "example.com/game/gametypes",
   "components": [
     {
@@ -224,13 +224,13 @@ which refer to components by key.
 | Field | Meaning |
 |---|---|
 | `version` | Format version, `0` until the first release; readers accept exactly this version. |
-| `generator` | `"weakpixel gen"` for a package's file (the generator uses it to recognize its own stale files), `"weakpixel doc"` for a merged project GOD. |
+| `generator` | `"wpix gen"` for a package's file (the generator uses it to recognize its own stale files), `"wpix doc"` for a merged project GOD. |
 | `package` | Import path of the package the file is generated from. Not in a merged GOD. |
 | `components[]` | Every component type the package declares (`+game:component` on the type, used or not) or its objects use (foreign ones included, so the file is self-contained), sorted by key. Merging files dedupes them. |
 | `objects[]` | One entry per Game Object. |
 | `objects[].group`, `.class` | Identity (`group:class`). |
 | `objects[].doc` | Go doc comment of the object type, without `+game:*` lines. Omitted when empty. |
-| `objects[].goType` | The object's Go struct, `importpath.Type` (the class name need not be the struct name). Documentation, used by editors to jump to the source; `RegisterSchema` does not compare it, `weakpixel doc` does. |
+| `objects[].goType` | The object's Go struct, `importpath.Type` (the class name need not be the struct name). Documentation, used by editors to jump to the source; `RegisterSchema` does not compare it, `wpix doc` does. |
 | `objects[].components[]` | The object's components in declaration order (embedded objects are flattened in). |
 
 ### Component type fields (`components[]`)
@@ -347,7 +347,7 @@ A field marked `+game:runtime` (for example `Animator.Time`) keeps its normal sc
 see it, but it is not authored data: `Serialize` omits it (the field is `json:"-"`), and a
 runtime property in the **input** of `Deserialize` is an error
 (`component gfx:Animator: $.Time: runtime field, not authored data`), so an editor that wrongly
-writes one is told. `weakpixel doc` marks such fields; a scripting binding can read and write them.
+writes one is told. `wpix doc` marks such fields; a scripting binding can read and write them.
 
 ### Enums
 
@@ -483,13 +483,13 @@ type Light struct {
 | `hidden` | `true` keeps the field out of the editor's property list. It stays in the file. |
 | `showIf` | The field is shown only while a condition on a sibling of the same struct holds, named by its JSON name: `Flag` (truthy), `!Flag`, `Shape=EmitRect` (an enum constant name, an integer, `true`/`false`, or a number or string) or `Shape!=EmitPoint`. |
 
-The hints are one `x-editor` object on the property, `{"name": "Brightness", "min": 0, "max": 10, "step": 0.5, "unit": "deg", "order": 0, "color": true, "hidden": true, "showIf": {"field": "Shape", "equals": 2, "not": false}}` with only the keys that were given; `showIf` has the enum already resolved to its integer. Like `default` they stay in the compiled schema, so an editor built into the game sees them. `weakpixel schema` leaves them out.
+The hints are one `x-editor` object on the property, `{"name": "Brightness", "min": 0, "max": 10, "step": 0.5, "unit": "deg", "order": 0, "color": true, "hidden": true, "showIf": {"field": "Shape", "equals": 2, "not": false}}` with only the keys that were given; `showIf` has the enum already resolved to its integer. Like `default` they stay in the compiled schema, so an editor built into the game sees them. `wpix schema` leaves them out.
 
-Wrong hints fail `weakpixel gen` with the field's file and line: a bound or step that is not a number (or a step of 0, or `min` above `max`), `order` that is not an integer, bounds or `unit=deg` on a field that is not numeric, `color` on a field of another shape, a `showIf` that names a missing sibling, the field itself or a value its type cannot take, an unknown argument, and the marker on a field that is not in the schema (`json:"-"` without `+game:asset` or `+game:runtime`, an unexported or an embedded field).
+Wrong hints fail `wpix gen` with the field's file and line: a bound or step that is not a number (or a step of 0, or `min` above `max`), `order` that is not an integer, bounds or `unit=deg` on a field that is not numeric, `color` on a field of another shape, a `showIf` that names a missing sibling, the field itself or a value its type cannot take, an unknown argument, and the marker on a field that is not in the schema (`json:"-"` without `+game:asset` or `+game:runtime`, an unexported or an embedded field).
 
 ### Documentation fields
 
-`doc` (of components, objects and `x-enum` members), `goType`, `field`, `embeddedVia` and `description` exist for `weakpixel doc` (see
+`doc` (of components, objects and `x-enum` members), `goType`, `field`, `embeddedVia` and `description` exist for `wpix doc` (see
 [api-game-object.md](api-game-object.md#documentation)). They are **not part of the
 runtime**: the generated `zz__gen.go` does not contain them (the schemas compiled into it have
 every `description` and `x-enum` `doc` removed), and `RegisterComponent` and `RegisterSchema` ignore them

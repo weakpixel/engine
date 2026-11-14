@@ -1,6 +1,6 @@
 // Package sheetfile is the grid sheet format, *.sheet.json: fixed-size
 // cells over one image (doc/guide/engine/asset-kinds.md#grid-sheet). The
-// atlas loader in package render and the sheet tool of weakpixel-editor
+// atlas loader in package render and the sheet tool of wpix-editor
 // both use it, so the tool shows exactly the frames the loader makes. It
 // imports the standard library only.
 package sheetfile

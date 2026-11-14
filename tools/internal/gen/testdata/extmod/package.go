@@ -7,4 +7,4 @@
 // github.com/weakpixel/engine/gfx.
 package extmod
 
-//go:generate go run github.com/weakpixel/engine/tools/weakpixel gen
+//go:generate go run github.com/weakpixel/engine/tools/wpix gen

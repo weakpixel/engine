@@ -20,4 +20,4 @@
 // makes no Ebiten calls. Package game never imports speech: speech is opt-in.
 package speech
 
-//go:generate go run github.com/weakpixel/engine/tools/weakpixel gen
+//go:generate go run github.com/weakpixel/engine/tools/wpix gen

@@ -1,13 +1,13 @@
-// Package schema implements `weakpixel schema`. It writes JSON Schemas
+// Package schema implements `wpix schema`. It writes JSON Schemas
 // (draft-07) for every JSON file kind of a game project, so an editor can
 // complete and check them:
 //
-//	weakpixel schema [-o dir] [god inputs...]
+//	wpix schema [-o dir] [god inputs...]
 //
 // The fixed kinds (anim, sheet, atlas, bindings, library, weakpixel) are
 // described by the tool. The level and prefab schemas come from the project's
 // GOD files: the inputs are files, directories or "..." patterns as for
-// `weakpixel doc`, by default god.specs of .weakpixel.json, else "./...".
+// `wpix doc`, by default god.specs of .weakpixel.json, else "./...".
 // Without GOD files, level and prefab are skipped.
 //
 // The output folder is -o, else schema.out of .weakpixel.json, else
@@ -31,7 +31,7 @@ import (
 // DefaultOut is the output folder without -o and schema.out.
 const DefaultOut = "build/schema"
 
-// Options are the arguments of `weakpixel schema`.
+// Options are the arguments of `wpix schema`.
 type Options struct {
 	Out    string   // output folder; empty means schema.out of .weakpixel.json, else DefaultOut
 	Inputs []string // GOD files, directories or patterns; empty means god.specs, else ./...

@@ -65,4 +65,4 @@ fsys, err := httpfs.New("https://example.com/game/assets/", nil) // nil: http.De
 cfg.FS = fsys
 ```
 
-Keep `Workers` at its default (at least 1) and `WatchInterval` off; in development `weakpixel serve` pushes changes (`httpfs.WatchChanges` into `Config.AssetChanges`) and sends `Cache-Control: no-cache`. The editor build reads the workspace the same way. Web builds as a whole: [web.md](web.md).
+Keep `Workers` at its default (at least 1) and `WatchInterval` off; in development `wpix serve` pushes changes (`httpfs.WatchChanges` into `Config.AssetChanges`) and sends `Cache-Control: no-cache`. The editor build reads the workspace the same way. Web builds as a whole: [web.md](web.md).

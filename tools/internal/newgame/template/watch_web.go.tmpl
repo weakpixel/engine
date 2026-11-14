@@ -8,7 +8,7 @@ import (
 	"github.com/weakpixel/asset/httpfs"
 )
 
-// assetChanges listens to the dev server (go tool weakpixel serve), which
+// assetChanges listens to the dev server (go tool wpix serve), which
 // sends the keys of the asset files you save, so the open page reloads them
 // without a refresh (make web-dev).
 func assetChanges() <-chan []string {

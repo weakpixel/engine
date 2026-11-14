@@ -3,7 +3,7 @@
 // emitters ([Emitter], [Spec]), [Decode] and [Encode].
 //
 // Package particles' asset loader, the fx tool (editor/fxedit) and
-// `weakpixel mcp` all use this package, so they cannot disagree about what a
+// `wpix mcp` all use this package, so they cannot disagree about what a
 // valid effect file is. It imports gfx (for the blend, shape, color
 // and vector types the gfx.Particles overrides share) and xmath only.
 //

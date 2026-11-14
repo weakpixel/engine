@@ -87,7 +87,7 @@ func collect(inputs []string) ([]string, error) {
 	return files, errors.Join(errs...)
 }
 
-// mergedGOD reports whether path is a merged GOD that weakpixel doc --format god
+// mergedGOD reports whether path is a merged GOD that wpix doc --format god
 // wrote. A walk skips it: it repeats the package files next to it, and would
 // keep a removed component alive. Named explicitly, it is read.
 func mergedGOD(path string) bool {

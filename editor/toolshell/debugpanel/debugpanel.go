@@ -1,6 +1,6 @@
 // Package debugpanel draws a [toolshell.Panel] with debugui, in the native
-// window of weakpixel-editor. It is the only package that imports debugui
-// (besides tools/weakpixel-editor/internal/native, which wires it): the js/wasm build must not link
+// window of wpix-editor. It is the only package that imports debugui
+// (besides tools/wpix-editor/internal/native, which wires it): the js/wasm build must not link
 // it, so the user's module needs no go.sum entries for it. The VSCode
 // extension draws the same panel as HTML.
 package debugpanel
@@ -82,7 +82,7 @@ type state struct {
 }
 
 // Insets implements [toolshell.Renderer]. The logical screen is the
-// physical screen (see tools/weakpixel-editor/internal/native), so the
+// physical screen (see tools/wpix-editor/internal/native), so the
 // widths are in physical pixels: the UI pixels times the UI scale.
 func (p *Panel) Insets() (left, right int) {
 	return p.scale * p.left, p.scale * p.right

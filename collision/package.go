@@ -19,4 +19,4 @@
 // should run it.
 package collision
 
-//go:generate go run github.com/weakpixel/engine/tools/weakpixel gen
+//go:generate go run github.com/weakpixel/engine/tools/wpix gen

@@ -42,7 +42,7 @@ func AssetBase() (string, bool) {
 func Stage() string { return hostString("stage") }
 
 // Tool returns the tool the host page asks for
-// (globalThis.weakpixelHost.tool, for weakpixel-editor), "" when it names
+// (globalThis.weakpixelHost.tool, for wpix-editor), "" when it names
 // none.
 func Tool() string { return hostString("tool") }
 

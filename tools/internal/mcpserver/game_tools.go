@@ -391,7 +391,7 @@ func (t *tools) gameTools() []*mcp.Tool {
 	none := mcp.Object(nil)
 	return []*mcp.Tool{
 		tool("game_start", "Start the game",
-			"Builds the project's editor package (go build -tags editor, output in build/weakpixel-mcp/) and starts it on the level or prefab at "+
+			"Builds the project's editor package (go build -tags editor, output in build/wpix-mcp/) and starts it on the level or prefab at "+
 				"path, as a child process. By default the game has a window, so the developer watches; edits they make there are written to "+
 				"the document, and edits you make to it show in the window. headless: true runs without a window (CI, no display): nothing "+
 				"is drawn and screenshot is refused. Only one game runs at a time.",

@@ -19,7 +19,7 @@ func TestStaleFileRemoval(t *testing.T) {
 		if err := os.WriteFile(filepath.Join(dir, outputName), []byte(old), 0o644); err != nil {
 			t.Fatal(err)
 		}
-		oldJSON := `{"version":3,"generator":"weakpixel gen","objects":[]}`
+		oldJSON := `{"version":3,"generator":"wpix gen","objects":[]}`
 		if err := os.WriteFile(filepath.Join(dir, jsonOutputName), []byte(oldJSON), 0o644); err != nil {
 			t.Fatal(err)
 		}
@@ -64,7 +64,7 @@ func TestStaleFileRemoval(t *testing.T) {
 // group is an error instead of an overwrite.
 func TestWriteSpecs(t *testing.T) {
 	spec := func(pkg string) []byte {
-		return []byte(`{"version":0,"generator":"weakpixel gen","package":"` + pkg + `"}`)
+		return []byte(`{"version":0,"generator":"wpix gen","package":"` + pkg + `"}`)
 	}
 	read := func(t *testing.T, path string) string {
 		t.Helper()

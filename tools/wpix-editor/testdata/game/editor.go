@@ -6,7 +6,7 @@ import (
 	"log"
 
 	"github.com/weakpixel/engine/editor/host"
-	"github.com/weakpixel/engine/tools/weakpixel-editor/testdata/game/testgame"
+	"github.com/weakpixel/engine/tools/wpix-editor/testdata/game/testgame"
 )
 
 // main is the editor build: GOOS=js GOARCH=wasm go build -tags editor. In a

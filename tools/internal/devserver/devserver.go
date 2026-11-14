@@ -1,10 +1,10 @@
-// Package devserver implements `weakpixel serve`: a static file server for a
+// Package devserver implements `wpix serve`: a static file server for a
 // browser game's development build that pushes asset changes to the open
 // page.
 //
 // Usage:
 //
-//	weakpixel serve [--addr :8080] [--assets <dir>] <dir>
+//	wpix serve [--addr :8080] [--assets <dir>] <dir>
 //
 // It serves <dir> (the page and game.wasm) at /, and the --assets directory
 // under /assets/, both with "Cache-Control: no-cache" so the browser
@@ -47,7 +47,7 @@ const ChangesPath = "/_weakpixel/changes"
 // pollInterval is how often the asset tree is scanned.
 const pollInterval = 250 * time.Millisecond
 
-// Options are the arguments of `weakpixel serve`.
+// Options are the arguments of `wpix serve`.
 type Options struct {
 	Dir    string // the build directory, served at /
 	Addr   string // address to listen on

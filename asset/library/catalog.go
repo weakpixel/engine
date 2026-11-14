@@ -14,7 +14,7 @@ import (
 
 // File names the library reads at its root.
 const (
-	// CatalogFile is the catalog written by weakpixel assets. When it exists,
+	// CatalogFile is the catalog written by wpix assets. When it exists,
 	// [Open] reads packages from it instead of listing directories.
 	CatalogFile = "assets.catalog.json"
 	// ConfigFile holds optional overrides (see [Config]).
@@ -25,7 +25,7 @@ const (
 // stays 0 until the engine is released.
 const CatalogVersion = 0
 
-// Catalog lists a library's packages. It is a build output of weakpixel
+// Catalog lists a library's packages. It is a build output of wpix
 // assets (catalog, pack); without one, [Open] builds it by listing the FS.
 type Catalog struct {
 	Version  int       `json:"version"`

@@ -273,7 +273,7 @@ func TestNewProject(t *testing.T) {
 		{[]string{"GOOS=js", "GOARCH=wasm"}, []string{"build", "-tags", "webassets", "./..."}},
 		{[]string{"GOOS=js", "GOARCH=wasm"}, []string{"build", "-tags", "webassets,webdev", "./..."}},
 		{[]string{"GOOS=js", "GOARCH=wasm"}, []string{"build", "-tags", "editor", "./..."}},
-		{nil, []string{"tool", "weakpixel", "assets", "check"}},
+		{nil, []string{"tool", "wpix", "assets", "check"}},
 		{nil, []string{"run", ".", "-pack", filepath.Join(t.TempDir(), "packs")}},
 	} {
 		cmd := exec.Command(goBin, c.args...)
@@ -291,11 +291,11 @@ func TestNewProject(t *testing.T) {
 		}
 	}
 
-	// weakpixel doc reads build/god/ and writes god.out from .weakpixel.json.
-	cmd := exec.Command(goBin, "tool", "weakpixel", "doc", "--format", "god")
+	// wpix doc reads build/god/ and writes god.out from .weakpixel.json.
+	cmd := exec.Command(goBin, "tool", "wpix", "doc", "--format", "god")
 	cmd.Dir = dir
 	if out, err := cmd.CombinedOutput(); err != nil {
-		t.Fatalf("go tool weakpixel doc --format god: %v\n%s", err, out)
+		t.Fatalf("go tool wpix doc --format god: %v\n%s", err, out)
 	}
 	if _, err := os.Stat(filepath.Join(dir, "build/god/project.god.json")); err != nil {
 		t.Error(err)

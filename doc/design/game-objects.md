@@ -5,10 +5,10 @@ How `+game:*` markers become typed Go views and a JSON definition, and how `god`
 ## Goals
 
 - **No new storage model.** A Game Object is an ordinary entity holding ordinary components. The generated view is sugar over `ViewN` and the low-level `World`, so objects mix freely with hand-written systems.
-- **One declaration, three consumers.** The same Go struct drives the typed Go API, JSON loading and saving (levels, prefabs, saves), and tools that never compile the game (`weakpixel doc`, Lua, editors).
+- **One declaration, three consumers.** The same Go struct drives the typed Go API, JSON loading and saving (levels, prefabs, saves), and tools that never compile the game (`wpix doc`, Lua, editors).
 - **Generated code works from any module.** It uses exported `ecs` and `god` API only.
 
-## Pipeline (`weakpixel gen`)
+## Pipeline (`wpix gen`)
 
 ```
 load.go      packages.Load; an existing zz__gen.go is blanked through an overlay so stale output can't break loading
@@ -21,7 +21,7 @@ render.go    template data; generator.go.tpl → zz__gen.go; JSON → the packag
 main.go      settings (.weakpixel.json via internal/project); writes <specs>/<group>.god.json (specs: god.specs, default build/god)
 ```
 
-`generate(dir, patterns)` is pure (returns outputs, writes nothing), which is what the golden and diagnostic tests call. `write` skips unchanged files and removes stale files the generator wrote, recognized by their header and the `"generator": "weakpixel gen"` field. In the specs folder a file also carries `"package"`: `write` refuses to overwrite another package's file (two packages with one group) and removes only its own package's files under an old name. One folder of `<group>.god.json` instead of a file per package directory gives tools one place to look; naming by group keeps the names readable and stable across package moves.
+`generate(dir, patterns)` is pure (returns outputs, writes nothing), which is what the golden and diagnostic tests call. `write` skips unchanged files and removes stale files the generator wrote, recognized by their header and the `"generator": "wpix gen"` field. In the specs folder a file also carries `"package"`: `write` refuses to overwrite another package's file (two packages with one group) and removes only its own package's files under an old name. One folder of `<group>.god.json` instead of a file per package directory gives tools one place to look; naming by group keeps the names readable and stable across package moves.
 
 ## What the template generates
 
@@ -43,11 +43,11 @@ Required component order in the template follows the field names, sorted; compon
 
 ## GOD versions
 
-A GOD file carries `version`. Nothing is released yet, so the format, like the editor protocol, is at version `0` and changes without a version bump or compatibility code; `weakpixel doc` reads only version 0 and asks to regenerate anything else. The version starts counting at the first release.
+A GOD file carries `version`. Nothing is released yet, so the format, like the editor protocol, is at version `0` and changes without a version bump or compatibility code; `wpix doc` reads only version 0 and asks to regenerate anything else. The version starts counting at the first release.
 
 ## One GOD per project
 
-`go generate` stays per package; `weakpixel doc` merges. Components merge by `group:name` and objects by `group:class`; identical definitions (docs ignored, as in `RegisterSchema`) collapse, so the self-contained package files (which repeat the foreign components they use) merge cleanly, and a different definition under one key is an error naming both files. `weakpixel doc --format god` writes the result (`god.out`), marked `"generator": "weakpixel doc"` so directory walks skip it instead of reading stale definitions back.
+`go generate` stays per package; `wpix doc` merges. Components merge by `group:name` and objects by `group:class`; identical definitions (docs ignored, as in `RegisterSchema`) collapse, so the self-contained package files (which repeat the foreign components they use) merge cleanly, and a different definition under one key is an error naming both files. `wpix doc --format god` writes the result (`god.out`), marked `"generator": "wpix doc"` so directory walks skip it instead of reading stale definitions back.
 
 ## `god` runtime
 

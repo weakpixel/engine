@@ -1,6 +1,6 @@
 ---
 name: game-object-gen
-description: Use for weakpixel gen, +game markers, generated Game Object views, GOD schemas/serialization, or generator tests.
+description: Use for wpix gen, +game markers, generated Game Object views, GOD schemas/serialization, or generator tests.
 ---
 
 # Game Object generator and GOD runtime
@@ -17,7 +17,7 @@ validate.go         collect and sort source-positioned diagnostics
 schema.go, render.go build GOD schemas and typed template data
 generator.go.tpl    emit zz__gen.go; render GOD JSON to <specs>/<group>.god.json
                     (specs folder: god.specs, default build/god)
-weakpixel doc       merge GOD files; Markdown, HTML and --format god output
+wpix doc       merge GOD files; Markdown, HTML and --format god output
 ```
 
 `generate(dir, patterns)` is the testable, side-effect-free boundary. Preserve declaration order in GOD component lists and deterministic sorted field order in template data. Objects with 1..16 required components use `ecs.ViewN`; zero or more than 16 use `World.Query(ids...)` and `[]any`. Optional fields use low-level `World` methods. Generated IDs include foreign package aliases (for example, `CID_ExtHitbox`).
@@ -35,10 +35,10 @@ Keep the generated view accessor (`<Object>View` / `New<Object>View`) distinct f
 3. Update `render.go` or the template when output changes; bump GOD `version` only for incompatible format changes.
 4. Add or extend golden and diagnostic tests, and update the owning guide page for user-visible marker behavior.
 
-Documentation extracted from Go comments belongs in the package's GOD file (`<specs>/<group>.god.json`); generated Go schemas omit descriptions. `weakpixel doc` consumes that JSON. Keep schema/runtime behavior aligned with the GOD definition guide.
+Documentation extracted from Go comments belongs in the package's GOD file (`<specs>/<group>.god.json`); generated Go schemas omit descriptions. `wpix doc` consumes that JSON. Keep schema/runtime behavior aligned with the GOD definition guide.
 
 ## Tests
 
-`weakpixel gen` has golden, diagnostic, stale-file, documentation, and external-module (`extmod`) tests. Extend the narrowest relevant test; preserve coverage for aggregated, deterministic diagnostics, output stability, stale-file ownership, and generation from an external module. Run `go test ./tools/internal/gen/...`; for generated consumer changes, also run `go generate ./...` and build/test affected packages.
+`wpix gen` has golden, diagnostic, stale-file, documentation, and external-module (`extmod`) tests. Extend the narrowest relevant test; preserve coverage for aggregated, deterministic diagnostics, output stability, stale-file ownership, and generation from an external module. Run `go test ./tools/internal/gen/...`; for generated consumer changes, also run `go generate ./...` and build/test affected packages.
 
 Before describing a runtime behavior as missing, check the guide and the current `testdata/gametypes` and `god` implementation. The docs own the complete runtime behavior checklist; don't keep completed migration tasks here.
