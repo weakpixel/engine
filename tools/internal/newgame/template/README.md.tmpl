@@ -1,0 +1,56 @@
+# {{.Title}}
+
+A game on the [Weakpixel Engine](https://github.com/weakpixel/engine), created with `weakpixel new`.
+
+```sh
+make run      # play: WASD or the arrow keys walk, Shift runs, Esc quits
+make test     # the game's tests, without a window
+```
+
+## Commands
+
+| Command | Does |
+| --- | --- |
+| `make run` | The game in a window, with the assets embedded in the binary |
+| `make dev` | The game reading `assets/` from disk: files you save reload while it runs |
+| `make generate` | `go generate ./...`: Game Object code (`game/zz__gen.go`) and the GOD file (`build/god/{{.Name}}.god.json`) from the `+game` markers. Run it after changing a component |
+| `make test` | `go test ./...`, then the editor build's test (`go test -tags editor .`) |
+| `make check` | Checks the asset library: file names, groups and broken references |
+| `make doc` | The merged GOD (`build/god/project.god.json`) and HTML docs of the Game Objects (`build/god-doc/`) |
+| `make web` | The browser build in `build/web/`; `make serve` serves it on http://localhost:8080 |
+| `make web-packed` | The browser build with the assets as packs, fetched over HTTP, in `build/web-packed/` |
+| `make web-dev` | The browser build for development: serves it on http://localhost:8080 and reloads the assets you save in the open page |
+| `make editor` | The level editor in a window, without VSCode |
+
+The engine's command-line tools run as `go tool weakpixel <command>` at the engine version in `go.mod` (`go tool weakpixel help` lists them). `go tool weakpixel-editor view assets/<file>.png` opens a texture in the engine's viewer, with a grid, pan and zoom.
+
+## Files
+
+| Path | What |
+| --- | --- |
+| `main.go` | Opens the window and runs the game; `-assets <dir>` reads loose files, `-pack <dir>` writes the packed build |
+| `assets.go`, `assets_web.go` | Where the assets come from: embedded, or packs over HTTP in the `webassets` browser build |
+| `watch.go`, `watch_web.go` | Pushed asset changes for hot reload: none, or from the dev server in the `webdev` browser build |
+| `editor.go` | The editor build (`-tags editor`) that the VSCode extension runs |
+| `main_test.go`, `editor_test.go` | Run the game, and the editor build, without a window: the player walks, the editor opens the level |
+| `game/game.go` | Settings, input actions, `AddSystems` and the first level |
+| `game/components.go` | The `PlayerControl` component and the `Player` Game Object |
+| `game/player-system.go` | Moves the player by the move action |
+| `assets/` | The [asset library](https://github.com/weakpixel/engine/blob/main/doc/guide/engine/asset-library.md#the-layout): `global/` loads at start, every other folder is a package (`start/` holds the first level) |
+| `assets/start/start.level.json` | The first level. Open it in VSCode to edit it |
+| `assets/global/prefabs/player.prefab.json` | The player prefab the level places |
+| `assets/global/input/player.bindings.json` | Keys and gamepad buttons of the actions |
+| `build/god/` | Generated GOD files (not committed): the schema of every Game Object, read by the editor extension. Run `go generate ./...` once after cloning |
+| `web/index.html` | The page of the browser build |
+| `.weakpixel.json` | [Project settings](https://github.com/weakpixel/engine/blob/main/doc/guide/project-file.md) for the tools and the editor |
+
+## Editing levels in VSCode
+
+Install the [Weakpixel VSCode extension](https://github.com/weakpixel/weakpixel-engine-vscode) (`.vscode/extensions.json` recommends it) and open `assets/start/start.level.json`: the game runs in the editor tab, and every change is written into the file.
+
+## Learn more
+
+- [Getting started](https://github.com/weakpixel/engine/blob/main/doc/guide/engine/getting-started.md) and the [engine guide](https://github.com/weakpixel/engine/blob/main/doc/guide/engine/README.md)
+- [Game Objects and markers](https://github.com/weakpixel/engine/blob/main/doc/guide/ecs/api-game-object.md)
+- [Input actions](https://github.com/weakpixel/engine/blob/main/doc/guide/engine/input.md)
+- [Tools](https://github.com/weakpixel/engine/blob/main/doc/guide/tools.md)

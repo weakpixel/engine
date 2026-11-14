@@ -1,0 +1,333 @@
+{
+  "version": 0,
+  "generator": "weakpixel gen",
+  "package": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/full",
+  "components": [
+    {
+      "group": "ext2",
+      "name": "Beta",
+      "doc": "Beta is a foreign component from the second \"ext\"-named package.",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/full/ext2dir.Beta",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "V": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "V"
+        ]
+      }
+    },
+    {
+      "group": "extgrp",
+      "name": "Alpha",
+      "doc": "Alpha is a foreign component with its identity on the type.",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/full/ext.Alpha",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "V": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "V"
+        ]
+      }
+    },
+    {
+      "group": "fullgrp",
+      "name": "A",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/full.A",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "V": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "V"
+        ]
+      }
+    },
+    {
+      "group": "fullgrp",
+      "name": "B",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/full.B",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "V": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "V"
+        ]
+      }
+    },
+    {
+      "group": "fullgrp",
+      "name": "Misc",
+      "doc": "Misc exercises []byte, a fixed array, and maps with a supported\n(integer) and an unsupported (struct) key type.",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/full.Misc",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Blob": {
+            "type": "string",
+            "format": "byte",
+            "nullable": true
+          },
+          "ByInt": {
+            "type": "object",
+            "nullable": true,
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "ByOther": {
+            "x-preserve-unknown-fields": true
+          },
+          "Fixed": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "minItems": 3,
+            "maxItems": 3
+          }
+        },
+        "required": [
+          "Fixed"
+        ]
+      }
+    },
+    {
+      "group": "fullgrp",
+      "name": "Node",
+      "doc": "Node is self-referencing, so its schema is x-preserve-unknown-fields.",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/full.Node",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Children": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "nullable": true,
+              "x-preserve-unknown-fields": true
+            }
+          },
+          "Value": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "Value"
+        ]
+      }
+    },
+    {
+      "group": "fullgrp",
+      "name": "Purse",
+      "doc": "Purse nests a custom-JSON field.",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/full.Purse",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Amount": {
+            "x-go-type": "full.Money"
+          }
+        },
+        "required": [
+          "Amount"
+        ]
+      }
+    },
+    {
+      "group": "fullgrp",
+      "name": "Tags",
+      "doc": "Tags exercises encoding/json tag variants.",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/full.Tags",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Elapsed": {
+            "type": "number",
+            "format": "double",
+            "description": "Elapsed is playback state, not authored data.",
+            "x-runtime": true
+          },
+          "Icon": {
+            "type": "string",
+            "format": "asset",
+            "description": "Icon is an asset handle: a string key in JSON, runtime-only in Go.",
+            "x-asset": "sprite"
+          },
+          "Plain": {
+            "type": "string"
+          },
+          "as_string": {
+            "x-preserve-unknown-fields": true
+          },
+          "maybe": {
+            "type": "string"
+          },
+          "renamed_name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "renamed_name",
+          "Plain"
+        ]
+      }
+    },
+    {
+      "group": "fullgrp",
+      "name": "Unused",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/full.Unused",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "V": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "V"
+        ]
+      }
+    },
+    {
+      "group": "named",
+      "name": "Gamma",
+      "doc": "C has an explicit identity: it is \"named:Gamma\" in data files.",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/full.C",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "V": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "V"
+        ]
+      }
+    }
+  ],
+  "objects": [
+    {
+      "group": "fullgrp",
+      "class": "Base",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/full.Base",
+      "components": [
+        {
+          "component": "fullgrp:A",
+          "field": "A"
+        }
+      ]
+    },
+    {
+      "group": "customgrp",
+      "class": "Widget",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/full.CustomClassObj",
+      "components": [
+        {
+          "component": "fullgrp:A",
+          "field": "A"
+        }
+      ]
+    },
+    {
+      "group": "fullgrp",
+      "class": "Kit",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/full.Kit",
+      "components": [
+        {
+          "component": "fullgrp:Tags",
+          "field": "Tags"
+        },
+        {
+          "component": "fullgrp:Purse",
+          "field": "Purse",
+          "optional": true
+        },
+        {
+          "component": "fullgrp:Node",
+          "field": "Node"
+        },
+        {
+          "component": "fullgrp:Misc",
+          "field": "Misc",
+          "readonly": true
+        },
+        {
+          "component": "extgrp:Alpha",
+          "field": "Alpha"
+        },
+        {
+          "component": "ext2:Beta",
+          "field": "Beta"
+        }
+      ]
+    },
+    {
+      "group": "fullgrp",
+      "class": "Mid",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/full.Mid",
+      "components": [
+        {
+          "component": "fullgrp:A",
+          "field": "A",
+          "embeddedVia": [
+            "Base"
+          ]
+        },
+        {
+          "component": "fullgrp:B",
+          "field": "B"
+        }
+      ]
+    },
+    {
+      "group": "fullgrp",
+      "class": "Top",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/full.Top",
+      "components": [
+        {
+          "component": "fullgrp:A",
+          "field": "A",
+          "embeddedVia": [
+            "Mid",
+            "Base"
+          ]
+        },
+        {
+          "component": "fullgrp:B",
+          "field": "B",
+          "embeddedVia": [
+            "Mid"
+          ]
+        },
+        {
+          "component": "named:Gamma",
+          "field": "C"
+        }
+      ]
+    }
+  ]
+}

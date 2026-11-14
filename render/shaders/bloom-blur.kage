@@ -1,0 +1,19 @@
+//kage:unit pixels
+
+package main
+
+// Params.xy: the step between taps in pixels, (r, 0) for the horizontal
+// pass and (0, r) for the vertical one.
+var Params vec4
+
+// Fragment is one direction of a separable 9-tap Gaussian blur; the source
+// and the target have the same size.
+func Fragment(dst vec4, src vec2, color vec4) vec4 {
+	d := Params.xy
+	c := imageSrc0At(src) * 0.227027
+	c += (imageSrc0At(src+d) + imageSrc0At(src-d)) * 0.1945946
+	c += (imageSrc0At(src+d*2) + imageSrc0At(src-d*2)) * 0.1216216
+	c += (imageSrc0At(src+d*3) + imageSrc0At(src-d*3)) * 0.054054
+	c += (imageSrc0At(src+d*4) + imageSrc0At(src-d*4)) * 0.016216
+	return c
+}

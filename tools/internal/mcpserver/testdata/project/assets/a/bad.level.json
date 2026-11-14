@@ -1,0 +1,22 @@
+{
+  "objects": [
+    {
+      "id": "x",
+      "group": "demo",
+      "class": "Crate",
+      "components": {
+        "demo:Health": {"HP": -1, "Kind": 7},
+        "demo:Nope": {}
+      }
+    },
+    {
+      "id": "x",
+      "group": "demo",
+      "class": "Barrel"
+    },
+    {
+      "id": "y",
+      "prefab": "global/prefabs/missing.prefab.json"
+    }
+  ]
+}

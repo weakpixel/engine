@@ -1,0 +1,43 @@
+goos: darwin
+goarch: amd64
+pkg: github.com/weakpixel/engine/extract
+cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
+BenchmarkExtract/1k-12 	   15937	     77025 ns/op	       0 B/op	       0 allocs/op
+BenchmarkExtract/1k-12 	   16062	     77836 ns/op	       0 B/op	       0 allocs/op
+BenchmarkExtract/1k-12 	   14138	     83800 ns/op	       0 B/op	       0 allocs/op
+BenchmarkExtract/1k-12 	   15718	     75931 ns/op	       0 B/op	       0 allocs/op
+BenchmarkExtract/1k-12 	   15847	     75849 ns/op	       0 B/op	       0 allocs/op
+BenchmarkExtract/10k-12         	    1267	    926965 ns/op	       0 B/op	       0 allocs/op
+BenchmarkExtract/10k-12         	    1278	    935611 ns/op	       0 B/op	       0 allocs/op
+BenchmarkExtract/10k-12         	    1278	    938099 ns/op	       0 B/op	       0 allocs/op
+BenchmarkExtract/10k-12         	    1294	    918126 ns/op	       0 B/op	       0 allocs/op
+BenchmarkExtract/10k-12         	    1297	    913766 ns/op	       0 B/op	       0 allocs/op
+PASS
+ok  	github.com/weakpixel/engine/extract	12.635s
+goos: darwin
+goarch: amd64
+pkg: github.com/weakpixel/engine/render
+cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
+BenchmarkSort10k-12      	     830	   1443033 ns/op	      98 B/op	       0 allocs/op
+BenchmarkSort10k-12      	     840	   1437182 ns/op	      97 B/op	       0 allocs/op
+BenchmarkSort10k-12      	     794	   1458566 ns/op	     103 B/op	       0 allocs/op
+BenchmarkSort10k-12      	     844	   1447308 ns/op	      97 B/op	       0 allocs/op
+BenchmarkSort10k-12      	     788	   1490110 ns/op	     103 B/op	       0 allocs/op
+BenchmarkSpriteGet-12    	485667852	         2.440 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSpriteGet-12    	495534580	         2.434 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSpriteGet-12    	491636379	         2.443 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSpriteGet-12    	489156394	         2.532 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSpriteGet-12    	488090835	         2.430 ns/op	       0 B/op	       0 allocs/op
+PASS
+ok  	github.com/weakpixel/engine/render	13.076s
+pkg: github.com/weakpixel/engine/anim
+BenchmarkAnimation/1k-12 	   43701	     24256 ns/op	       0 B/op	       0 allocs/op
+BenchmarkAnimation/1k-12 	   56144	     21581 ns/op	       0 B/op	       0 allocs/op
+BenchmarkAnimation/1k-12 	   55504	     21647 ns/op	       0 B/op	       0 allocs/op
+BenchmarkAnimation/1k-12 	   53731	     21719 ns/op	       0 B/op	       0 allocs/op
+BenchmarkAnimation/1k-12 	   53898	     21843 ns/op	       0 B/op	       0 allocs/op
+BenchmarkAnimation/10k-12         	    5682	    231475 ns/op	       0 B/op	       0 allocs/op
+BenchmarkAnimation/10k-12         	    5424	    214277 ns/op	       0 B/op	       0 allocs/op
+BenchmarkAnimation/10k-12         	    5680	    217986 ns/op	       0 B/op	       0 allocs/op
+BenchmarkAnimation/10k-12         	    5595	    214910 ns/op	       0 B/op	       0 allocs/op
+BenchmarkAnimation/10k-12         	    5643	    213122 ns/op	       0 B/op	       0 allocs/op

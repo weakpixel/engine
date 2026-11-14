@@ -1,0 +1,134 @@
+{
+  "version": 0,
+  "generator": "weakpixel gen",
+  "package": "github.com/weakpixel/engine/hierarchy",
+  "components": [
+    {
+      "group": "hierarchy",
+      "name": "Parent",
+      "doc": "Parent attaches its entity to Entity. The entity also needs a\ngfx.Transform: the [System] overwrites it each tick with the world\ntransform computed from the parent chain, so a serialized Transform of a\nchild is derived data. Use [Attach] from code.",
+      "goType": "github.com/weakpixel/engine/hierarchy.Parent",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Entity": {
+            "type": "string",
+            "format": "entity",
+            "nullable": true,
+            "description": "Entity is the parent. In a GOD level it is the id of an object of the\nsame document."
+          },
+          "Local": {
+            "type": "object",
+            "description": "Local is the placement relative to the parent.",
+            "properties": {
+              "LayerMode": {
+                "type": "integer",
+                "format": "int32",
+                "description": "LayerMode says how the child's layers follow the parent's.",
+                "minimum": 0,
+                "maximum": 255,
+                "x-enum": [
+                  {
+                    "value": 0,
+                    "name": "LayerRelative",
+                    "doc": "LayerRelative sets the child's layers to the parent's layer plus\n[Local.LayerOffset] every tick."
+                  },
+                  {
+                    "value": 1,
+                    "name": "LayerAbsolute",
+                    "doc": "LayerAbsolute leaves the child's layers alone."
+                  }
+                ]
+              },
+              "LayerOffset": {
+                "type": "integer",
+                "format": "int32",
+                "description": "LayerOffset is added to the parent's layer with LayerRelative.",
+                "minimum": -32768,
+                "maximum": 32767
+              },
+              "Pos": {
+                "type": "object",
+                "description": "Pos is the offset in the parent's space: scaled and rotated by the\nparent's world Scale and Rot.",
+                "properties": {
+                  "X": {
+                    "type": "number",
+                    "format": "float"
+                  },
+                  "Y": {
+                    "type": "number",
+                    "format": "float"
+                  }
+                },
+                "required": [
+                  "X",
+                  "Y"
+                ]
+              },
+              "Rot": {
+                "type": "number",
+                "format": "float",
+                "description": "Rot is added to the parent's rotation, in radians. Under a mirrored\nparent (one negative scale axis) it is subtracted.",
+                "x-editor": {
+                  "step": 5,
+                  "unit": "deg"
+                }
+              },
+              "Scale": {
+                "type": "object",
+                "description": "Scale multiplies the parent's scale. Zero means (1, 1).",
+                "properties": {
+                  "X": {
+                    "type": "number",
+                    "format": "float",
+                    "default": 1
+                  },
+                  "Y": {
+                    "type": "number",
+                    "format": "float",
+                    "default": 1
+                  }
+                },
+                "required": [
+                  "X",
+                  "Y"
+                ]
+              },
+              "YSortSide": {
+                "type": "integer",
+                "format": "int32",
+                "description": "YSortSide says where the child sorts relative to its root in a\nY-sorted layer.",
+                "minimum": 0,
+                "maximum": 255,
+                "x-enum": [
+                  {
+                    "value": 0,
+                    "name": "YSortInFront",
+                    "doc": "YSortInFront sorts the child just in front of its root."
+                  },
+                  {
+                    "value": 1,
+                    "name": "YSortBehind",
+                    "doc": "YSortBehind sorts the child just behind its root."
+                  }
+                ]
+              }
+            },
+            "required": [
+              "Pos",
+              "Rot",
+              "Scale",
+              "LayerOffset",
+              "LayerMode",
+              "YSortSide"
+            ]
+          }
+        },
+        "required": [
+          "Local"
+        ]
+      }
+    }
+  ],
+  "objects": []
+}

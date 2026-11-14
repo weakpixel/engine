@@ -1,0 +1,12 @@
+{
+  "god": {
+    "specs": "god"
+  },
+  "assets": {
+    "root": "assets"
+  },
+  "editor": {
+    "game": ".",
+    "snap": 8
+  }
+}

@@ -1,0 +1,20 @@
+{
+    "maps": [
+        {
+            "fileName": "level-1.tmj",
+            "height": 640,
+            "width": 640,
+            "x": -336,
+            "y": 160
+        },
+        {
+            "fileName": "level-2.tmj",
+            "height": 640,
+            "width": 640,
+            "x": 304,
+            "y": 160
+        }
+    ],
+    "onlyShowAdjacentMaps": false,
+    "type": "world"
+}

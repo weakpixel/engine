@@ -1,0 +1,269 @@
+{
+  "version": 0,
+  "generator": "weakpixel gen",
+  "package": "github.com/weakpixel/engine/physics",
+  "components": [
+    {
+      "group": "physics",
+      "name": "Body",
+      "doc": "Body makes an entity with a gfx.Transform and a [Velocity] a physics\nbody; add a collision.Collider for it to collide. It holds the tuning the\nintegrator reads every tick.\n\nA zero Body is a dynamic body of mass 1 without gravity: falling bodies\nset GravityScale to 1. The editor writes GravityScale 1 for a new Body.",
+      "goType": "github.com/weakpixel/engine/physics.Body",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Damping": {
+            "type": "object",
+            "description": "Damping is the fraction of the velocity lost per second, per axis: 0\nkeeps it, 0.5 halves it every second, 1 (or more) stops the body at\nonce.",
+            "properties": {
+              "X": {
+                "type": "number",
+                "format": "float"
+              },
+              "Y": {
+                "type": "number",
+                "format": "float"
+              }
+            },
+            "required": [
+              "X",
+              "Y"
+            ]
+          },
+          "DropThrough": {
+            "type": "boolean",
+            "description": "DropThrough makes the body ignore one-way colliders and tile grids.\nThe game sets it (drop down through a platform); physics clears it\nonce the body touches no one-way collider."
+          },
+          "GravityScale": {
+            "type": "number",
+            "format": "float",
+            "description": "GravityScale multiplies Config.Gravity for this body: 0 no gravity, 1\nfull, 0.5 floaty, negative falls up. The editor starts a new Body at 1,\nso it falls; a Body added in code keeps 0.",
+            "default": 1
+          },
+          "Kind": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Kind is Dynamic (0) or Kinematic.",
+            "minimum": 0,
+            "maximum": 255,
+            "x-enum": [
+              {
+                "value": 0,
+                "name": "Dynamic",
+                "doc": "Dynamic bodies are moved by gravity, their Velocity and contacts."
+              },
+              {
+                "value": 1,
+                "name": "Kinematic",
+                "doc": "Kinematic bodies move only by their Velocity (set by code, or by\n[Follow]): they push dynamic bodies, carry the ones that stand on them\nand are never pushed. They pass through statics and each other."
+              }
+            ]
+          },
+          "LockX": {
+            "type": "boolean",
+            "description": "LockX and LockY keep the body from moving along that axis (an\nelevator locks X)."
+          },
+          "LockY": {
+            "type": "boolean",
+            "description": "LockX and LockY keep the body from moving along that axis (an\nelevator locks X)."
+          },
+          "Mass": {
+            "type": "number",
+            "format": "float",
+            "description": "Mass is the mass of a dynamic body; zero means 1. Kinematic bodies\nhave infinite mass. The editor starts a new Body at 1.",
+            "default": 1
+          },
+          "MaxSpeed": {
+            "type": "object",
+            "description": "MaxSpeed bounds the speed per axis, in world units per second; zero\nmeans unlimited.",
+            "properties": {
+              "X": {
+                "type": "number",
+                "format": "float"
+              },
+              "Y": {
+                "type": "number",
+                "format": "float"
+              }
+            },
+            "required": [
+              "X",
+              "Y"
+            ]
+          }
+        },
+        "required": [
+          "Kind",
+          "Mass",
+          "Damping",
+          "GravityScale",
+          "MaxSpeed",
+          "LockX",
+          "LockY",
+          "DropThrough"
+        ]
+      }
+    },
+    {
+      "group": "physics",
+      "name": "Follow",
+      "doc": "Follow moves a kinematic body to Target every tick by setting its\nVelocity to (Target - Pos) / dt, so a platform driven by a tween (see\n[FollowTarget]) is an ordinary kinematic body: it carries riders, drags\ncrates by friction and pushes with momentum. Tweening Transform.Pos\ninstead teleports the platform after physics has run.\n\nA fresh Follow takes the body's position as its target on the first tick\nphysics sees it, so it never jumps to the origin. Removing Follow leaves\nthe body with its last Velocity: zero it.",
+      "goType": "github.com/weakpixel/engine/physics.Follow",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Target": {
+            "type": "object",
+            "description": "Target is the position the body reaches at the end of the tick.",
+            "properties": {
+              "X": {
+                "type": "number",
+                "format": "float"
+              },
+              "Y": {
+                "type": "number",
+                "format": "float"
+              }
+            },
+            "required": [
+              "X",
+              "Y"
+            ],
+            "x-runtime": true
+          }
+        }
+      }
+    },
+    {
+      "group": "physics",
+      "name": "Material",
+      "doc": "Material sets the surface behavior of a collider: a dynamic crate, a\nstatic wall or a kinematic platform. Without one, the collider uses\nConfig.DefaultMaterial; a Material is taken literally, so Friction 0 is\nice.\n\nThe two sides of a contact combine: bounce is the larger one, friction\nsqrt(a * b), the surface velocity is this side's SurfaceVel minus the\nother's.",
+      "goType": "github.com/weakpixel/engine/physics.Material",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Bounce": {
+            "type": "number",
+            "format": "float",
+            "description": "Bounce is the restitution: 0 does not bounce, 1 keeps the speed, more\nthan 1 adds to it (a trampoline)."
+          },
+          "Friction": {
+            "type": "number",
+            "format": "float",
+            "description": "Friction is the Coulomb friction coefficient; zero is ice."
+          },
+          "SurfaceVel": {
+            "type": "object",
+            "description": "SurfaceVel is the speed the surface drags touching bodies toward, in\nworld units per second, along the contact (a conveyor belt).",
+            "properties": {
+              "X": {
+                "type": "number",
+                "format": "float"
+              },
+              "Y": {
+                "type": "number",
+                "format": "float"
+              }
+            },
+            "required": [
+              "X",
+              "Y"
+            ]
+          }
+        },
+        "required": [
+          "Bounce",
+          "Friction",
+          "SurfaceVel"
+        ]
+      }
+    },
+    {
+      "group": "physics",
+      "name": "Touching",
+      "doc": "Touching reports what a body or a [MoveAndSlide] mover touches: physics\nwrites it every tick for bodies that have it, MoveAndSlide on every call.\nIt is runtime state, never serialized.",
+      "goType": "github.com/weakpixel/engine/physics.Touching",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Ground": {
+            "type": "string",
+            "format": "entity",
+            "nullable": true,
+            "description": "Ground is the entity it stands on; zero for a tile grid or nothing.",
+            "x-runtime": true
+          },
+          "GroundNormal": {
+            "type": "object",
+            "description": "GroundNormal is the unit normal of the ground, pointing up out of it.",
+            "properties": {
+              "X": {
+                "type": "number",
+                "format": "float"
+              },
+              "Y": {
+                "type": "number",
+                "format": "float"
+              }
+            },
+            "required": [
+              "X",
+              "Y"
+            ],
+            "x-runtime": true
+          },
+          "OnCeiling": {
+            "type": "boolean",
+            "description": "OnCeiling is set while something blocks it from above.",
+            "x-runtime": true
+          },
+          "OnGround": {
+            "type": "boolean",
+            "description": "OnGround is set while the entity stands on something.",
+            "x-runtime": true
+          },
+          "OnWall": {
+            "type": "integer",
+            "format": "int32",
+            "description": "OnWall is -1 while a wall blocks it on the left, +1 on the right,\nelse 0.",
+            "minimum": -128,
+            "maximum": 127,
+            "x-runtime": true
+          }
+        }
+      }
+    },
+    {
+      "group": "physics",
+      "name": "Velocity",
+      "doc": "Velocity is the speed of an entity in world units per second. Physics\nmoves bodies by it, [NewMoveSystem] moves other entities by it, and game\ncode sets it (a jump: v.Vel.Y = -300) or reads it (walk or idle).\n\nWhile a dynamic body stands on a kinematic body, its Velocity is relative\nto that body (the platform's motion is added on top); when it leaves, the\nplatform's velocity is added to it.",
+      "goType": "github.com/weakpixel/engine/physics.Velocity",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Vel": {
+            "type": "object",
+            "description": "Vel is the velocity in world units per second.",
+            "properties": {
+              "X": {
+                "type": "number",
+                "format": "float"
+              },
+              "Y": {
+                "type": "number",
+                "format": "float"
+              }
+            },
+            "required": [
+              "X",
+              "Y"
+            ]
+          }
+        },
+        "required": [
+          "Vel"
+        ]
+      }
+    }
+  ],
+  "objects": []
+}

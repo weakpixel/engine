@@ -1,0 +1,113 @@
+{
+  "version": 0,
+  "generator": "weakpixel gen",
+  "package": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/docs",
+  "components": [
+    {
+      "group": "docs",
+      "name": "Health",
+      "doc": "Health is hit points.\n\nIt never drops below zero.",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/docs.Health",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Current": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "Max": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "Current",
+          "Max"
+        ]
+      }
+    },
+    {
+      "group": "docs",
+      "name": "Plain",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/docs.Plain",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "V": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "V"
+        ]
+      }
+    },
+    {
+      "group": "docs",
+      "name": "Transform",
+      "doc": "Transform is a position in the world.",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/docs.Transform",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "X": {
+            "type": "number",
+            "format": "double",
+            "description": "Horizontal position."
+          },
+          "Y": {
+            "type": "number",
+            "format": "double",
+            "description": "Vertical position."
+          }
+        },
+        "required": [
+          "X",
+          "Y"
+        ]
+      }
+    }
+  ],
+  "objects": [
+    {
+      "group": "docs",
+      "class": "Common",
+      "doc": "Common is shared by the objects of the package.",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/docs.Common",
+      "components": [
+        {
+          "component": "docs:Transform",
+          "field": "Transform",
+          "doc": "Where the object is."
+        }
+      ]
+    },
+    {
+      "group": "docs",
+      "class": "Hero",
+      "doc": "Hero is the player character.",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/docs.Hero",
+      "components": [
+        {
+          "component": "docs:Transform",
+          "field": "Transform",
+          "doc": "Where the object is.",
+          "embeddedVia": [
+            "Common"
+          ]
+        },
+        {
+          "component": "docs:Health",
+          "field": "Health",
+          "doc": "Stores the hero's health."
+        },
+        {
+          "component": "docs:Plain",
+          "field": "Plain",
+          "doc": "Trailing comment of the field."
+        }
+      ]
+    }
+  ]
+}

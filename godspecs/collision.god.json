@@ -1,0 +1,128 @@
+{
+  "version": 0,
+  "generator": "weakpixel gen",
+  "package": "github.com/weakpixel/engine/collision",
+  "components": [
+    {
+      "group": "collision",
+      "name": "Collider",
+      "doc": "Collider gives an entity with a gfx.Transform a collision shape. The\nshape is axis-aligned: Transform.Scale scales Offset and Size (a negative\nscale mirrors), Transform.Rot is ignored.",
+      "goType": "github.com/weakpixel/engine/collision.Collider",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Layer": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Layer is the bitmask of layers this collider is on. Zero means\nDefaultLayer (layer 0).",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "Mask": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Mask is the bitmask of layers this collider reacts to: it detects the\ncolliders on them. Zero reacts to nothing (a coin, a wall).",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "Offset": {
+            "type": "object",
+            "description": "Offset is added to Transform.Pos: the top-left corner of a rect, the\ncenter of a circle.",
+            "properties": {
+              "X": {
+                "type": "number",
+                "format": "float"
+              },
+              "Y": {
+                "type": "number",
+                "format": "float"
+              }
+            },
+            "required": [
+              "X",
+              "Y"
+            ]
+          },
+          "OneWay": {
+            "type": "integer",
+            "format": "int32",
+            "description": "OneWay blocks only from one side (for physics): 0 every side, 1 up,\n2 down, 3 left, 4 right.",
+            "minimum": 0,
+            "maximum": 255,
+            "x-enum": [
+              {
+                "value": 0,
+                "name": "OneWayNone",
+                "doc": "OneWayNone blocks from every side."
+              },
+              {
+                "value": 1,
+                "name": "OneWayUp",
+                "doc": "OneWayUp blocks only bodies coming from above, moving down onto it: a\nplatform you can jump through from below."
+              },
+              {
+                "value": 2,
+                "name": "OneWayDown",
+                "doc": "OneWayDown blocks only bodies coming from below."
+              },
+              {
+                "value": 3,
+                "name": "OneWayLeft",
+                "doc": "OneWayLeft blocks only bodies coming from the left."
+              },
+              {
+                "value": 4,
+                "name": "OneWayRight",
+                "doc": "OneWayRight blocks only bodies coming from the right."
+              }
+            ]
+          },
+          "Sensor": {
+            "type": "boolean",
+            "description": "Sensor reports contacts but never pushes (for physics; detection\ntreats every collider the same)."
+          },
+          "Shape": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Shape is ShapeRect, ShapeCircle, ShapeAnimBody or a custom kind.",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "Size": {
+            "type": "object",
+            "description": "Size is the width and height of a rect, the radius (in X) of a\ncircle.",
+            "properties": {
+              "X": {
+                "type": "number",
+                "format": "float"
+              },
+              "Y": {
+                "type": "number",
+                "format": "float"
+              }
+            },
+            "required": [
+              "X",
+              "Y"
+            ]
+          },
+          "Static": {
+            "type": "boolean",
+            "description": "Static marks a collider that does not move on its own. Static pairs\nare never tested; a static collider that is moved anyway is picked up\non the next tick."
+          }
+        },
+        "required": [
+          "Shape",
+          "Offset",
+          "Size",
+          "Layer",
+          "Mask",
+          "Static",
+          "Sensor",
+          "OneWay"
+        ]
+      }
+    }
+  ],
+  "objects": []
+}

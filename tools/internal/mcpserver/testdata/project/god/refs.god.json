@@ -1,0 +1,25 @@
+{
+  "version": 0,
+  "generator": "weakpixel gen",
+  "package": "example.com/demo",
+  "components": [
+    {
+      "group": "refs",
+      "name": "Follow",
+      "doc": "Follow points at another object.",
+      "goType": "example.com/demo.Follow",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Target": {"type": "string", "format": "entity", "nullable": true},
+          "Others": {"type": "array", "items": {"type": "string", "format": "entity", "nullable": true}},
+          "Icon": {"type": "string", "format": "asset", "x-asset": "sprite"},
+          "Sound": {"type": "string", "format": "asset", "x-asset": "sound"},
+          "Path": {"type": "array", "items": {"type": "integer", "format": "int32"}}
+        },
+        "required": ["Target", "Others", "Icon", "Sound", "Path"]
+      }
+    }
+  ],
+  "objects": []
+}

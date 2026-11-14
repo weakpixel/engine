@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "groups": { "play": ["gameplay", "vehicle"] },
+  "mappings": {
+    "gameplay": {
+      "bindings": {
+        "move": [
+          { "composite": "dpad", "up": "key:W", "down": "key:S", "left": "key:A", "right": "key:D" },
+          { "control": "pad:leftstick", "processors": [{ "deadzone": 0.2 }] },
+          { "control": "touch:move" }
+        ],
+        "jump": [{ "control": "key:Space" }, { "control": "pad:south" }, { "control": "touch:jump" }],
+        "attack": [{ "control": "mouse:left" }, { "control": "pad:west" }],
+        "save": [{ "control": "key:S", "mods": ["mod:ctrl"] }],
+        "charge": [{ "control": "key:C", "interaction": { "hold": "100ms" } }],
+        "throttle": [{ "control": "pad:rt" }, { "composite": "axis", "neg": "key:Q", "pos": "key:E" }],
+        "aim": [{ "control": "mouse:delta", "processors": [{ "sensitivity": true }] },
+                { "control": "pad:rightstick", "processors": [{ "deadzone": 0.15 }, { "curve": "quadratic" }] }],
+        "pause": [{ "control": "key:Escape", "locked": true }, { "control": "pad:start", "locked": true }],
+        "join": [{ "control": "key:Enter" }, { "control": "pad:start" }]
+      },
+      "touch": {
+        "move": { "kind": "stick", "area": [0, 0.4, 0.5, 1], "radius": 0.1, "floating": true },
+        "jump": { "kind": "button", "circle": [0.88, 0.8, 0.07] }
+      }
+    },
+    "vehicle": {
+      "priority": 10,
+      "bindings": {
+        "move": [{ "composite": "dpad", "up": "key:W", "down": "key:S", "left": "key:A", "right": "key:D" }],
+        "brake": [{ "control": "key:Space" }]
+      }
+    },
+    "menu": {
+      "priority": 20,
+      "block": true,
+      "bindings": {
+        "ui.move": [{ "composite": "dpad", "up": "key:ArrowUp", "down": "key:ArrowDown", "left": "key:ArrowLeft", "right": "key:ArrowRight",
+                      "interaction": { "repeat": { "delay": "100ms", "every": "50ms" } } }],
+        "ui.confirm": [{ "control": "key:Space" }, { "control": "pad:south" }],
+        "ui.back": [{ "control": "key:Escape", "locked": true }]
+      }
+    }
+  }
+}

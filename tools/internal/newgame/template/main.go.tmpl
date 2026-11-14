@@ -1,0 +1,92 @@
+//go:build !editor
+
+// Command {{.Name}} runs the game in a window:
+//
+//	go run .                  the assets embedded in the binary
+//	go run . -assets assets   the assets folder, reloading files you change
+//	go run . -pack <dir>      write the packed build of the assets and exit
+//
+// The game itself is in package game; this file only opens the window.
+package main
+
+import (
+	"flag"
+	"fmt"
+	"io/fs"
+	"log"
+	"os"
+	"time"
+
+	"github.com/hajimehoshi/ebiten/v2"
+
+	"github.com/weakpixel/engine/asset/library"
+	engine "github.com/weakpixel/engine/game"
+
+	"{{.Module}}/game"
+)
+
+func main() {
+	dir := flag.String("assets", "", "read the assets from this folder instead of the embedded ones, and reload changed files")
+	pack := flag.String("pack", "", "write the packed build of the assets to this empty directory and exit")
+	flag.Parse()
+
+	var cfg engine.Config
+	// The startup screen shows while the first assets load, for at least 5
+	// seconds. Replace or add screens in StartupConfig; delete this line to
+	// start the game at once. Tests and the editor build leave it off.
+	cfg.Startup = &engine.StartupConfig{}
+	cfg.AssetChanges = assetChanges()
+	fsys, err := gameAssets()
+	if *dir != "" {
+		fsys, err = os.DirFS(*dir), nil
+		cfg.WatchInterval = time.Second / 2
+	}
+	if err != nil {
+		log.Fatal(err)
+	}
+	if *pack != "" {
+		packAssets(fsys, *pack)
+		return
+	}
+
+	e, err := newGame(cfg, fsys)
+	if err != nil {
+		log.Fatal(err)
+	}
+	ebiten.SetWindowSize(1280, 720)
+	ebiten.SetWindowTitle("{{.Title}}")
+	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
+	runErr := ebiten.RunGame(e)
+	e.Close()
+	if runErr != nil {
+		log.Fatal(runErr)
+	}
+}
+
+// newGame builds the engine on the asset library at the root of fsys and
+// starts the first level. main runs it in a window; main_test.go ticks it
+// without one. cfg adds to the game's own settings (the test sets its input
+// source).
+func newGame(cfg engine.Config, fsys fs.FS) (*engine.Engine, error) {
+	cfg, err := game.Config(cfg, fsys)
+	if err != nil {
+		return nil, err
+	}
+	e := engine.New(cfg)
+	game.AddSystems(e)
+	game.LoadFirstLevel(e)
+	return e, nil
+}
+
+// packAssets writes the packed build of fsys to dir: one pack per group and
+// a catalog, which the browser build with the webassets tag reads over HTTP
+// (make web-packed).
+func packAssets(fsys fs.FS, dir string) {
+	cat, _, err := library.WritePacks(fsys, dir)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, g := range cat.Packages {
+		fmt.Printf("%s -> %s\n", g.Name, g.Pack)
+	}
+}

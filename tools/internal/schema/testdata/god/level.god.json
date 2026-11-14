@@ -1,0 +1,590 @@
+{
+  "version": 0,
+  "generator": "weakpixel gen",
+  "package": "example.com/level",
+  "components": [
+    {
+      "group": "gfx",
+      "name": "Animator",
+      "doc": "Animator plays an animation clip on the entity's Sprite: the anim\npackage's AnimationSystem advances Time and writes Sprite.ID each tick.\n\nAnimator is a standalone Game Object component; objects opt in by marking\na field of this type as a component. Clip and Speed are authored data (Clip\nis an asset key such as \"chars/hero.aseprite.json#run\"); Time, Frame and\nDone are runtime state, in the schema but marked x-runtime, so they are\nnever serialized.\n\nRestart a clip by setting Clip to the new handle and zeroing Time, Frame\nand Done.",
+      "goType": "github.com/weakpixel/engine/gfx.Animator",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Clip": {
+            "type": "string",
+            "format": "asset",
+            "description": "Clip selects the clip. The zero handle, and a clip that is not loaded\nyet, leave the Sprite untouched.",
+            "x-asset": "clip"
+          },
+          "Done": {
+            "type": "boolean",
+            "description": "Done is set when a non-looping clip has reached its last frame. The\nsystem then stops advancing the entity.",
+            "x-runtime": true
+          },
+          "Frame": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Frame is the index of the current frame in the clip, written by the\nsystem so that gameplay can react to it.",
+            "minimum": -2147483648,
+            "maximum": 2147483647,
+            "x-runtime": true
+          },
+          "Speed": {
+            "type": "number",
+            "format": "float",
+            "description": "Speed scales the playback rate. Zero means 1; negative values are\ntreated as 1 too, because the clip's direction comes from the clip. The\neditor starts a new Animator at 1.",
+            "default": 1
+          },
+          "Time": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Time is how long the clip has played, scaled by Speed.",
+            "x-runtime": true
+          }
+        },
+        "required": [
+          "Speed"
+        ]
+      }
+    },
+    {
+      "group": "gfx",
+      "name": "DebugShape",
+      "doc": "DebugShape draws an outline-style primitive at the entity's Transform in\nworld space, for collider and path visualization.",
+      "goType": "github.com/weakpixel/engine/gfx.DebugShape",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Color": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Color is the line color. Zero means white.",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "Kind": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Kind selects the primitive.",
+            "minimum": 0,
+            "maximum": 255,
+            "x-enum": [
+              {
+                "value": 0,
+                "name": "ShapeRect",
+                "doc": "ShapeRect is a rectangle of Size from the Transform's position."
+              },
+              {
+                "value": 1,
+                "name": "ShapeCircle",
+                "doc": "ShapeCircle is a circle of radius Size.X around the position."
+              },
+              {
+                "value": 2,
+                "name": "ShapeLine",
+                "doc": "ShapeLine is a line from the position to position + Size."
+              }
+            ]
+          },
+          "Size": {
+            "type": "object",
+            "description": "Size is the width/height of a rect, the radius (in X) of a circle, or\nthe end offset of a line.",
+            "properties": {
+              "X": {
+                "type": "number",
+                "format": "float"
+              },
+              "Y": {
+                "type": "number",
+                "format": "float"
+              }
+            },
+            "required": [
+              "X",
+              "Y"
+            ]
+          }
+        },
+        "required": [
+          "Kind",
+          "Size",
+          "Color"
+        ]
+      }
+    },
+    {
+      "group": "gfx",
+      "name": "Sprite",
+      "doc": "Sprite draws an image at the entity's Transform.",
+      "goType": "github.com/weakpixel/engine/gfx.Sprite",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Blend": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Blend is how the sprite is composited onto what is below it. The zero\nvalue is BlendNormal. Give blended sprites a layer of their own so they\nbatch.",
+            "minimum": 0,
+            "maximum": 255,
+            "x-enum": [
+              {
+                "value": 0,
+                "name": "BlendNormal",
+                "doc": "BlendNormal draws the source over what is below (alpha blending)."
+              },
+              {
+                "value": 1,
+                "name": "BlendAdditive",
+                "doc": "BlendAdditive adds the source color to what is below: glows, fire,\nsparks."
+              },
+              {
+                "value": 2,
+                "name": "BlendMultiply",
+                "doc": "BlendMultiply multiplies what is below by the source color: white\nkeeps it, black darkens it to black."
+              },
+              {
+                "value": 3,
+                "name": "BlendScreen",
+                "doc": "BlendScreen brightens like BlendAdditive but never exceeds white:\nsoft glows, light shafts, flashes."
+              },
+              {
+                "value": 4,
+                "name": "BlendSubtract",
+                "doc": "BlendSubtract subtracts the source color from what is below:\ndarkening tints, negative light."
+              },
+              {
+                "value": 5,
+                "name": "BlendLighten",
+                "doc": "BlendLighten keeps the brighter of source and destination per\nchannel: overlapping glows that do not add up."
+              },
+              {
+                "value": 6,
+                "name": "BlendErase",
+                "doc": "BlendErase removes what is below by the source's alpha. Use it inside\na layer group to cut holes (fog of war, flashlight masks)."
+              }
+            ]
+          },
+          "FlipX": {
+            "type": "boolean",
+            "description": "FlipX mirrors the sprite horizontally."
+          },
+          "FlipY": {
+            "type": "boolean",
+            "description": "FlipY mirrors the sprite vertically."
+          },
+          "Hidden": {
+            "type": "boolean",
+            "description": "Hidden skips the sprite. It is a field and not a tag so that toggling\nit does not move the entity between archetypes."
+          },
+          "ID": {
+            "type": "string",
+            "format": "asset",
+            "description": "ID selects the image. Animation systems change it per frame. The zero\nhandle draws the placeholder. In the Game Object schema it is an asset\nkey (\"chars/hero.aseprite.json#idle_0\"); the handle itself is\nruntime-only (json:\"-\"), and the resolver package converts the two.",
+            "x-asset": "sprite"
+          },
+          "Layer": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Layer is the draw order: higher layers draw on top.",
+            "minimum": -32768,
+            "maximum": 32767
+          },
+          "Origin": {
+            "type": "object",
+            "description": "Origin is the pivot as a fraction of the sprite size: (0.5,0.5) is the\ncenter. The zero Origin means the sprite's own default pivot, so\ntop-left needs a tiny non-zero value such as (0.0001, 0.0001).",
+            "properties": {
+              "X": {
+                "type": "number",
+                "format": "float"
+              },
+              "Y": {
+                "type": "number",
+                "format": "float"
+              }
+            },
+            "required": [
+              "X",
+              "Y"
+            ]
+          },
+          "Params": {
+            "type": "array",
+            "description": "Params are passed to Shader as its \"Params\" vec4 uniform; their meaning\nis up to the shader. Animate them instead of swapping shaders: changing\na field does not move the entity between archetypes.",
+            "items": {
+              "type": "number",
+              "format": "float"
+            },
+            "minItems": 4,
+            "maxItems": 4
+          },
+          "Shader": {
+            "type": "string",
+            "format": "asset",
+            "description": "Shader draws the sprite through a Kage shader (hit flash, outline,\npalette swap). The zero handle, and a shader that is still loading or\nfailed, draw the sprite normally. In the Game Object schema it is an\nasset key (\"fx/flash.kage\"); the handle is runtime-only (json:\"-\").",
+            "x-asset": "shader"
+          },
+          "Tint": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Tint multiplies the sprite's color. Zero means no tint.",
+            "minimum": 0,
+            "maximum": 4294967295
+          }
+        },
+        "required": [
+          "Layer",
+          "Origin",
+          "FlipX",
+          "FlipY",
+          "Tint",
+          "Blend",
+          "Hidden"
+        ]
+      }
+    },
+    {
+      "group": "gfx",
+      "name": "Transform",
+      "doc": "Transform places an entity in the world.\n\nThe zero Scale means (1, 1), so a zero-valued Transform is valid.",
+      "goType": "github.com/weakpixel/engine/gfx.Transform",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Pos": {
+            "type": "object",
+            "description": "Pos is the position in world units at the current tick.",
+            "properties": {
+              "X": {
+                "type": "number",
+                "format": "float"
+              },
+              "Y": {
+                "type": "number",
+                "format": "float"
+              }
+            },
+            "required": [
+              "X",
+              "Y"
+            ]
+          },
+          "PrevPos": {
+            "type": "object",
+            "description": "PrevPos is Pos at the start of the tick. The extract.SnapshotTransforms\nsystem copies Pos here, and the renderer blends PrevPos to Pos so that\n60 TPS looks smooth on faster displays.",
+            "properties": {
+              "X": {
+                "type": "number",
+                "format": "float"
+              },
+              "Y": {
+                "type": "number",
+                "format": "float"
+              }
+            },
+            "required": [
+              "X",
+              "Y"
+            ]
+          },
+          "Rot": {
+            "type": "number",
+            "format": "float",
+            "description": "Rot is the rotation in radians, clockwise on screen.",
+            "x-editor": {
+              "step": 5,
+              "unit": "deg"
+            }
+          },
+          "Scale": {
+            "type": "object",
+            "description": "Scale multiplies the sprite size. Zero means (1, 1); the editor starts a\nnew Transform at (1, 1).",
+            "properties": {
+              "X": {
+                "type": "number",
+                "format": "float",
+                "default": 1
+              },
+              "Y": {
+                "type": "number",
+                "format": "float",
+                "default": 1
+              }
+            },
+            "required": [
+              "X",
+              "Y"
+            ]
+          }
+        },
+        "required": [
+          "Pos",
+          "PrevPos",
+          "Rot",
+          "Scale"
+        ]
+      }
+    },
+    {
+      "group": "hero_tiled",
+      "name": "Health",
+      "doc": "Health is the hit points of a fighter. Combat adds to Damage and the\n[HealthSystem] applies it.",
+      "goType": "example.com/level.Health",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Current": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Current is the hit points left; the fighter is out at 0.",
+            "minimum": -2147483648,
+            "maximum": 2147483647
+          },
+          "Damage": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Damage is the hit points taken since the health system last ran.",
+            "minimum": -2147483648,
+            "maximum": 2147483647
+          },
+          "Max": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Max is the hit points the fighter starts with and is restored to.",
+            "minimum": -2147483648,
+            "maximum": 2147483647
+          }
+        },
+        "required": [
+          "Current",
+          "Max",
+          "Damage"
+        ]
+      }
+    },
+    {
+      "group": "hero_tiled",
+      "name": "HeroBrain",
+      "doc": "HeroBrain is the hero's state machine data: the direction it faces and\nits current state (see hero-states.go).",
+      "goType": "example.com/level.HeroBrain",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Facing": {
+            "type": "object",
+            "description": "Facing is the last direction the hero walked in; it picks the idle\nclip.",
+            "properties": {
+              "X": {
+                "type": "number",
+                "format": "float"
+              },
+              "Y": {
+                "type": "number",
+                "format": "float"
+              }
+            },
+            "required": [
+              "X",
+              "Y"
+            ]
+          },
+          "Hit": {
+            "type": "boolean",
+            "description": "Hit is set by combat when an attack landed on this fighter; the\nmachine consumes it by entering [StateHurt]."
+          },
+          "RollDir": {
+            "type": "object",
+            "description": "RollDir is the unit direction of the current roll; set when the roll\nstarts.",
+            "properties": {
+              "X": {
+                "type": "number",
+                "format": "float"
+              },
+              "Y": {
+                "type": "number",
+                "format": "float"
+              }
+            },
+            "required": [
+              "X",
+              "Y"
+            ]
+          },
+          "RunSpeed": {
+            "type": "number",
+            "format": "float",
+            "description": "RunSpeed is the speed in pixels per second while running; set per\nfighter at spawn (see heroRunSpeed and twinRunSpeed)."
+          },
+          "State": {
+            "type": "integer",
+            "format": "int32",
+            "description": "State is the current state of the machine.",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "Struck": {
+            "type": "boolean",
+            "description": "Struck is set by combat when this fighter's current chop has landed,\nso one swing hits once. A new chop clears it."
+          },
+          "Velocity": {
+            "type": "object",
+            "description": "Velocity is the hero's speed in pixels per second as of the last tick. A\nchop slides on with it.",
+            "properties": {
+              "X": {
+                "type": "number",
+                "format": "float"
+              },
+              "Y": {
+                "type": "number",
+                "format": "float"
+              }
+            },
+            "required": [
+              "X",
+              "Y"
+            ]
+          },
+          "WalkSpeed": {
+            "type": "number",
+            "format": "float",
+            "description": "WalkSpeed is the speed in pixels per second while walking; set per\nfighter at spawn (see heroWalkSpeed and twinWalkSpeed)."
+          }
+        },
+        "required": [
+          "Facing",
+          "State",
+          "Velocity",
+          "Hit",
+          "Struck",
+          "WalkSpeed",
+          "RunSpeed",
+          "RollDir"
+        ]
+      }
+    },
+    {
+      "group": "hero_tiled",
+      "name": "HeroTag",
+      "doc": "HeroTag is a tag component that marks the hero. It is used to select the",
+      "goType": "example.com/level.HeroTag",
+      "schema": {
+        "type": "object"
+      }
+    },
+    {
+      "group": "hero_tiled",
+      "name": "TwinMind",
+      "doc": "TwinMind is the twin's AI data.",
+      "goType": "example.com/level.TwinMind",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Cooldown": {
+            "type": "number",
+            "format": "float",
+            "description": "Cooldown is the time in seconds until the twin may attack again."
+          }
+        },
+        "required": [
+          "Cooldown"
+        ]
+      }
+    }
+  ],
+  "objects": [
+    {
+      "group": "hero_tiled",
+      "class": "DebugBox",
+      "doc": "DebugBox is one outline rectangle of the debug overlay.",
+      "goType": "example.com/level.DebugBox",
+      "components": [
+        {
+          "component": "gfx:Transform",
+          "field": "Transform",
+          "doc": "The box's corner."
+        },
+        {
+          "component": "gfx:DebugShape",
+          "field": "DebugShape",
+          "doc": "The outline."
+        }
+      ]
+    },
+    {
+      "group": "hero_tiled",
+      "class": "EvilTwin",
+      "doc": "EvilTwin is the hero's dark double: it looks like the hero, runs the same\nstate machine and hunts the hero down (see twin-system.go).",
+      "goType": "example.com/level.EvilTwin",
+      "components": [
+        {
+          "component": "gfx:Transform",
+          "field": "Transform",
+          "doc": "Where the twin is."
+        },
+        {
+          "component": "gfx:Animator",
+          "field": "Animator",
+          "doc": "How the twin is animated."
+        },
+        {
+          "component": "gfx:Sprite",
+          "field": "Sprite",
+          "doc": "How the twin looks: the hero's sprites through the evil shader."
+        },
+        {
+          "component": "hero_tiled:HeroBrain",
+          "field": "Brain",
+          "doc": "What the twin is doing; the same machine data as the hero's."
+        },
+        {
+          "component": "hero_tiled:TwinMind",
+          "field": "Mind",
+          "doc": "What the twin wants."
+        },
+        {
+          "component": "hero_tiled:Health",
+          "field": "Health",
+          "doc": "How much the twin can take."
+        }
+      ]
+    },
+    {
+      "group": "hero_tiled",
+      "class": "Hero",
+      "doc": "Hero is the player character: a positioned, animated sprite.",
+      "goType": "example.com/level.Hero",
+      "components": [
+        {
+          "component": "hero_tiled:HeroTag",
+          "field": "HeroTag",
+          "doc": "The tag marks the hero for selection by the systems that need it."
+        },
+        {
+          "component": "gfx:Transform",
+          "field": "Transform",
+          "doc": "Where the hero is."
+        },
+        {
+          "component": "gfx:Animator",
+          "field": "Animator",
+          "doc": "How the hero is animated."
+        },
+        {
+          "component": "gfx:Sprite",
+          "field": "Sprite",
+          "doc": "How the hero looks."
+        },
+        {
+          "component": "hero_tiled:HeroBrain",
+          "field": "Brain",
+          "doc": "What the hero is doing."
+        },
+        {
+          "component": "hero_tiled:Health",
+          "field": "Health",
+          "doc": "How much the hero can take."
+        }
+      ]
+    }
+  ]
+}

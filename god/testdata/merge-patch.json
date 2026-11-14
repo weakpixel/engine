@@ -1,0 +1,16 @@
+{
+  "doc": "Cases of the prefab override merge (doc/guide/ecs/game-object-definition.md#prefabs): objects merge key by key, everything else replaces, null sets null. Shared with the VSCode extension (weakpixel/weakpixel-engine-vscode test/fixtures/merge-patch.json): change both.",
+  "cases": [
+    {"name": "replace scalar", "base": 1, "patch": 2, "want": 2},
+    {"name": "merge keys", "base": {"A": 1, "B": 2}, "patch": {"B": 3}, "want": {"A": 1, "B": 3}},
+    {"name": "add key", "base": {"A": 1}, "patch": {"C": {"X": 1}}, "want": {"A": 1, "C": {"X": 1}}},
+    {"name": "nested", "base": {"P": {"X": 1, "Y": 2}, "S": 1}, "patch": {"P": {"Y": 5}}, "want": {"P": {"X": 1, "Y": 5}, "S": 1}},
+    {"name": "arrays replace", "base": {"L": [1, 2, 3]}, "patch": {"L": [9]}, "want": {"L": [9]}},
+    {"name": "null sets null", "base": {"A": {"X": 1}}, "patch": {"A": null}, "want": {"A": null}},
+    {"name": "object over scalar", "base": {"A": 1}, "patch": {"A": {"X": 1}}, "want": {"A": {"X": 1}}},
+    {"name": "object over null", "base": {"A": null}, "patch": {"A": {"X": 1}}, "want": {"A": {"X": 1}}},
+    {"name": "scalar over object", "base": {"A": {"X": 1}}, "patch": {"A": 3}, "want": {"A": 3}},
+    {"name": "empty patch", "base": {"A": {"X": 1}}, "patch": {}, "want": {"A": {"X": 1}}},
+    {"name": "deep add", "base": {"A": {"B": {"C": 1}}}, "patch": {"A": {"B": {"D": 2}}}, "want": {"A": {"B": {"C": 1, "D": 2}}}}
+  ]
+}

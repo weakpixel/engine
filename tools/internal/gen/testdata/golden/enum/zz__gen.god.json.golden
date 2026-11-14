@@ -1,0 +1,136 @@
+{
+  "version": 0,
+  "generator": "weakpixel gen",
+  "package": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/enum",
+  "components": [
+    {
+      "group": "enum",
+      "name": "Shape",
+      "doc": "Shape uses Kind directly, through a pointer, a slice and a map.",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/enum.Shape",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "ByName": {
+            "type": "object",
+            "nullable": true,
+            "additionalProperties": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 0,
+              "maximum": 65535,
+              "x-enum": [
+                {
+                  "value": 0,
+                  "name": "KindPoint",
+                  "doc": "KindPoint spawns at the origin."
+                },
+                {
+                  "value": 1,
+                  "name": "KindCircle",
+                  "doc": "KindCircle spawns inside a circle."
+                },
+                {
+                  "value": 2,
+                  "name": "KindRect"
+                }
+              ]
+            }
+          },
+          "Kind": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0,
+            "maximum": 65535,
+            "x-enum": [
+              {
+                "value": 0,
+                "name": "KindPoint",
+                "doc": "KindPoint spawns at the origin."
+              },
+              {
+                "value": 1,
+                "name": "KindCircle",
+                "doc": "KindCircle spawns inside a circle."
+              },
+              {
+                "value": 2,
+                "name": "KindRect"
+              }
+            ]
+          },
+          "Many": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 0,
+              "maximum": 65535,
+              "x-enum": [
+                {
+                  "value": 0,
+                  "name": "KindPoint",
+                  "doc": "KindPoint spawns at the origin."
+                },
+                {
+                  "value": 1,
+                  "name": "KindCircle",
+                  "doc": "KindCircle spawns inside a circle."
+                },
+                {
+                  "value": 2,
+                  "name": "KindRect"
+                }
+              ]
+            }
+          },
+          "Maybe": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true,
+            "minimum": 0,
+            "maximum": 65535,
+            "x-enum": [
+              {
+                "value": 0,
+                "name": "KindPoint",
+                "doc": "KindPoint spawns at the origin."
+              },
+              {
+                "value": 1,
+                "name": "KindCircle",
+                "doc": "KindCircle spawns inside a circle."
+              },
+              {
+                "value": 2,
+                "name": "KindRect"
+              }
+            ]
+          },
+          "Size": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "Kind",
+          "Size"
+        ]
+      }
+    }
+  ],
+  "objects": [
+    {
+      "group": "enum",
+      "class": "Emitter",
+      "goType": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/enum.Emitter",
+      "components": [
+        {
+          "component": "enum:Shape",
+          "field": "Shape"
+        }
+      ]
+    }
+  ]
+}

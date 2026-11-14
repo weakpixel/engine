@@ -1,0 +1,439 @@
+{
+  "version": 0,
+  "generator": "weakpixel gen",
+  "package": "example.com/game",
+  "components": [
+    {
+      "group": "game",
+      "name": "Acceleration",
+      "doc": "Acceleration is an entity's rate of change of velocity, applied once per\ntick.",
+      "goType": "example.com/game.Acceleration",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "X": {
+            "type": "number",
+            "format": "double",
+            "description": "X is the horizontal acceleration, in world units per tick squared."
+          },
+          "Y": {
+            "type": "number",
+            "format": "double",
+            "description": "Y is the vertical acceleration, in world units per tick squared."
+          }
+        },
+        "required": [
+          "X",
+          "Y"
+        ]
+      }
+    },
+    {
+      "group": "game",
+      "name": "Armor",
+      "doc": "Armor is a Boss-only required component, making Boss richer than Hero.",
+      "goType": "example.com/game.Armor",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Value": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Value is the damage absorbed from each hit."
+          }
+        },
+        "required": [
+          "Value"
+        ]
+      }
+    },
+    {
+      "group": "game",
+      "name": "Companion",
+      "doc": "Companion is a readonly (value) component: NewEntity/Set store a copy,\nand Get/Each copy it back out.",
+      "goType": "example.com/game.Companion",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Attachment": {
+            "type": "object",
+            "nullable": true,
+            "description": "Attachment is what the companion carries, or null when nothing.",
+            "properties": {
+              "Name": {
+                "type": "string",
+                "description": "Name identifies the attachment, e.g. \"saddle\"."
+              }
+            },
+            "required": [
+              "Name"
+            ]
+          },
+          "Name": {
+            "type": "string",
+            "description": "Name is the companion's display name."
+          }
+        },
+        "required": [
+          "Name"
+        ]
+      }
+    },
+    {
+      "group": "game",
+      "name": "Follow",
+      "doc": "Follow makes an entity move after another object. Target is an entity\nreference: in a level file it is the \"id\" of the followed object, and null\nmeans nobody.",
+      "goType": "example.com/game.Follow",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Distance": {
+            "type": "number",
+            "format": "double"
+          },
+          "Target": {
+            "type": "string",
+            "format": "entity",
+            "nullable": true
+          }
+        },
+        "required": [
+          "Distance"
+        ]
+      }
+    },
+    {
+      "group": "game",
+      "name": "Health",
+      "doc": "Health is an entity's hit points. The entity is dead when Current reaches\nzero.",
+      "goType": "example.com/game.Health",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Current": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Current is the remaining hit points."
+          },
+          "Max": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Max is the upper bound Current is healed up to."
+          }
+        },
+        "required": [
+          "Current",
+          "Max"
+        ]
+      }
+    },
+    {
+      "group": "game",
+      "name": "Hitbox",
+      "doc": "Hitbox is an axis-aligned box, relative to the entity's position, used for\ncollision. Its identity is declared on the type: it is \"game:Hitbox\" in\ndata files, in the same group as the gametypes components.",
+      "goType": "example.com/game/ext.Hitbox",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Height": {
+            "type": "number",
+            "format": "double",
+            "description": "Height is the box height, in world units."
+          },
+          "OffsetX": {
+            "type": "number",
+            "format": "double",
+            "description": "OffsetX is the horizontal distance from the entity's position to the\nbox origin."
+          },
+          "OffsetY": {
+            "type": "number",
+            "format": "double",
+            "description": "OffsetY is the vertical distance from the entity's position to the box\norigin."
+          },
+          "Width": {
+            "type": "number",
+            "format": "double",
+            "description": "Width is the box width, in world units."
+          }
+        },
+        "required": [
+          "Width",
+          "Height",
+          "OffsetX",
+          "OffsetY"
+        ]
+      }
+    },
+    {
+      "group": "game",
+      "name": "Score",
+      "doc": "Score is a component no object uses yet. +game:component on the type puts\nit into the GOD, types.Components() and the god-doc output anyway, so it\ncan be documented and linked before an object adopts it.",
+      "goType": "example.com/game.Score",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Points": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Points is the score so far."
+          }
+        },
+        "required": [
+          "Points"
+        ]
+      }
+    },
+    {
+      "group": "game",
+      "name": "State",
+      "doc": "State is an entity's coarse behavioral state.",
+      "goType": "example.com/game.State",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Active": {
+            "type": "boolean",
+            "description": "Active reports whether the entity takes part in the simulation."
+          },
+          "Kind": {
+            "type": "string",
+            "description": "Kind names the behavior the entity is in, e.g. \"idle\" or \"attacking\"."
+          }
+        },
+        "required": [
+          "Active",
+          "Kind"
+        ]
+      }
+    },
+    {
+      "group": "game",
+      "name": "Transform",
+      "doc": "Transform is an entity's position in the world.",
+      "goType": "example.com/game.Transform",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "X": {
+            "type": "number",
+            "format": "double",
+            "description": "X is the horizontal position, in world units."
+          },
+          "Y": {
+            "type": "number",
+            "format": "double",
+            "description": "Y is the vertical position, in world units."
+          }
+        },
+        "required": [
+          "X",
+          "Y"
+        ]
+      }
+    },
+    {
+      "group": "game",
+      "name": "Vel",
+      "doc": "Vel is an entity's velocity.",
+      "goType": "example.com/game.Vel",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "X": {
+            "type": "number",
+            "format": "double",
+            "description": "X is the horizontal velocity, in world units per tick."
+          },
+          "Y": {
+            "type": "number",
+            "format": "double",
+            "description": "Y is the vertical velocity, in world units per tick."
+          }
+        },
+        "required": [
+          "X",
+          "Y"
+        ]
+      }
+    },
+    {
+      "group": "game",
+      "name": "Weapon",
+      "doc": "Weapon is an optional offensive component. Entities without it cannot\nattack.",
+      "goType": "example.com/game.Weapon",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Ammo": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Ammo is the number of shots left."
+          },
+          "Damage": {
+            "type": "number",
+            "format": "double",
+            "description": "Damage is the hit points removed from a target per hit."
+          }
+        },
+        "required": [
+          "Damage",
+          "Ammo"
+        ]
+      }
+    }
+  ],
+  "objects": [
+    {
+      "group": "game",
+      "class": "Boss",
+      "doc": "Boss is a Hero-like enemy with armor. It matches everything Hero matches.",
+      "goType": "example.com/game.Boss",
+      "components": [
+        {
+          "component": "game:Transform",
+          "field": "Transform",
+          "doc": "Where the entity is in the world.",
+          "embeddedVia": [
+            "Common"
+          ]
+        },
+        {
+          "component": "game:Acceleration",
+          "field": "Acceleration",
+          "doc": "How quickly the entity's velocity changes.",
+          "embeddedVia": [
+            "Common"
+          ]
+        },
+        {
+          "component": "game:State",
+          "field": "State",
+          "doc": "What the entity is currently doing.",
+          "embeddedVia": [
+            "Common"
+          ]
+        },
+        {
+          "component": "game:Health",
+          "field": "Health",
+          "doc": "The boss's hit points."
+        },
+        {
+          "component": "game:Vel",
+          "field": "Vel",
+          "doc": "How fast the boss moves."
+        },
+        {
+          "component": "game:Hitbox",
+          "field": "Hitbox",
+          "doc": "The area used for collision checks."
+        },
+        {
+          "component": "game:Companion",
+          "field": "Companion",
+          "readonly": true,
+          "doc": "The boss's companion, copied out on Get."
+        },
+        {
+          "component": "game:Weapon",
+          "field": "Weapon",
+          "optional": true,
+          "doc": "The weapon the boss currently carries, if any."
+        },
+        {
+          "component": "game:Armor",
+          "field": "Armor",
+          "doc": "Damage reduction that sets a Boss apart from a Hero."
+        }
+      ]
+    },
+    {
+      "group": "game",
+      "class": "Common",
+      "doc": "Common is the set of components every moving thing in the game shares. It\nis embedded by the other objects.",
+      "goType": "example.com/game.Common",
+      "components": [
+        {
+          "component": "game:Transform",
+          "field": "Transform",
+          "doc": "Where the entity is in the world."
+        },
+        {
+          "component": "game:Acceleration",
+          "field": "Acceleration",
+          "doc": "How quickly the entity's velocity changes."
+        },
+        {
+          "component": "game:State",
+          "field": "State",
+          "doc": "What the entity is currently doing."
+        }
+      ]
+    },
+    {
+      "group": "game",
+      "class": "Hero",
+      "doc": "Hero is the player character.",
+      "goType": "example.com/game.Hero",
+      "components": [
+        {
+          "component": "game:Transform",
+          "field": "Transform",
+          "doc": "Where the entity is in the world.",
+          "embeddedVia": [
+            "Common"
+          ]
+        },
+        {
+          "component": "game:Acceleration",
+          "field": "Acceleration",
+          "doc": "How quickly the entity's velocity changes.",
+          "embeddedVia": [
+            "Common"
+          ]
+        },
+        {
+          "component": "game:State",
+          "field": "State",
+          "doc": "What the entity is currently doing.",
+          "embeddedVia": [
+            "Common"
+          ]
+        },
+        {
+          "component": "game:Health",
+          "field": "Health",
+          "doc": "Stores the hero's health."
+        },
+        {
+          "component": "game:Vel",
+          "field": "Vel",
+          "doc": "How fast the hero moves."
+        },
+        {
+          "component": "game:Hitbox",
+          "field": "Hitbox",
+          "doc": "The area used for collision checks."
+        },
+        {
+          "component": "game:Companion",
+          "field": "Companion",
+          "readonly": true,
+          "doc": "The hero's companion, copied out on Get."
+        },
+        {
+          "component": "game:Weapon",
+          "field": "Weapon",
+          "optional": true,
+          "doc": "The weapon the hero currently carries, if any."
+        },
+        {
+          "component": "game:Follow",
+          "field": "Follow",
+          "optional": true,
+          "doc": "The object the hero follows, if any."
+        }
+      ]
+    }
+  ]
+}

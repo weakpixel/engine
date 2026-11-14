@@ -1,0 +1,25 @@
+{
+  "doc": "Cases of TypeSchema.InitialValue (doc/guide/ecs/game-object-definition.md#defaults): the value an editor writes for a new component. Shared with the VSCode extension (weakpixel/weakpixel-engine-vscode test/fixtures/initial-value.json): change both.",
+  "cases": [
+    {"name": "scalars", "schema": {"type": "object", "properties": {"N": {"type": "number"}, "I": {"type": "integer"}, "B": {"type": "boolean"}, "S": {"type": "string"}}}, "want": {"N": 0, "I": 0, "B": false, "S": ""}},
+    {"name": "entity is null", "schema": {"type": "object", "properties": {"E": {"type": "string", "format": "entity", "nullable": true}}}, "want": {"E": null}},
+    {"name": "unknown is null", "schema": {"type": "object", "properties": {"U": {"x-preserve-unknown-fields": true}}}, "want": {"U": null}},
+    {"name": "slice is empty", "schema": {"type": "object", "properties": {"L": {"type": "array", "nullable": true, "items": {"type": "integer"}}}}, "want": {"L": []}},
+    {"name": "array has minItems", "schema": {"type": "object", "properties": {"A": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "number"}}}}, "want": {"A": [0, 0]}},
+    {"name": "map is empty", "schema": {"type": "object", "properties": {"M": {"type": "object", "nullable": true, "additionalProperties": {"type": "number"}}}}, "want": {"M": {}}},
+    {"name": "default", "schema": {"type": "object", "properties": {"Size": {"type": "number", "default": 1.5}, "Text": {"type": "string", "default": "Hello"}}}, "want": {"Size": 1.5, "Text": "Hello"}},
+    {"name": "default inside nested object", "schema": {"type": "object", "properties": {"Scale": {"type": "object", "properties": {"X": {"type": "number", "default": 1}, "Y": {"type": "number", "default": 1}}}}}, "want": {"Scale": {"X": 1, "Y": 1}}},
+    {"name": "partial defaults keep zero siblings", "schema": {"type": "object", "properties": {"V": {"type": "object", "properties": {"X": {"type": "number", "default": 4}, "Y": {"type": "number"}}}}}, "want": {"V": {"X": 4, "Y": 0}}},
+    {"name": "outer default wins over inner", "schema": {"type": "object", "properties": {"V": {"type": "object", "default": {"X": 9}, "properties": {"X": {"type": "number", "default": 1}, "Y": {"type": "number", "default": 2}}}}}, "want": {"V": {"X": 9}}},
+    {"name": "enum default is the integer", "schema": {"type": "object", "properties": {"Blend": {"type": "integer", "default": 3, "x-enum": [{"value": 0, "name": "BlendNormal"}, {"value": 3, "name": "BlendScreen"}]}}}, "want": {"Blend": 3}},
+    {"name": "pointer without default is left out", "schema": {"type": "object", "properties": {"P": {"type": "number", "nullable": true}}}, "want": {}},
+    {"name": "struct and fixed array pointers are left out, slices stay", "schema": {"type": "object", "properties": {"V": {"type": "object", "nullable": true, "properties": {"X": {"type": "number"}}}, "A": {"type": "array", "nullable": true, "minItems": 4, "maxItems": 4, "items": {"type": "number"}}, "L": {"type": "array", "nullable": true, "items": {"type": "number"}}}}, "want": {"L": []}},
+    {"name": "pointer with default", "schema": {"type": "object", "properties": {"P": {"type": "number", "nullable": true, "default": 2}}}, "want": {"P": 2}},
+    {"name": "slice list default", "schema": {"type": "object", "properties": {"L": {"type": "array", "nullable": true, "items": {"type": "integer"}, "default": [1, 2, 3]}}}, "want": {"L": [1, 2, 3]}},
+    {"name": "map default", "schema": {"type": "object", "properties": {"M": {"type": "object", "nullable": true, "additionalProperties": {"type": "number"}, "default": {"walk": 2, "run": 4}}}}, "want": {"M": {"walk": 2, "run": 4}}},
+    {"name": "array of objects with defaults", "schema": {"type": "object", "properties": {"A": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "object", "properties": {"X": {"type": "number", "default": 1}}}}}}, "want": {"A": [{"X": 1}, {"X": 1}]}},
+    {"name": "runtime property is left out", "schema": {"type": "object", "properties": {"Speed": {"type": "number"}, "Time": {"type": "number", "x-runtime": true}}}, "want": {"Speed": 0}},
+    {"name": "root default", "schema": {"type": "number", "default": 7}, "want": 7},
+    {"name": "root scalar", "schema": {"type": "string"}, "want": ""}
+  ]
+}

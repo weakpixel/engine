@@ -1,0 +1,156 @@
+# Sample
+
+## Contents
+
+**Objects**
+
+- ext
+  - [Thing](#extthing)
+- game
+  - [Boss](#gameboss)
+  - [Hero](#gamehero)
+
+**Components**
+
+- [ext:Stamp](#extstamp)
+- [ext:Transform](#exttransform)
+- [game:Companion](#gamecompanion)
+- [game:Health](#gamehealth)
+- [game:Score](#gamescore)
+- [game:Transform](#gametransform)
+- [game:Weapon](#gameweapon)
+
+## Objects
+
+### ext:Thing
+
+Thing has its own Transform.
+
+| Component | Field | Flags | Description |
+| --- | --- | --- | --- |
+| [ext:Transform](#exttransform) | `Transform` |  |  |
+| [ext:Stamp](#extstamp) | `Stamp` |  |  |
+
+### game:Boss
+
+| Component | Field | Flags | Description |
+| --- | --- | --- | --- |
+| [game:Transform](#gametransform) | `Transform` | embedded (Common) |  |
+
+### game:Hero
+
+Hero is the player character.
+
+It can carry a weapon.
+
+| Component | Field | Flags | Description |
+| --- | --- | --- | --- |
+| [game:Transform](#gametransform) | `Transform` | embedded (Common.Base) | Where the hero is. |
+| [game:Health](#gamehealth) | `Health` |  | Stores the hero's health. |
+| [game:Companion](#gamecompanion) | `Companion` | readonly |  |
+| [game:Weapon](#gameweapon) | `Weapon` | optional | The weapon the hero carries, if any. |
+
+## Components
+
+### ext:Stamp
+
+Go type: `example.com/ext.Stamp`
+
+Type: `time.Time`
+
+**Used by**
+
+- [ext:Thing](#extthing)
+
+### ext:Transform
+
+A transform with a name.
+
+Go type: `example.com/ext.Transform`
+
+| Field | Type | Required | Nullable | Description |
+| --- | --- | --- | --- | --- |
+| `Label` | `string` | yes |  |  |
+
+**Used by**
+
+- [ext:Thing](#extthing)
+
+### game:Companion
+
+Go type: `example.com/game.Companion`
+
+| Field | Type | Required | Nullable | Description |
+| --- | --- | --- | --- | --- |
+| `Attachment` | `object` |  | yes |  |
+| `Attachment.Name` | `string` | yes |  |  |
+| `Name` | `string` | yes |  |  |
+| `Owner` | `reference to another object` |  | yes | The object that owns the companion. |
+| `Tags` | `array of string` |  | yes |  |
+
+**Used by**
+
+- [game:Hero](#gamehero)
+
+### game:Health
+
+Health is hit points.
+
+It never drops below zero.
+
+Go type: `example.com/game.Health`
+
+| Field | Type | Required | Nullable | Description |
+| --- | --- | --- | --- | --- |
+| `Current` | `integer (int64)` | yes |  |  |
+| `Max` | `integer (int64)` | yes |  |  |
+
+**Used by**
+
+- [game:Hero](#gamehero)
+
+### game:Score
+
+Score is not used by any object yet.
+
+Go type: `example.com/game.Score`
+
+| Field | Type | Required | Nullable | Description |
+| --- | --- | --- | --- | --- |
+| `Mode` | `enum (ScoreSum, ScoreBest)` | yes |  | How points are counted. Values: `0 ScoreSum`: Every point counts; `1 ScoreBest`. Default: `ScoreBest`. |
+| `Points` | `integer (int64)` | yes |  | Default: `10`. |
+
+**Used by**
+
+_No object uses it yet._
+
+### game:Transform
+
+Transform is a position.
+
+Go type: `example.com/game.Transform`
+
+| Field | Type | Required | Nullable | Description |
+| --- | --- | --- | --- | --- |
+| `X` | `number (double)` | yes |  | Horizontal \| position. |
+| `Y` | `number (double)` | yes |  |  |
+
+**Used by**
+
+- [game:Boss](#gameboss) — embedded (Common)
+- [game:Hero](#gamehero) — embedded (Common.Base)
+
+### game:Weapon
+
+Go type: `example.com/game.Weapon`
+
+| Field | Type | Required | Nullable | Description |
+| --- | --- | --- | --- | --- |
+| `Cooldown` | `number (double)` *(runtime)* |  |  |  |
+| `Damage` | `number (double)` | yes |  |  |
+| `Icon` | `asset (sprite)` |  |  |  |
+
+**Used by**
+
+- [game:Hero](#gamehero)
+

@@ -1,0 +1,242 @@
+{
+  "version": 0,
+  "generator": "weakpixel gen",
+  "package": "example.com/game",
+  "components": [
+    {
+      "group": "ext",
+      "name": "Stamp",
+      "goType": "example.com/ext.Stamp",
+      "schema": {
+        "type": "string",
+        "x-go-type": "time.Time"
+      }
+    },
+    {
+      "group": "ext",
+      "name": "Transform",
+      "doc": "A transform with a name.",
+      "goType": "example.com/ext.Transform",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Label": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "Label"
+        ]
+      }
+    },
+    {
+      "group": "game",
+      "name": "Companion",
+      "goType": "example.com/game.Companion",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Name": {
+            "type": "string"
+          },
+          "Owner": {
+            "type": "string",
+            "format": "entity",
+            "nullable": true,
+            "description": "The object that owns the companion."
+          },
+          "Attachment": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "Name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "Name"
+            ]
+          },
+          "Tags": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "Name"
+        ]
+      }
+    },
+    {
+      "group": "game",
+      "name": "Health",
+      "doc": "Health is hit points.\n\nIt never drops below zero.",
+      "goType": "example.com/game.Health",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Current": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "Max": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "Current",
+          "Max"
+        ]
+      }
+    },
+    {
+      "group": "game",
+      "name": "Score",
+      "doc": "Score is not used by any object yet.",
+      "goType": "example.com/game.Score",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Mode": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0,
+            "maximum": 255,
+            "description": "How points are counted.",
+            "default": 1,
+            "x-enum": [
+              {"value": 0, "name": "ScoreSum", "doc": "Every point counts."},
+              {"value": 1, "name": "ScoreBest"}
+            ]
+          },
+          "Points": {
+            "type": "integer",
+            "format": "int64",
+            "default": 10
+          }
+        },
+        "required": [
+          "Mode",
+          "Points"
+        ]
+      }
+    },
+    {
+      "group": "game",
+      "name": "Transform",
+      "doc": "Transform is a position.",
+      "goType": "example.com/game.Transform",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "X": {
+            "type": "number",
+            "format": "double",
+            "description": "Horizontal | position."
+          },
+          "Y": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "required": [
+          "X",
+          "Y"
+        ]
+      }
+    },
+    {
+      "group": "game",
+      "name": "Weapon",
+      "goType": "example.com/game.Weapon",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Cooldown": {
+            "type": "number",
+            "format": "double",
+            "x-runtime": true
+          },
+          "Damage": {
+            "type": "number",
+            "format": "double"
+          },
+          "Icon": {
+            "type": "string",
+            "format": "asset",
+            "x-asset": "sprite"
+          }
+        },
+        "required": [
+          "Damage"
+        ]
+      }
+    }
+  ],
+  "objects": [
+    {
+      "group": "game",
+      "class": "Hero",
+      "doc": "Hero is the player character.\n\nIt can carry a weapon.",
+      "components": [
+        {
+          "component": "game:Transform",
+          "field": "Transform",
+          "doc": "Where the hero is.",
+          "embeddedVia": [
+            "Common",
+            "Base"
+          ]
+        },
+        {
+          "component": "game:Health",
+          "field": "Health",
+          "doc": "Stores the hero's health."
+        },
+        {
+          "component": "game:Companion",
+          "field": "Companion",
+          "readonly": true
+        },
+        {
+          "component": "game:Weapon",
+          "field": "Weapon",
+          "optional": true,
+          "doc": "The weapon the hero carries, if any."
+        }
+      ]
+    },
+    {
+      "group": "game",
+      "class": "Boss",
+      "components": [
+        {
+          "component": "game:Transform",
+          "field": "Transform",
+          "embeddedVia": [
+            "Common"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "ext",
+      "class": "Thing",
+      "doc": "Thing has its own Transform.",
+      "components": [
+        {
+          "component": "ext:Transform",
+          "field": "Transform"
+        },
+        {
+          "component": "ext:Stamp",
+          "field": "Stamp"
+        }
+      ]
+    }
+  ]
+}

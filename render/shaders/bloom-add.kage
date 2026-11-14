@@ -1,0 +1,31 @@
+//kage:unit pixels
+
+package main
+
+// Params.x: how strongly the blurred glow is added.
+var Params vec4
+
+// tap reads the glow image (imageSrc1) at r, a position in its own pixels
+// clamped to its pixel centers so the border does not fade out. Kage takes
+// the position of imageSrcNAt in imageSrc0's texture, hence the origin.
+func tap(r vec2) vec4 {
+	r = clamp(r, vec2(0.5), imageSrc1Size()-vec2(0.5))
+	return imageSrc1At(imageSrc0Origin() + r)
+}
+
+// Fragment adds the smaller glow image (imageSrc1) to the frame
+// (imageSrc0), upsampling it bilinearly: Kage samples the nearest pixel, and
+// a quarter-size image would show as blocks.
+func Fragment(dst vec4, src vec2, color vec4) vec4 {
+	c := imageSrc0At(src)
+	p := (src-imageSrc0Origin())/imageSrc0Size()*imageSrc1Size() - vec2(0.5)
+	f := fract(p)
+	b := floor(p) + vec2(0.5)
+	g := mix(
+		mix(tap(b), tap(b+vec2(1, 0)), f.x),
+		mix(tap(b+vec2(0, 1)), tap(b+vec2(1, 1)), f.x),
+		f.y)
+	rgb := c.rgb + g.rgb*Params.x
+	// Premultiplied alpha: a glow over a transparent pixel needs alpha.
+	return vec4(rgb, min(max(c.a, max(rgb.r, max(rgb.g, rgb.b))), 1))
+}

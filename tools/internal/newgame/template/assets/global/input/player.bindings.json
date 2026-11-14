@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "mappings": {
+    "gameplay": {
+      "bindings": {
+        "move": [
+          { "composite": "dpad", "up": "key:W", "down": "key:S", "left": "key:A", "right": "key:D" },
+          { "composite": "dpad", "up": "key:ArrowUp", "down": "key:ArrowDown", "left": "key:ArrowLeft", "right": "key:ArrowRight" },
+          { "control": "pad:leftstick", "processors": [{ "deadzone": 0.2 }, { "normalize": true }] },
+          { "composite": "dpad", "up": "pad:up", "down": "pad:down", "left": "pad:left", "right": "pad:right" }
+        ],
+        "run": [{ "control": "key:ShiftLeft" }, { "control": "key:ShiftRight" }, { "control": "pad:west" }],
+        "quit": [{ "control": "key:Escape" }, { "control": "pad:select" }]
+      }
+    }
+  }
+}

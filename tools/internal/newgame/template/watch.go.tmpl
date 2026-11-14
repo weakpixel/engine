@@ -1,0 +1,7 @@
+//go:build !editor && !(js && webassets && webdev)
+
+package main
+
+// assetChanges is the source of pushed asset changes (game.Config.AssetChanges):
+// none here. The browser dev build (make web-dev) has one, see watch_web.go.
+func assetChanges() <-chan []string { return nil }

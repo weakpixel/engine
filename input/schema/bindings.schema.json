@@ -1,0 +1,209 @@
+{
+  "type": "object",
+  "properties": {
+    "groups": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "mappings": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "bindings": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "composite": {
+                    "type": "string"
+                  },
+                  "control": {
+                    "type": "string"
+                  },
+                  "controls": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "down": {
+                    "type": "string"
+                  },
+                  "interaction": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                      "doubleTap": {
+                        "type": "string"
+                      },
+                      "hold": {
+                        "type": "string"
+                      },
+                      "press": {
+                        "type": "boolean"
+                      },
+                      "release": {
+                        "type": "boolean"
+                      },
+                      "repeat": {
+                        "type": "object",
+                        "nullable": true,
+                        "properties": {
+                          "delay": {
+                            "type": "string"
+                          },
+                          "every": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "delay",
+                          "every"
+                        ]
+                      },
+                      "tap": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "left": {
+                    "type": "string"
+                  },
+                  "locked": {
+                    "type": "boolean"
+                  },
+                  "mods": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "neg": {
+                    "type": "string"
+                  },
+                  "pos": {
+                    "type": "string"
+                  },
+                  "processors": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "curve": {
+                          "type": "string"
+                        },
+                        "deadzone": {
+                          "type": "number",
+                          "format": "float",
+                          "nullable": true
+                        },
+                        "invert": {
+                          "type": "string"
+                        },
+                        "max": {
+                          "type": "number",
+                          "format": "float",
+                          "nullable": true
+                        },
+                        "normalize": {
+                          "type": "boolean"
+                        },
+                        "scale": {
+                          "type": "array",
+                          "items": {
+                            "type": "number",
+                            "format": "float"
+                          }
+                        },
+                        "sensitivity": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  },
+                  "right": {
+                    "type": "string"
+                  },
+                  "threshold": {
+                    "type": "number",
+                    "format": "float"
+                  },
+                  "up": {
+                    "type": "string"
+                  },
+                  "whichWins": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "block": {
+            "type": "boolean"
+          },
+          "priority": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "strictMods": {
+            "type": "boolean"
+          },
+          "touch": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "area": {
+                  "type": "array",
+                  "items": {
+                    "type": "number",
+                    "format": "float"
+                  }
+                },
+                "circle": {
+                  "type": "array",
+                  "items": {
+                    "type": "number",
+                    "format": "float"
+                  }
+                },
+                "floating": {
+                  "type": "boolean"
+                },
+                "kind": {
+                  "type": "string"
+                },
+                "radius": {
+                  "type": "number",
+                  "format": "float"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            }
+          }
+        },
+        "required": [
+          "bindings"
+        ]
+      }
+    },
+    "version": {
+      "type": "integer",
+      "format": "int64"
+    }
+  },
+  "required": [
+    "version",
+    "mappings"
+  ]
+}
