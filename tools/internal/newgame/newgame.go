@@ -1,4 +1,4 @@
-// Package newgame implements "weakpixel new": it creates a game module that
+// Package newgame implements "wpix new": it creates a game module that
 // runs, tests, regenerates, builds for the browser and opens in the VSCode
 // level editor (doc/guide/tools.md#new).
 //
@@ -42,7 +42,7 @@ const (
 // must differ, or its GOD file would clash with the engine's.
 var reservedGroups = []string{"gfx"}
 
-// Options are the arguments of `weakpixel new`.
+// Options are the arguments of `wpix new`.
 type Options struct {
 	Dir     string // target directory
 	Module  string // module path; empty means the base name of Dir
@@ -129,7 +129,7 @@ func (o *Options) complete() error {
 		}
 	}
 	if o.version == "" {
-		errs = append(errs, errors.New("the engine version is unknown (the tool runs from a checkout): set --replace to the checkout, or run go run github.com/weakpixel/engine/tools/weakpixel@latest new"))
+		errs = append(errs, errors.New("the engine version is unknown (the tool runs from a checkout): set --replace to the checkout, or run go run github.com/weakpixel/engine/tools/wpix@latest new"))
 	}
 	return errors.Join(errs...)
 }
@@ -172,7 +172,7 @@ func checkModulePath(p string) error {
 
 // moduleVersion is the version of module path that this binary was built
 // with: the main module's version under go run ...@version, the dependency's
-// version under go tool weakpixel in a game module, or "" when unknown (a
+// version under go tool wpix in a game module, or "" when unknown (a
 // checkout, a replaced dependency, a workspace module, a test binary).
 func moduleVersion(path string) string {
 	info, ok := debug.ReadBuildInfo()

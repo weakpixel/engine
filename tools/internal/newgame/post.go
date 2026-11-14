@@ -22,7 +22,7 @@ func postSteps(o Options, stdout, stderr io.Writer) error {
 		if _, err := exec.LookPath("git"); err == nil {
 			steps = append([][]string{{"git", "init", "-q"}}, steps...)
 		} else {
-			fmt.Fprintln(stderr, "weakpixel new: git not found, skipped git init")
+			fmt.Fprintln(stderr, "wpix new: git not found, skipped git init")
 		}
 	}
 	for _, s := range steps {

@@ -20,19 +20,19 @@ Lua scripting is an optional add-on in the [weakpixel/contrib](https://github.co
 | --- | --- | --- |
 | Engine Runtime | `github.com/weakpixel/engine/game`, `gfx`, `render`, `anim`, `tilemap`, `collision`, `physics`, `sound`, `speech`, `input`, `room`, ... | The 2D runtime: [engine guide](doc/guide/engine/README.md), start with [`game.Engine`](doc/guide/engine/engine.md) |
 | GOD runtime | `github.com/weakpixel/engine/god` | Registered Game Object schemas, JSON loading and saving |
-| Generator | `go run github.com/weakpixel/engine/tools/weakpixel gen` | `// +game:*` markers to typed views and GOD files (`<god.specs>/<group>.god.json`) |
-| Tools | `github.com/weakpixel/engine/tools/weakpixel` | `new`, `gen`, `doc`, `assets`, `anim`, `serve`, `mcp` and more ([tools](doc/guide/tools.md)) |
-| Editor | `github.com/weakpixel/engine/editor/...`, `tools/weakpixel-editor` | The level editor core for the VSCode extension and the tool shell ([editor](doc/guide/engine/editor.md)) |
+| Generator | `go run github.com/weakpixel/engine/tools/wpix gen` | `// +game:*` markers to typed views and GOD files (`<god.specs>/<group>.god.json`) |
+| Tools | `github.com/weakpixel/engine/tools/wpix` | `new`, `gen`, `doc`, `assets`, `anim`, `serve`, `mcp` and more ([tools](doc/guide/tools.md)) |
+| Editor | `github.com/weakpixel/engine/editor/...`, `tools/wpix-editor` | The level editor core for the VSCode extension and the tool shell ([editor](doc/guide/engine/editor.md)) |
 | Math | `github.com/weakpixel/engine/xmath` | `float32` vectors, rectangles and matrices |
 
 `god` imports only the ECS module and the standard library, so a program that uses just the ECS and Game Objects compiles no Ebiten code.
 
 ## Quick start
 
-A new game, ready to run, test, build for the browser and edit in VSCode ([weakpixel new](doc/guide/tools.md#new)):
+A new game, ready to run, test, build for the browser and edit in VSCode ([wpix new](doc/guide/tools.md#new)):
 
 ```bash
-go run github.com/weakpixel/engine/tools/weakpixel@latest new mygame
+go run github.com/weakpixel/engine/tools/wpix@latest new mygame
 cd mygame && go run .
 ```
 

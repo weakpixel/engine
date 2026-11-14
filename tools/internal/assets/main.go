@@ -1,14 +1,14 @@
-// Package assets implements `weakpixel assets`. It checks, lists, catalogs and packs an asset library
+// Package assets implements `wpix assets`. It checks, lists, catalogs and packs an asset library
 // laid out in the standard convention (doc/guide/engine/asset-library.md)
 // without starting Ebiten.
 //
 // Usage:
 //
-//	weakpixel assets check [--json] [<root>]
-//	weakpixel assets ls [<root>]
-//	weakpixel assets catalog [<root>] [-o <file>|-]
-//	weakpixel assets pack [<root>] [-o <out>]
-//	weakpixel assets keys [<root>] [--pkg name] [-o file|-]
+//	wpix assets check [--json] [<root>]
+//	wpix assets ls [<root>]
+//	wpix assets catalog [<root>] [-o <file>|-]
+//	wpix assets pack [<root>] [-o <out>]
+//	wpix assets keys [<root>] [--pkg name] [-o file|-]
 //
 // check prints every finding of library.Scan, one line each
 // ("<file>: error|warn: ..."), then a summary line. With --json it prints one
@@ -35,7 +35,7 @@
 // of a known kind and the clip tags (default package "assets", default
 // output stdout), for go:generate:
 //
-//	//go:generate go run github.com/weakpixel/engine/tools/weakpixel assets keys assets --pkg main -o zz__gen.assets.go
+//	//go:generate go run github.com/weakpixel/engine/tools/wpix assets keys assets --pkg main -o zz__gen.assets.go
 //
 // <root> may be left out when a .weakpixel.json above the working directory
 // sets "assets.root" (doc/guide/project-file.md); an empty Root of the options
@@ -65,30 +65,30 @@ import (
 // cannot clobber anything.
 const DefaultPackOut = "build/assets"
 
-// CheckOptions are the arguments of `weakpixel assets check`.
+// CheckOptions are the arguments of `wpix assets check`.
 type CheckOptions struct {
 	Root string // library root; empty means assets.root of .weakpixel.json
 	JSON bool   // print one JSON object instead of lines
 }
 
-// ListOptions are the arguments of `weakpixel assets ls`.
+// ListOptions are the arguments of `wpix assets ls`.
 type ListOptions struct {
 	Root string // library root; empty means assets.root of .weakpixel.json
 }
 
-// CatalogOptions are the arguments of `weakpixel assets catalog`.
+// CatalogOptions are the arguments of `wpix assets catalog`.
 type CatalogOptions struct {
 	Root string // library root; empty means assets.root of .weakpixel.json
 	Out  string // output file, "-" for stdout; empty means <Root>/assets.catalog.json
 }
 
-// PackOptions are the arguments of `weakpixel assets pack`.
+// PackOptions are the arguments of `wpix assets pack`.
 type PackOptions struct {
 	Root string // library root; empty means assets.root of .weakpixel.json
 	Out  string // output folder, which must not exist or be empty; empty means DefaultPackOut
 }
 
-// KeysOptions are the arguments of `weakpixel assets keys`.
+// KeysOptions are the arguments of `wpix assets keys`.
 type KeysOptions struct {
 	Root string // library root; empty means assets.root of .weakpixel.json
 	Pkg  string // package name of the generated file; empty means "assets"
@@ -105,7 +105,7 @@ func (e *libraryError) Error() string {
 			fmt.Fprintln(&b, f)
 		}
 	}
-	b.WriteString("the library has errors; fix them first (weakpixel assets check)")
+	b.WriteString("the library has errors; fix them first (wpix assets check)")
 	return b.String()
 }
 

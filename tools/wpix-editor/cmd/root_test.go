@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/weakpixel/engine/tools/internal/cli"
-	"github.com/weakpixel/engine/tools/weakpixel-editor/internal/native"
+	"github.com/weakpixel/engine/tools/wpix-editor/internal/native"
 )
 
 // execute runs the command tree with a stub that records what would open.

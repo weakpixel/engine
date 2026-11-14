@@ -1,9 +1,9 @@
 # Getting started
 
-To start a game, create a project with [`weakpixel new`](../tools.md#new):
+To start a game, create a project with [`wpix new`](../tools.md#new):
 
 ```sh
-go run github.com/weakpixel/engine/tools/weakpixel@latest new mygame
+go run github.com/weakpixel/engine/tools/wpix@latest new mygame
 cd mygame
 go run .          # WASD or the arrow keys walk, Esc quits
 ```

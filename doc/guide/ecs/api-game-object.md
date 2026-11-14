@@ -1,6 +1,6 @@
 # Game Object API
 
-This page covers the runtime API of generated Game Objects. A Game Object is a Go struct whose fields are components. `weakpixel gen` generates a typed view for it on top of the [generic](https://github.com/weakpixel/ecs/blob/main/doc/api-generic.md) and [low-level](https://github.com/weakpixel/ecs/blob/main/doc/api-low-level.md) APIs of the [ECS](https://github.com/weakpixel/ecs). Game Objects are not a separate storage model: every object is an ordinary entity holding ordinary components.
+This page covers the runtime API of generated Game Objects. A Game Object is a Go struct whose fields are components. `wpix gen` generates a typed view for it on top of the [generic](https://github.com/weakpixel/ecs/blob/main/doc/api-generic.md) and [low-level](https://github.com/weakpixel/ecs/blob/main/doc/api-low-level.md) APIs of the [ECS](https://github.com/weakpixel/ecs). Game Objects are not a separate storage model: every object is an ordinary entity holding ordinary components.
 
 For the JSON schema and (de)serialization see [game-object-definition.md](game-object-definition.md).
 
@@ -58,7 +58,7 @@ This table is the one list of markers; [game-object-definition.md](game-object-d
 ## Generating
 
 ```go
-//go:generate go run github.com/weakpixel/engine/tools/weakpixel gen
+//go:generate go run github.com/weakpixel/engine/tools/wpix gen
 ```
 
 `go generate` writes `zz__gen.go` into the package, and the package's GOD file into the project's specs folder (`god.specs` of [`.weakpixel.json`](../project-file.md), as `<group>.god.json`) or, without one, `zz__gen.god.json` next to the sources. Do not edit them by hand. Everything it uses from `ecs` is exported API, so it works from any module (run `go mod tidy` after adding the directive; the generator needs `golang.org/x/tools`).
@@ -70,7 +70,7 @@ It generates:
 
 ## Documentation
 
-Go doc comments on objects, their component fields, component types, component fields and the constants of `+game:enum` types are copied into the package's GOD file (without the `+game:*` lines; see [Documentation fields](game-object-definition.md#documentation-fields)). `weakpixel doc` turns those files into one HTML or Markdown document: see [Tools](../tools.md#doc).
+Go doc comments on objects, their component fields, component types, component fields and the constants of `+game:enum` types are copied into the package's GOD file (without the `+game:*` lines; see [Documentation fields](game-object-definition.md#documentation-fields)). `wpix doc` turns those files into one HTML or Markdown document: see [Tools](../tools.md#doc).
 
 ## View
 

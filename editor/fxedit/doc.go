@@ -1,4 +1,4 @@
-// Package fxedit is the "fx" tool of weakpixel-editor: it makes a particle
+// Package fxedit is the "fx" tool of wpix-editor: it makes a particle
 // effect, an *.fx.json file (package particles), without knowing which
 // components are involved. It plays the effect in the shell's engine, shows
 // the fields that matter as a panel and writes the whole file back in

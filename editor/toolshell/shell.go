@@ -27,7 +27,7 @@ import (
 	"github.com/weakpixel/engine/input"
 )
 
-// Tool is one tool of weakpixel-editor: it loads what its file needs, reacts
+// Tool is one tool of wpix-editor: it loads what its file needs, reacts
 // to the viewport, describes its panel and takes the panel's changes. A tool
 // never draws widgets and never reads the device for the panel.
 //

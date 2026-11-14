@@ -1,16 +1,16 @@
-// Package goddoc implements `weakpixel doc`. It merges the GOD files of a project into one document with
+// Package goddoc implements `wpix doc`. It merges the GOD files of a project into one document with
 // an index of all Game Objects and an index of all Components, or into one
 // merged GOD.
 //
 // Usage:
 //
-//	go run github.com/weakpixel/engine/tools/weakpixel doc [flags] [inputs...]
+//	go run github.com/weakpixel/engine/tools/wpix doc [flags] [inputs...]
 //
 // Inputs are GOD files (*.god.json), directories (searched recursively) or
 // patterns such as ./... and dir/...; the default is god.specs of the
 // project's .weakpixel.json, else ./... . Directories named vendor, testdata,
 // node_modules and those starting with "." or "_" are skipped below the root
-// of a search, and so are merged GOD files that weakpixel doc wrote. All inputs are
+// of a search, and so are merged GOD files that wpix doc wrote. All inputs are
 // merged into one document: identical definitions collapse, a different
 // definition under the same key is an error.
 //
@@ -42,7 +42,7 @@ import (
 	"github.com/weakpixel/engine/tools/internal/cli"
 )
 
-// Options are the arguments of `weakpixel doc`. Empty fields take their
+// Options are the arguments of `wpix doc`. Empty fields take their
 // default from the project settings (.weakpixel.json) or from the other
 // fields.
 type Options struct {

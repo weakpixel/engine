@@ -9,7 +9,7 @@ s := editor.New(editor.Config{Path: "world-1/level-1.level.json"})
 cfg.Tool = s
 ```
 
-A game made with `weakpixel new` does this: its `editor.go` is the reference.
+A game made with `wpix new` does this: its `editor.go` is the reference.
 
 ## Session
 
@@ -116,7 +116,7 @@ func main() {
 | `Backdrop`, `NoBackdrop` | What surrounds the edited level, see [stages](#stages). |
 | `Level` | The level key opened when there is no VSCode (`go run -tags editor`), and the default first file. |
 
-`host.Run` connects the bridge (a plain `editor.Session` without VSCode), builds the FS, creates the engine and opens the file. In a level the extension sends the document after the game's `ready`; without VSCode the host reads `Game.Level` from the FS. `host.Build` does the same without running the window, for tests. The `editor.go` that `weakpixel new` writes is the reference.
+`host.Run` connects the bridge (a plain `editor.Session` without VSCode), builds the FS, creates the engine and opens the file. In a level the extension sends the document after the game's `ready`; without VSCode the host reads `Game.Level` from the FS. `host.Build` does the same without running the window, for tests. The `editor.go` that `wpix new` writes is the reference.
 
 ### Stages
 
@@ -129,30 +129,30 @@ The extension tells the page which stage to run (`globalThis.weakpixelHost.stage
 
 **Backdrop.** A level is edited among its map or world. The host picks the backdrop per file, never spawning the edited document (the session does): for `<name>.level.json` the sibling `<name>.tmj` (loaded alone), else the sibling `<name>.world` (its children's documents still spawn), else, with a library, the package's own level `<pkg>/<pkg>` (loaded with `LoadLevelBase` when `<pkg>/<pkg>.tmj` or `.world` exists, with the other documents). It reloads when the target changes, so a level never shows the previous level's world. A custom `Game.Backdrop` is called for the first file and when the editor opens a file of another package, and it should skip the edited document with `SpawnOptions.SkipDocuments`. A game whose systems load their own world sets `NoBackdrop` (for example a level system that loads and places its own world). A file at the root of the library, or in a package without a map of its own and no sibling map, has no backdrop.
 
-## weakpixel-editor
+## wpix-editor
 
-`weakpixel-editor` runs single-file tools in a window, without VSCode. It opens a file from the game's asset folder and shows the tool's panel in two columns over the viewport. The design is in [editor.md#tools](../../design/editor.md#tools).
+`wpix-editor` runs single-file tools in a window, without VSCode. It opens a file from the game's asset folder and shows the tool's panel in two columns over the viewport. The design is in [editor.md#tools](../../design/editor.md#tools).
 
 ```sh
-go tool weakpixel-editor view assets/player/idle.png
-go tool weakpixel-editor view assets/player/player.atlas.json
-go tool weakpixel-editor view assets/global/fonts/ui.ttf
-go tool weakpixel-editor anim assets/player/player.anim.json
-go tool weakpixel-editor sheet assets/gfx/tiles.sheet.json
-go tool weakpixel-editor sheet --image assets/gfx/tiles.png assets/gfx/tiles.sheet.json
-go tool weakpixel-editor voice assets/talk/kip.voice.json
-go tool weakpixel-editor voice assets/talk/village.dialogue.json
-go tool weakpixel-editor fx
-go tool weakpixel-editor fx assets/global/fx/sparks.prefab.json
-go tool weakpixel-editor help
+go tool wpix-editor view assets/player/idle.png
+go tool wpix-editor view assets/player/player.atlas.json
+go tool wpix-editor view assets/global/fonts/ui.ttf
+go tool wpix-editor anim assets/player/player.anim.json
+go tool wpix-editor sheet assets/gfx/tiles.sheet.json
+go tool wpix-editor sheet --image assets/gfx/tiles.png assets/gfx/tiles.sheet.json
+go tool wpix-editor voice assets/talk/kip.voice.json
+go tool wpix-editor voice assets/talk/village.dialogue.json
+go tool wpix-editor fx
+go tool wpix-editor fx assets/global/fx/sparks.prefab.json
+go tool wpix-editor help
 ```
 
-Flags go with `--` (`anim` takes `--sheet <export.json>`, `sheet` takes `--image <texture>`); `go tool weakpixel-editor <tool> --help` shows a tool's usage. Usage errors exit with 2, other failures with 1.
+Flags go with `--` (`anim` takes `--sheet <export.json>`, `sheet` takes `--image <texture>`); `go tool wpix-editor <tool> --help` shows a tool's usage. Usage errors exit with 2, other failures with 1.
 
-A project made by `weakpixel new` has the tool. For an existing project, add it once:
+A project made by `wpix new` has the tool. For an existing project, add it once:
 
 ```sh
-go get -tool github.com/weakpixel/engine/tools/weakpixel-editor
+go get -tool github.com/weakpixel/engine/tools/wpix-editor
 ```
 
 | Tool | File | Shows |
@@ -189,7 +189,7 @@ The panels lie over the viewport, which fills the window: the left one holds the
 
 ### The fx tool
 
-`go tool weakpixel-editor fx` with no file opens an untitled smoke effect that is already playing. Change the preset, image, shader and the fields that matter, watch the result, and **Save as** writes `global/fx/<name>.fx.json` (and the built-in sprite as a PNG next to it, so the saved effect never names a built-in image) and continues on the new file; Ctrl/Cmd+Z undoes edits before and after saving. With a `*.fx.json` file it edits that effect and writes the whole file in the canonical form ([effect file](particles.md#the-effect-file)). The effect is placed in a level with a `gfx:Particles` component; layer and seed belong to that component and are not edited here.
+`go tool wpix-editor fx` with no file opens an untitled smoke effect that is already playing. Change the preset, image, shader and the fields that matter, watch the result, and **Save as** writes `global/fx/<name>.fx.json` (and the built-in sprite as a PNG next to it, so the saved effect never names a built-in image) and continues on the new file; Ctrl/Cmd+Z undoes edits before and after saving. With a `*.fx.json` file it edits that effect and writes the whole file in the canonical form ([effect file](particles.md#the-effect-file)). The effect is placed in a level with a `gfx:Particles` component; layer and seed belong to that component and are not edited here.
 
 | Input | Does |
 | --- | --- |
@@ -201,7 +201,7 @@ The panel has Effect (preset and Apply preset, Keep image and shader, the live p
 
 ### The anim tool
 
-`go tool weakpixel-editor anim <file>.anim.json` plays the clips of the definition's sheet. An Aseprite export named `<name>.aseprite.json` opens the same way **read-only**: the clips play with the sheet's own timing, and the panel offers no editing; make a definition of it with `--sheet` (below) to add pivot and boxes. Boxes are drawn relative to the pivot, which is the origin of the view; coordinates are whole pixels. To start a definition from an Aseprite export, give a file that does not exist and the export: `weakpixel-editor anim --sheet player.json player.anim.json` (the same starter as `weakpixel anim create`; Ctrl/Cmd+S creates the file).
+`go tool wpix-editor anim <file>.anim.json` plays the clips of the definition's sheet. An Aseprite export named `<name>.aseprite.json` opens the same way **read-only**: the clips play with the sheet's own timing, and the panel offers no editing; make a definition of it with `--sheet` (below) to add pivot and boxes. Boxes are drawn relative to the pivot, which is the origin of the view; coordinates are whole pixels. To start a definition from an Aseprite export, give a file that does not exist and the export: `wpix-editor anim --sheet player.json player.anim.json` (the same starter as `wpix anim create`; Ctrl/Cmd+S creates the file).
 
 | Key | Does |
 | --- | --- |
@@ -216,11 +216,11 @@ The panel has Effect (preset and Apply preset, Keep image and shader, the live p
 | Left and Right | Previous and next frame (as `,` `.`) |
 | `X` | Flip H preview |
 
-The panel has Playback (clip, play, frame, flip), File (default clip, pivot, body), Clip (loop, fps, speed, own pivot, the duration of the shown frame), Boxes (the selected box's kind, id, frame range and rect, Copy to this frame, Extend to this frame, Delete) and Problems: the findings of `weakpixel anim validate`. A box needs a pivot, so the first box tool use without one asks for it. A document that does not parse (an edit in a text editor, say) stays on screen dimmed and is never overwritten.
+The panel has Playback (clip, play, frame, flip), File (default clip, pivot, body), Clip (loop, fps, speed, own pivot, the duration of the shown frame), Boxes (the selected box's kind, id, frame range and rect, Copy to this frame, Extend to this frame, Delete) and Problems: the findings of `wpix anim validate`. A box needs a pivot, so the first box tool use without one asks for it. A document that does not parse (an edit in a text editor, say) stays on screen dimmed and is never overwritten.
 
 ### The sheet tool
 
-`go tool weakpixel-editor sheet <file>.sheet.json` draws the grid of a [grid sheet](asset-kinds.md#grid-sheet) over its texture: every frame is outlined, the pixels no frame covers (right of and below the grid) are dimmed, and the frame under the mouse is highlighted. The panel has Sheet (the image and number fields for frame width, frame height, margin and spacing), Frames (image size, columns × rows, frame count, the unused pixels, and the index and rectangle of the frame under the mouse) and Problems (a missing image, or a frame that does not fit the image). Each change writes the whole file in the canonical form and is one undo step. To start a sheet from a texture, give a file that does not exist and the image: `weakpixel-editor sheet --image tiles.png tiles.sheet.json` starts with 16 pixel cells (smaller if the image is smaller); Ctrl/Cmd+S creates the file. The pivot of an existing sheet is kept but not edited here.
+`go tool wpix-editor sheet <file>.sheet.json` draws the grid of a [grid sheet](asset-kinds.md#grid-sheet) over its texture: every frame is outlined, the pixels no frame covers (right of and below the grid) are dimmed, and the frame under the mouse is highlighted. The panel has Sheet (the image and number fields for frame width, frame height, margin and spacing), Frames (image size, columns × rows, frame count, the unused pixels, and the index and rectangle of the frame under the mouse) and Problems (a missing image, or a frame that does not fit the image). Each change writes the whole file in the canonical form and is one undo step. To start a sheet from a texture, give a file that does not exist and the image: `wpix-editor sheet --image tiles.png tiles.sheet.json` starts with 16 pixel cells (smaller if the image is smaller); Ctrl/Cmd+S creates the file. The pivot of an existing sheet is kept but not edited here.
 
 ## Events
 

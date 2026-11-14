@@ -1,7 +1,7 @@
-// Package gen implements `weakpixel gen`. It generates GameObject schemas from
+// Package gen implements `wpix gen`. It generates GameObject schemas from
 // +game:* markers.
 //
-// Usage: go run github.com/weakpixel/engine/tools/weakpixel gen [package patterns]
+// Usage: go run github.com/weakpixel/engine/tools/wpix gen [package patterns]
 //
 // The default target is the current package. Only the target packages'
 // generated files are written or removed: zz__gen.go next to the sources,
@@ -32,7 +32,7 @@ type output struct {
 	JSON    []byte
 }
 
-// Options are the arguments of `weakpixel gen`.
+// Options are the arguments of `wpix gen`.
 type Options struct {
 	Patterns []string // package patterns; none means the current package
 }

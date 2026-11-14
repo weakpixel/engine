@@ -58,7 +58,7 @@ assets, snapshot | input, simulate, camera, post | hierarchy, anim, render-prepa
 
 ## Startup screen
 
-With `Config.Startup` set, the game shows a startup screen from its first frame until the initial assets have loaded, and for at least 5 seconds even when loading is faster. nil, the default, shows none. A project made with `weakpixel new` turns it on in its `main` (not in its tests or editor build).
+With `Config.Startup` set, the game shows a startup screen from its first frame until the initial assets have loaded, and for at least 5 seconds even when loading is faster. nil, the default, shows none. A project made with `wpix new` turns it on in its `main` (not in its tests or editor build).
 
 ```go
 // The default: the Weakpixel Engine image on a dark background.
@@ -172,7 +172,7 @@ Where the PNG goes (`Config.Screenshots`):
 
 ### Hotkey and environment variables
 
-`Config.Screenshots.Key` (an `input.Key`, zero for none) is a development hotkey: every press, the edge from up to down of the raw key state, takes one `ShotGame` capture (`KeyTarget` picks `ShotWindow` instead). It needs no input action and works in any game. It also works while a [development tool](#development-tools) pauses the game; keys the tool's own UI used never reach it. `game.DevScreenshotKey()` is F12, or F9 in a browser, which keeps F12 for its developer tools. The [starter project](../tools.md) turns it on, and so do the `weakpixel-editor` tools.
+`Config.Screenshots.Key` (an `input.Key`, zero for none) is a development hotkey: every press, the edge from up to down of the raw key state, takes one `ShotGame` capture (`KeyTarget` picks `ShotWindow` instead). It needs no input action and works in any game. It also works while a [development tool](#development-tools) pauses the game; keys the tool's own UI used never reach it. `game.DevScreenshotKey()` is F12, or F9 in a browser, which keeps F12 for its developer tools. The [starter project](../tools.md) turns it on, and so do the `wpix-editor` tools.
 
 Without code changes:
 
@@ -183,7 +183,7 @@ Without code changes:
 | `WEAKPIXEL_SCREENSHOT_DIR` | Overrides `Config.Screenshots.Dir`. |
 | `WEAKPIXEL_SCREENSHOT_QUIT` | `1`: quit after the last `WEAKPIXEL_SCREENSHOT_AT` capture was written. |
 
-`WEAKPIXEL_SCREENSHOT_AT=1,60 WEAKPIXEL_SCREENSHOT_QUIT=1 go run ./mygame` writes two PNGs and exits, which is how to take golden images in CI. A native window still opens, because Ebiten needs a display: use `xvfb-run` on Linux CI. A bad value is logged and ignored. They work for every program built on `game.Engine`, the `weakpixel-editor` tools included.
+`WEAKPIXEL_SCREENSHOT_AT=1,60 WEAKPIXEL_SCREENSHOT_QUIT=1 go run ./mygame` writes two PNGs and exits, which is how to take golden images in CI. A native window still opens, because Ebiten needs a display: use `xvfb-run` on Linux CI. A bad value is logged and ignored. They work for every program built on `game.Engine`, the `wpix-editor` tools included.
 
 ### Host variables
 

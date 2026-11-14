@@ -1,4 +1,4 @@
-// Package voiceview is the "voice" tool of weakpixel-editor: a read-only
+// Package voiceview is the "voice" tool of wpix-editor: a read-only
 // preview with sound of the files of package speech. A voice
 // (*.voice.json) speaks a line typed in the panel and draws the line's notes
 // as a piano roll; a dialogue (*.dialogue.json) plays in a box, line by line,

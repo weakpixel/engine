@@ -1,9 +1,9 @@
-// Package tileset implements `weakpixel tileset`: tools that turn images into
+// Package tileset implements `wpix tileset`: tools that turn images into
 // Tiled tilesets the engine loads (doc/guide/engine/tilemaps.md).
 //
 // Usage:
 //
-//	weakpixel tileset from-atlas [flags] <atlas.xml>...
+//	wpix tileset from-atlas [flags] <atlas.xml>...
 //
 // from-atlas reads a packed Starling/ShoeBox TextureAtlas (<SubTexture>
 // XML plus its PNG) and writes a PNG in which every sub-texture sits in a
@@ -41,7 +41,7 @@ import (
 	"github.com/weakpixel/engine/tools/internal/cli"
 )
 
-// FromAtlasOptions are the arguments of `weakpixel tileset from-atlas`.
+// FromAtlasOptions are the arguments of `wpix tileset from-atlas`.
 type FromAtlasOptions struct {
 	Atlases []string // atlas XML files, or wildcard patterns the tool expands
 	Out     string   // output PNG; empty means <atlas>.tiles.png next to the XML

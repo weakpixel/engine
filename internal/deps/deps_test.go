@@ -112,7 +112,7 @@ func TestPackageDependencyRules(t *testing.T) {
 				"particles/fxfile", "tween", "collision", "physics",
 				// The command-line tools run without a display. Their tests may
 				// still use render; listDeps ignores test imports.
-				"tools/internal/anim", "tools/internal/assets", "tools/internal/framelog", "tools/internal/newgame", "tools/internal/goddoc", "tools/internal/gen", "tools/internal/mcpserver", "tools/weakpixel", "tools/weakpixel/cmd",
+				"tools/internal/anim", "tools/internal/assets", "tools/internal/framelog", "tools/internal/newgame", "tools/internal/goddoc", "tools/internal/gen", "tools/internal/mcpserver", "tools/wpix", "tools/wpix/cmd",
 			},
 			allowed: func(dep string) bool {
 				return !strings.Contains(dep, "hajimehoshi/ebiten") && !strings.Contains(dep, "ebitengine")
@@ -291,7 +291,7 @@ func TestVoiceLibraryOnlyInSpeech(t *testing.T) {
 }
 
 // TestToolShellDependencies checks that debugui and Cobra reach only the
-// native weakpixel-editor: the tool shell, the tools and the whole js/wasm
+// native wpix-editor: the tool shell, the tools and the whole js/wasm
 // build of the command stay free of them. A game module that builds the wasm
 // editor for the VSCode extension then needs no go.sum entries for either.
 func TestToolShellDependencies(t *testing.T) {
@@ -322,14 +322,14 @@ func TestToolShellDependencies(t *testing.T) {
 		return dep == root+"editor" || dep == root+"editor/bridge" || dep == root+"editor/host"
 	}
 	check("editor/toolshell", listDeps(t, root+"editor/toolshell"), isLevelEditor)
-	cmd := root + "tools/weakpixel-editor"
+	cmd := root + "tools/wpix-editor"
 	wasm := listDepsEnv(t, cmd, "GOOS=js", "GOARCH=wasm")
 	check("js/wasm "+cmd, wasm, isDebugUI)
 	check("js/wasm "+cmd, wasm, isCobra)
 	check("js/wasm "+cmd, wasm, isLevelEditor)
 	check(cmd, listDeps(t, cmd), isLevelEditor)
 	if err := errors.Join(errs...); err != nil {
-		t.Errorf("debugui may only be linked by editor/toolshell/debugpanel and the native editor, Cobra not by the wasm editor, and the tool shell and weakpixel-editor must not link the level editor (editor, its bridge or its host):\n%v", err)
+		t.Errorf("debugui may only be linked by editor/toolshell/debugpanel and the native editor, Cobra not by the wasm editor, and the tool shell and wpix-editor must not link the level editor (editor, its bridge or its host):\n%v", err)
 	}
 }
 
@@ -362,7 +362,7 @@ func TestToolPackageImports(t *testing.T) {
 				errs = append(errs, fmt.Errorf("%s imports %s: tool packages take options and leave the command line to tools/<binary>/cmd", rel, imp))
 			}
 			if strings.HasPrefix(imp, debugui) &&
-				rel != "editor/toolshell/debugpanel" && rel != "tools/weakpixel-editor/internal/native" {
+				rel != "editor/toolshell/debugpanel" && rel != "tools/wpix-editor/internal/native" {
 				errs = append(errs, fmt.Errorf("%s imports %s: debugui may be imported only by debugpanel and the native editor", rel, imp))
 			}
 		}

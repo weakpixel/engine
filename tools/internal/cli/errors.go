@@ -1,4 +1,4 @@
-// Package cli is what the Cobra command trees of the weakpixel binaries share:
+// Package cli is what the Cobra command trees of the wpix binaries share:
 // the exit codes (0 ok, 1 failure, 2 usage), the error type that means a
 // usage error, and the version command. Tool packages import only
 // [UsageError] and [Usagef] from here; Cobra stays in the cmd packages.
@@ -6,7 +6,7 @@ package cli
 
 import "fmt"
 
-// Exit codes of every weakpixel binary.
+// Exit codes of every wpix binary.
 const (
 	ExitOK      = 0
 	ExitFailure = 1

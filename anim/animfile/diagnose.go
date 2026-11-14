@@ -12,7 +12,7 @@ const MaxPortableTexture = 8192
 // Level is the severity of a [Finding].
 type Level string
 
-// Finding levels, as printed by "weakpixel anim validate".
+// Finding levels, as printed by "wpix anim validate".
 const (
 	// LevelError is anything the loader rejects.
 	LevelError Level = "error"
@@ -32,7 +32,7 @@ type Finding struct {
 }
 
 // Diagnose checks f against its sheet s the way the loader does and adds the
-// warnings and notes of "weakpixel anim validate". It is the one place both
+// warnings and notes of "wpix anim validate". It is the one place both
 // the command and the editor take their findings from.
 //
 // If [Resolve] fails, the result is nil and the findings are its errors, one
@@ -84,7 +84,7 @@ func UnevenTrim(s *Sheet, tag SheetTag) (a, b Point, uneven bool) {
 	return a, a, false
 }
 
-// Starter returns the definition "weakpixel anim create" writes for sheet s,
+// Starter returns the definition "wpix anim create" writes for sheet s,
 // whose path relative to the definition is ref: every tag in sheet order as
 // {"loop": true}, which keeps the sheet's behavior (a ping-pong tag stays
 // ping-pong) and shows where "false" goes; the first tag as defaultClip; no

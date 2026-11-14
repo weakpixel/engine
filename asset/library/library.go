@@ -27,7 +27,7 @@ type Library struct {
 
 // Open opens the library at the root of base. If base has an
 // assets.catalog.json it is read; otherwise base is listed with [Scan]
-// (its findings are ignored here: run weakpixel assets check). A file system
+// (its findings are ignored here: run wpix assets check). A file system
 // that cannot list directories (HTTP) needs a catalog.
 //
 // It returns an error for an invalid catalog or library.json, or a base
@@ -59,7 +59,7 @@ func loadCatalog(base fs.FS) (*Catalog, error) {
 		return nil, fmt.Errorf("library: %s: %w", CatalogFile, err)
 	}
 	if _, err := fs.ReadDir(base, "."); err != nil {
-		return nil, fmt.Errorf("library: the file system cannot list directories and has no %s (write one with weakpixel assets catalog): %w", CatalogFile, err)
+		return nil, fmt.Errorf("library: the file system cannot list directories and has no %s (write one with wpix assets catalog): %w", CatalogFile, err)
 	}
 	cat, _, err := Scan(base)
 	return cat, err

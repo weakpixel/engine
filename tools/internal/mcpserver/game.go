@@ -118,7 +118,7 @@ func trimLines(s string, n int) string {
 	return strings.Join(lines[:n], "\n") + fmt.Sprintf("\n... %d more lines", len(lines)-n)
 }
 
-// build compiles the project's editor package into build/weakpixel-mcp/ of
+// build compiles the project's editor package into build/wpix-mcp/ of
 // the project (plan D4: never next to the source) and returns the binary.
 func (m *gameManager) build(ctx context.Context) (string, time.Duration, error) {
 	p := m.t.p
@@ -158,7 +158,7 @@ func (m *gameManager) buildIgnored() string {
 	err := cmd.Run()
 	var ee *exec.ExitError
 	if errors.As(err, &ee) && ee.ExitCode() == 1 {
-		return "build/ is not in .gitignore: add it before committing, game binaries are written to build/weakpixel-mcp/"
+		return "build/ is not in .gitignore: add it before committing, game binaries are written to build/wpix-mcp/"
 	}
 	return ""
 }

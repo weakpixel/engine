@@ -103,7 +103,7 @@ a := ecs.GetComp[gfx.Animator](w, e)
 a.Clip, a.Time, a.Frame, a.Done = run, 0, 0, false
 ```
 
-`set.Names` lists the tags in file order (handy for debug menus), `set.Default` is the definition's `defaultClip`. To start an `*.anim.json` for an Aseprite export, run `go run ./tools/weakpixel anim create --file chars/player.json`; `weakpixel anim validate` checks one against its sheet (see [animation.md](animation.md#tooling-weakpixel anim)). If you only need one clip, `anim.LoadClip` with a `#tag` key is enough: it loads the set behind the scenes.
+`set.Names` lists the tags in file order (handy for debug menus), `set.Default` is the definition's `defaultClip`. To start an `*.anim.json` for an Aseprite export, run `go run ./tools/wpix anim create --file chars/player.json`; `wpix anim validate` checks one against its sheet (see [animation.md](animation.md#tooling-weakpixel anim)). If you only need one clip, `anim.LoadClip` with a `#tag` key is enough: it loads the set behind the scenes.
 
 ## Tileset, Map, World
 
@@ -157,7 +157,7 @@ th := asset.Load[render.Texture](sc, "bg/sky.png")
 img := asset.StoreOf[render.Texture](srv).Get(th).Image // valid until the next Update
 ```
 
-**Size limit.** A texture larger than the GPU's maximum texture size fails to load with `render: texture <w>x<h> is larger than this GPU supports` (the asset becomes `Failed`, shows the placeholder, and its dependents fail). The limit is the device's own: 16384 on most desktop GPUs, 8192 on many laptops, phones and browsers. Keep sheets at most 8192 on either side to run everywhere; `weakpixel anim validate` warns about larger Aseprite sheets.
+**Size limit.** A texture larger than the GPU's maximum texture size fails to load with `render: texture <w>x<h> is larger than this GPU supports` (the asset becomes `Failed`, shows the placeholder, and its dependents fail). The limit is the device's own: 16384 on most desktop GPUs, 8192 on many laptops, phones and browsers. Keep sheets at most 8192 on either side to run everywhere; `wpix anim validate` warns about larger Aseprite sheets.
 
 ## Font source
 
@@ -220,7 +220,7 @@ The loader is chosen by the asset type you load and, where one type reads severa
 
 ### Grid sheet
 
-`*.sheet.json`: fixed-size cells over one image. Frames are named `"0"`, `"1"`, ... left to right, top to bottom. `weakpixel-editor sheet` [edits the file](editor.md#the-sheet-tool).
+`*.sheet.json`: fixed-size cells over one image. Frames are named `"0"`, `"1"`, ... left to right, top to bottom. `wpix-editor sheet` [edits the file](editor.md#the-sheet-tool).
 
 ```json
 { "image": "player.png", "frameW": 16, "frameH": 16, "margin": 0, "spacing": 0,

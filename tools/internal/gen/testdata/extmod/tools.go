@@ -6,5 +6,5 @@
 package extmod
 
 import (
-	_ "github.com/weakpixel/engine/tools/weakpixel"
+	_ "github.com/weakpixel/engine/tools/wpix"
 )

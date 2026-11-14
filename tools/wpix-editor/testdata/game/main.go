@@ -4,7 +4,7 @@
 // game's asset library into a folder, for editor hosts that serve the assets
 // from disk:
 //
-//	go run ./tools/weakpixel-editor/testdata/game -o build/testgame/assets
+//	go run ./tools/wpix-editor/testdata/game -o build/testgame/assets
 //
 // With -tags editor it is the editor build (editor.go).
 package main
@@ -16,7 +16,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/weakpixel/engine/tools/weakpixel-editor/testdata/game/testgame"
+	"github.com/weakpixel/engine/tools/wpix-editor/testdata/game/testgame"
 )
 
 func main() {

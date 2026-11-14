@@ -1,6 +1,6 @@
 {
   "version": 0,
-  "generator": "weakpixel gen",
+  "generator": "wpix gen",
   "package": "github.com/weakpixel/engine/tools/internal/gen/testdata/golden/full",
   "components": [
     {

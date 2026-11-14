@@ -51,13 +51,13 @@ engine-bench:
 # god.specs, as one HTML page and one Markdown file in godDoc.out.
 .PHONY: god-doc
 god-doc:
-	go run ./tools/weakpixel doc --format god
-	go run ./tools/weakpixel doc
-	go run ./tools/weakpixel doc --format md
+	go run ./tools/wpix doc --format god
+	go run ./tools/wpix doc
+	go run ./tools/wpix doc --format md
 
 .PHONY: build-tools
 build-tools:
-	go build -o ./build/weakpixel ./tools/weakpixel
+	go build -o ./build/wpix ./tools/wpix
 
 # js/wasm. WASM_ENV runs go test under go_js_wasm_exec (Node): it puts the
 # exec wrapper on PATH and starts from an empty environment, because Node
@@ -76,7 +76,7 @@ wasm: wasm-build wasm-test
 .PHONY: wasm-build
 wasm-build:
 	GOOS=js GOARCH=wasm go build ./...
-	GOOS=js GOARCH=wasm go build -tags editor -o build/editor-testgame.wasm ./tools/weakpixel-editor/testdata/game
+	GOOS=js GOARCH=wasm go build -tags editor -o build/editor-testgame.wasm ./tools/wpix-editor/testdata/game
 
 # Runs the tests that work without a browser under js/wasm (needs Node; slow,
 # so not part of all).

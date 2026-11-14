@@ -10,7 +10,7 @@ import (
 	"github.com/weakpixel/engine/tools/internal/cli"
 )
 
-// runMCP runs `weakpixel mcp` on the script's lines and returns the answers
+// runMCP runs `wpix mcp` on the script's lines and returns the answers
 // by id.
 func runMCP(t *testing.T, script ...string) map[string]map[string]any {
 	t.Helper()

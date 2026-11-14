@@ -57,7 +57,7 @@ func (t *tools) projectTools() []*mcp.Tool {
 				"limit":  mcp.Integer("at most this many keys (default 200)", 1, maxAssets),
 			}), readOnly, t.listAssets),
 		tool("check_assets", "Check assets",
-			"Checks the asset library like `weakpixel assets check`: missing references, case mismatches, oversized textures and "+
+			"Checks the asset library like `wpix assets check`: missing references, case mismatches, oversized textures and "+
 				"other findings, each with the file. Changes nothing.",
 			mcp.Object(nil), readOnly, t.checkAssets),
 		tool("list_documents", "List documents",

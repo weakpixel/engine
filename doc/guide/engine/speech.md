@@ -114,7 +114,7 @@ Read `speech.Event{Entity, Kind, Line}` with a `system.EventReader` on `system.E
 
 ## Previewing voices and dialogues
 
-`go tool weakpixel-editor voice <file>` opens a `*.voice.json` or a `*.dialogue.json` with sound ([editor.md](editor.md#weakpixel-editor)): a voice says a line typed in the panel and draws its notes, a dialogue plays line by line with a Next button. In VSCode the sound starts after the first click inside the view. Edit voices and dialogues in the library's Voice Editor.
+`go tool wpix-editor voice <file>` opens a `*.voice.json` or a `*.dialogue.json` with sound ([editor.md](editor.md#wpix-editor)): a voice says a line typed in the panel and draws its notes, a dialogue plays line by line with a Next button. In VSCode the sound starts after the first click inside the view. Edit voices and dialogues in the library's Voice Editor.
 
 A tool that runs the engine paused (`game.TickPause` skips `StagePost`) calls `Step(dt)` once per tick instead of the system; a game never needs it.
 
@@ -136,7 +136,7 @@ Three things hold speech. Each releases the sounding notes, so no note hangs, an
 
 A voice's `language` field is a `*.lang.json` path relative to the voice file, or a name `<name>` that loads `<name>.lang.json` next to it; `""` is the library's default language. A voice's sample instruments load the WAV files they name, relative to the voice. A dialogue's speaker voices that are files load relative to the dialogue. A reloaded voice takes effect at the next line; a reloaded dialogue is used by the next `Play`. Placeholders: a missing or failed voice is a silent one that still reveals the text at the default speed; a failed dialogue plays nothing. See [asset-kinds.md](asset-kinds.md#voices-and-dialogues).
 
-In the level editor of a game that imports `speech`, a `*.voice.json` or `*.dialogue.json` dropped on the viewport creates a `speech:Talker` or `speech:Box` with the file in its field, and a dropped file fills a voice or dialogue field in the inspector. The level editor runs speech silently. `weakpixel mcp` checks voice and dialogue fields like other asset fields; a voice field without a folder and without `.json` is taken as a starter name, and an unknown one is reported when the level loads.
+In the level editor of a game that imports `speech`, a `*.voice.json` or `*.dialogue.json` dropped on the viewport creates a `speech:Talker` or `speech:Box` with the file in its field, and a dropped file fills a voice or dialogue field in the inspector. The level editor runs speech silently. `wpix mcp` checks voice and dialogue fields like other asset fields; a voice field without a folder and without `.json` is taken as a starter name, and an unknown one is reported when the level loads.
 
 ## No audio, browsers and costs
 

@@ -139,7 +139,7 @@ Timing: base = `durations` if present, else `fps`, else the Aseprite durations; 
 
 All geometry is **integer pixels**, origin top-left, y down.
 
-- **`pivot`** is in pixels of the **trimmed sprite image** (the rectangle Aseprite packed into the sheet). The loader converts it per frame to the renderer's fraction, `Frame.Origin = (Sprite.Offset + pivot) / Sprite.Size`, The pivot is measured from **each frame's own trimmed rectangle**: it stays on the same art pixel when every frame of the clip has the same trim offset (Aseprite's "Trim Sprite", as in the hero sheet), but with "Trim Cels" (each frame trimmed separately) the art shifts from frame to frame. `weakpixel anim validate` warns about such clips. An all-zero result becomes `(1e-4, 1e-4)`, because the zero `Origin` means "default pivot" to the renderer.
+- **`pivot`** is in pixels of the **trimmed sprite image** (the rectangle Aseprite packed into the sheet). The loader converts it per frame to the renderer's fraction, `Frame.Origin = (Sprite.Offset + pivot) / Sprite.Size`, The pivot is measured from **each frame's own trimmed rectangle**: it stays on the same art pixel when every frame of the clip has the same trim offset (Aseprite's "Trim Sprite", as in the hero sheet), but with "Trim Cels" (each frame trimmed separately) the art shifts from frame to frame. `wpix anim validate` warns about such clips. An all-zero result becomes `(1e-4, 1e-4)`, because the zero `Origin` means "default pivot" to the renderer.
 - **`rect`** (body and shapes) is relative to the pivot: the pivot is `(0, 0)`, so a box above the feet has a negative `y`.
 - **Frame indices** (`frames`, `durations`) are in the clip's **play order**: for a reversed Aseprite tag, frame 0 is the tag's last frame.
 
@@ -186,7 +186,7 @@ With [asset hot reload](assets.md#hot-reload) on, editing the Aseprite export, i
 
 ### Package `animfile`
 
-Parsing and checking live in `anim/animfile` (standard library only: no Ebiten, no ECS). The loader is an adapter over it, and `weakpixel anim` uses it too, so both accept exactly the same files.
+Parsing and checking live in `anim/animfile` (standard library only: no Ebiten, no ECS). The loader is an adapter over it, and `wpix anim` uses it too, so both accept exactly the same files.
 
 | | |
 | --- | --- |
@@ -194,16 +194,16 @@ Parsing and checking live in `anim/animfile` (standard library only: no Ebiten, 
 | `Decode(data) (*File, error)` | syntax, unknown fields, ints, `version`, `sheet` |
 | `Resolve(file, tags) (*Resolved, error)` | everything that needs the sheet; per clip the final loop mode, durations, pivot and boxes, plus `Omitted` (tags without a `clips` entry) |
 | `Encode(file) ([]byte, error)` | 2-space indented JSON, clips in slice order |
-| `Diagnose(file, sheet) (*Resolved, []Finding)` | `Resolve` plus the warnings and notes of `weakpixel anim validate` (uneven trims under a pivot, a sheet over 8192, tags the file does not list), as findings with a level; the resolved definition is nil when there are errors |
-| `Starter(sheet, ref) *File` | the definition `weakpixel anim create` writes |
+| `Diagnose(file, sheet) (*Resolved, []Finding)` | `Resolve` plus the warnings and notes of `wpix anim validate` (uneven trims under a pivot, a sheet over 8192, tags the file does not list), as findings with a level; the resolved definition is nil when there are errors |
+| `Starter(sheet, ref) *File` | the definition `wpix anim create` writes |
 
-### Tooling: `weakpixel anim`
+### Tooling: `wpix anim`
 
-The `weakpixel-editor anim` tool edits these files visually ([editor guide](editor.md#the-anim-tool)). `anim.PivotOrigin(sprite, pivot)` is the pivot-to-`Sprite.Origin` conversion the loader and the editor share.
+The `wpix-editor anim` tool edits these files visually ([editor guide](editor.md#the-anim-tool)). `anim.PivotOrigin(sprite, pivot)` is the pivot-to-`Sprite.Origin` conversion the loader and the editor share.
 
 ```bash
-go run ./tools/weakpixel anim validate chars/player.anim.json [more.anim.json ...]
-go run ./tools/weakpixel anim create --file chars/player.json [-o chars/player.anim.json | -o -] [--force]
+go run ./tools/wpix anim validate chars/player.anim.json [more.anim.json ...]
+go run ./tools/wpix anim create --file chars/player.json [-o chars/player.anim.json | -o -] [--force]
 ```
 
 **`validate`** checks each definition against its sheet JSON (`sheet`, relative to the definition) with the loader's rules, without reading the PNG. One line per finding, then a summary:

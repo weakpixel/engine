@@ -14,7 +14,7 @@ func newSchemaCmd() *cobra.Command {
 		Short: "Write JSON schemas of the game's JSON files, for editor completion and checks",
 		Long: "schema writes a JSON Schema (draft-07) for every JSON file kind of a game project. The level and\n" +
 			"prefab schemas come from the project's GOD files: the inputs are files, directories or ... patterns\n" +
-			"as for weakpixel doc, by default god.specs of .weakpixel.json, else ./... Without GOD files, level\n" +
+			"as for wpix doc, by default god.specs of .weakpixel.json, else ./... Without GOD files, level\n" +
 			"and prefab are skipped.",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.Inputs = args

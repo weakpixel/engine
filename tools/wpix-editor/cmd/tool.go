@@ -9,8 +9,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/weakpixel/engine/tools/internal/cli"
-	"github.com/weakpixel/engine/tools/weakpixel-editor/internal/editorapp"
-	"github.com/weakpixel/engine/tools/weakpixel-editor/internal/native"
+	"github.com/weakpixel/engine/tools/wpix-editor/internal/editorapp"
+	"github.com/weakpixel/engine/tools/wpix-editor/internal/native"
 )
 
 // addToolCmds adds one subcommand per tool, in name order.

@@ -14,7 +14,7 @@ func TestExecute(t *testing.T) {
 		wantStdout string
 		wantStderr string
 	}{
-		{"no args", nil, 2, "", "weakpixel needs a command"},
+		{"no args", nil, 2, "", "wpix needs a command"},
 		{"help", []string{"help"}, 0, "framelog", ""},
 		{"--help", []string{"--help"}, 0, "assets", ""},
 		{"help command", []string{"help", "anim"}, 0, "", ""},
@@ -25,15 +25,15 @@ func TestExecute(t *testing.T) {
 		{"doc bad format", []string{"doc", "--format", "pdf"}, 2, "", `unknown format "pdf"`},
 		{"doc single-dash long flag", []string{"doc", "-format", "md"}, 2, "", "unknown shorthand flag"},
 		{"gen bad flag", []string{"gen", "--x"}, 2, "", "unknown flag"},
-		{"anim unknown", []string{"anim", "nope"}, 2, "", `weakpixel anim: unknown command "nope"`},
-		{"anim without command", []string{"anim"}, 2, "", "weakpixel anim needs a command"},
+		{"anim unknown", []string{"anim", "nope"}, 2, "", `wpix anim: unknown command "nope"`},
+		{"anim without command", []string{"anim"}, 2, "", "wpix anim needs a command"},
 		{"anim validate without files", []string{"anim", "validate"}, 2, "", "requires at least 1 arg"},
 		{"anim create without --file", []string{"anim", "create"}, 2, "", "required flag(s)"},
 		{"anim create with extra args", []string{"anim", "create", "--file", "a.json", "b.json"}, 2, "", "unknown command"},
 		{"anim create bad flag", []string{"anim", "create", "--nope"}, 2, "", "unknown flag"},
-		{"anim validate missing file", []string{"anim", "validate", "nope.anim.json"}, 1, "nope.anim.json: error", "weakpixel anim validate"},
+		{"anim validate missing file", []string{"anim", "validate", "nope.anim.json"}, 1, "nope.anim.json: error", "wpix anim validate"},
 		{"anim help", []string{"anim", "--help"}, 0, "validate", ""},
-		{"assets without args", []string{"assets"}, 2, "", "weakpixel assets needs a command"},
+		{"assets without args", []string{"assets"}, 2, "", "wpix assets needs a command"},
 		{"assets unknown", []string{"assets", "nope"}, 2, "", `unknown command "nope"`},
 		{"assets two roots", []string{"assets", "check", "a", "b"}, 2, "", "accepts at most 1 arg"},
 		{"assets pack old out argument", []string{"assets", "pack", "a", "b"}, 2, "", "accepts at most 1 arg"},
@@ -46,12 +46,12 @@ func TestExecute(t *testing.T) {
 		{"new bad group", []string{"new", "--no-run", "--name", "Bad", "/tmp/never-created"}, 2, "", "group"},
 		{"schema bad flag", []string{"schema", "--nope"}, 2, "", "unknown flag"},
 		{"schema missing value", []string{"schema", "-o"}, 2, "", "needs an argument"},
-		{"tileset without args", []string{"tileset"}, 2, "", "weakpixel tileset needs a command"},
+		{"tileset without args", []string{"tileset"}, 2, "", "wpix tileset needs a command"},
 		{"tileset from-atlas without atlas", []string{"tileset", "from-atlas"}, 2, "", "requires at least 1 arg"},
 		{"tileset from-atlas bad align", []string{"tileset", "from-atlas", "--align", "up", "a.xml"}, 2, "", "unknown alignment"},
 		{"tileset from-atlas missing xml", []string{"tileset", "from-atlas", "nope.xml"}, 1, "", "nope.xml"},
 		{"framelog negative skip", []string{"framelog", "--skip", "-1", "x.csv"}, 2, "", "--skip"},
-		{"framelog missing file", []string{"framelog", "nope.csv"}, 1, "", "weakpixel framelog: "},
+		{"framelog missing file", []string{"framelog", "nope.csv"}, 1, "", "wpix framelog: "},
 		{"framelog without file", []string{"framelog"}, 2, "", "accepts 1 arg"},
 	}
 	for _, tc := range tests {

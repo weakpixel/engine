@@ -25,7 +25,7 @@ The license texts are in each module's source (`go mod download -json <module>` 
 
 ## Go modules used only by the tools
 
-These are linked by `weakpixel` and `weakpixel-editor`, never by a game.
+These are linked by `wpix` and `wpix-editor`, never by a game.
 
 | Module | License | Notes |
 | --- | --- | --- |
@@ -33,7 +33,7 @@ These are linked by `weakpixel` and `weakpixel-editor`, never by a game.
 | [github.com/spf13/pflag](https://github.com/spf13/pflag) | BSD-3-Clause | |
 | [github.com/inconshreveable/mousetrap](https://github.com/inconshreveable/mousetrap) | Apache-2.0 | |
 | [golang.org/x/tools](https://pkg.go.dev/golang.org/x/tools), [x/mod](https://pkg.go.dev/golang.org/x/mod) | BSD-3-Clause | the generator |
-| [github.com/ebitengine/debugui](https://github.com/ebitengine/debugui) | Apache-2.0 | native `weakpixel-editor` only |
+| [github.com/ebitengine/debugui](https://github.com/ebitengine/debugui) | Apache-2.0 | native `wpix-editor` only |
 | [github.com/hajimehoshi/bitmapfont/v4](https://github.com/hajimehoshi/bitmapfont) | Apache-2.0 (code) | debugui's font; its embedded bitmap fonts carry their own licenses (OFL-1.1, Baekmuk, M+ Bitmap, public domain), listed in that module |
 | [github.com/pierrec/lz4/v4](https://github.com/pierrec/lz4) | BSD-3-Clause | used by bitmapfont |
 | [github.com/google/go-cmp](https://github.com/google/go-cmp) | BSD-3-Clause | tests only |

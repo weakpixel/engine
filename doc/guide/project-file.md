@@ -28,11 +28,11 @@
 
 | Key | Used by | Meaning | Without it |
 | --- | --- | --- | --- |
-| `god.specs` | `weakpixel gen`, `weakpixel doc` | Folder of the per-package GOD files. `go generate` writes each package's file there as `<group>.god.json`; `weakpixel doc` reads that folder when no inputs are given. The GOD files are build output: leave the key out and they go to `build/god` below the module root (ignored by git). Set it to a folder you commit if people without Go work in the project with the VSCode extension, which reads the files for the inspector, code lenses and the assets view. | `build/god` below the module root; `weakpixel doc` reads that folder when it exists, else `./...` |
-| `god.out` | `weakpixel doc --format god` | The merged GOD of the whole project (all components and objects in one file). | `--format god` needs `-o` |
-| `godDoc.out` | `weakpixel doc` | Folder for the rendered docs: `index.html`, `god.md`, or the `--split` Markdown files. | `god-doc.<format>` (`god-doc/` with `--split`) in the current directory |
-| `schema.out` | `weakpixel schema` | Folder the JSON schemas of the game's JSON files are written to, see [tools](tools.md#schema). | `build/schema` |
-| `assets.root` | `weakpixel assets`, VSCode extension | The asset [library](engine/asset-library.md) root. Asset keys are relative to it. | `weakpixel assets` needs the `<root>` argument; the extension uses the nearest folder above the file that holds a `global/` folder or a `library.json` |
+| `god.specs` | `wpix gen`, `wpix doc` | Folder of the per-package GOD files. `go generate` writes each package's file there as `<group>.god.json`; `wpix doc` reads that folder when no inputs are given. The GOD files are build output: leave the key out and they go to `build/god` below the module root (ignored by git). Set it to a folder you commit if people without Go work in the project with the VSCode extension, which reads the files for the inspector, code lenses and the assets view. | `build/god` below the module root; `wpix doc` reads that folder when it exists, else `./...` |
+| `god.out` | `wpix doc --format god` | The merged GOD of the whole project (all components and objects in one file). | `--format god` needs `-o` |
+| `godDoc.out` | `wpix doc` | Folder for the rendered docs: `index.html`, `god.md`, or the `--split` Markdown files. | `god-doc.<format>` (`god-doc/` with `--split`) in the current directory |
+| `schema.out` | `wpix schema` | Folder the JSON schemas of the game's JSON files are written to, see [tools](tools.md#schema). | `build/schema` |
+| `assets.root` | `wpix assets`, VSCode extension | The asset [library](engine/asset-library.md) root. Asset keys are relative to it. | `wpix assets` needs the `<root>` argument; the extension uses the nearest folder above the file that holds a `global/` folder or a `library.json` |
 | `assets.prefabs` | VSCode extension | Folder under `assets.root` where Create Prefab from Selection starts. Must stay inside the root. | `<package of the open level>/prefabs`, else `global/prefabs` |
 | `editor.game` | VSCode extension | Directory of the package the editor builds to WebAssembly (the one with the [editor `main`](engine/editor.md#making-a-game-editable-in-vscode)) | The nearest directory with a `package main` at or above the opened file |
 | `editor.tags` | VSCode extension | Build tags of that build, an array | `["editor"]` |
@@ -41,11 +41,11 @@
 | `editor.prefab.background` | VSCode extension | Background of the [prefab stage](engine/editor.md#stages) as `#rrggbb` | `#24242a` |
 | `editor.prefab.grid` | VSCode extension | Grid step of the prefab stage in world units; 0 draws no grid | 16 |
 
-With `assets.root` set, `weakpixel assets` runs without its `<root>` argument (`weakpixel assets check`, `weakpixel assets keys --pkg main -o zz__gen.assets.go`); a root on the command line wins.
+With `assets.root` set, `wpix assets` runs without its `<root>` argument (`wpix assets check`, `wpix assets keys --pkg main -o zz__gen.assets.go`); a root on the command line wins.
 
 ## Rules
 
-- **Lookup.** A tool finds the file by walking up from its directory (the package directory for `weakpixel gen`, the working directory for `weakpixel doc`) and uses the first `.weakpixel.json` it meets. The walk stops at the Go module root (the first directory with a `go.mod`), so a nested module never uses the file of the module around it and keeps its own.
+- **Lookup.** A tool finds the file by walking up from its directory (the package directory for `wpix gen`, the working directory for `wpix doc`) and uses the first `.weakpixel.json` it meets. The walk stops at the Go module root (the first directory with a `go.mod`), so a nested module never uses the file of the module around it and keeps its own.
 - **Paths** are relative to the directory holding the file.
 - **Unknown keys are errors.** All of them are reported at once (`unknown key "god.spec"`), as is a section that is not an object (`god: want an object`). A typo is never silently ignored.
 - **Flags win.** A command-line input, root or `-o` overrides the file.

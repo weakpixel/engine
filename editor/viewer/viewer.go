@@ -1,4 +1,4 @@
-// Package viewer is the "view" tool of weakpixel-editor: it previews an asset
+// Package viewer is the "view" tool of wpix-editor: it previews an asset
 // with the engine's own loaders. A texture is shown on a grid with pan and
 // zoom; an atlas (*.sheet.json, *.atlas.json) shows its frames over the
 // texture, and a font (*.ttf, *.otf) shows sample text at the sizes the
