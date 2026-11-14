@@ -15,6 +15,10 @@ The core ECS (`World`, entities, components, views, queries, resources, and the 
 | [Game Objects](guide/ecs/api-game-object.md) | `+game:*` markers and the generated `<Object>View` |
 | [Game Object Definition (GOD)](guide/ecs/game-object-definition.md) | Component keys (`group:name`), the GOD files, loading and saving entities as JSON (`god`) |
 
+### Lua (module `github.com/weakpixel/contrib/lua`)
+
+Lua scripting is an add-on module in the [weakpixel/contrib](https://github.com/weakpixel/contrib/tree/main/lua) repository, not part of this one. It runs Lua systems on the Game Object schemas (`god`) through [`Engine.AddRunner`](guide/engine/engine.md). Its guide is in the [lua folder](https://github.com/weakpixel/contrib/blob/main/lua/README.md).
+
 ### Engine Runtime (Ebiten)
 
 | Page | Covers |

@@ -442,8 +442,8 @@ func (e *Engine) AddSystem(st Stage, sys ...system.System) {
 
 // AddRunner is like [Engine.AddSystem] for [system.Runner] values. A runner
 // that implements system.Initializer is initialized before its first Run,
-// which makes this the way to add Lua systems and other
-// stateful systems.
+// which makes this the way to add Lua systems (see
+// github.com/weakpixel/contrib/lua) and other stateful systems.
 //
 // Panics like [Engine.AddSystem].
 func (e *Engine) AddRunner(st Stage, runners ...system.Runner) {
