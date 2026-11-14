@@ -12,6 +12,8 @@ The engine builds on three standalone modules with no dependencies of their own:
 | [github.com/weakpixel/asset](https://github.com/weakpixel/asset) | Handles, stores, scopes, background loading, hot reload; `httpfs` for browser builds |
 | [github.com/weakpixel/voice](https://github.com/weakpixel/voice) | Dialogue text to musical gibberish on a small synthesizer |
 
+Lua scripting is an optional add-on in the [weakpixel/contrib](https://github.com/weakpixel/contrib) repository: [`github.com/weakpixel/contrib/lua`](https://github.com/weakpixel/contrib/tree/main/lua) runs Lua systems on Game Object schemas.
+
 ## What is in this module
 
 | Part | Import path | What it is |

@@ -70,7 +70,7 @@ It generates:
 
 ## Documentation
 
-Go doc comments on objects, their component fields, component types, component fields and the constants of `+game:enum` types are copied into the package's GOD file (without the `+game:*` lines; see [Documentation fields](game-object-definition.md#documentation-fields)). `weakpixel doc` turns those files into one HTML or Markdown document, or LuaLS stubs for Lua scripts: see [Tools](../tools.md#doc).
+Go doc comments on objects, their component fields, component types, component fields and the constants of `+game:enum` types are copied into the package's GOD file (without the `+game:*` lines; see [Documentation fields](game-object-definition.md#documentation-fields)). `weakpixel doc` turns those files into one HTML or Markdown document: see [Tools](../tools.md#doc).
 
 ## View
 

@@ -19,7 +19,7 @@ For a status report, summarize the relevant area as built, partial, or not start
 
 ## Working rules
 
-- The ECS core (`World`, views, queries, resources, `system`, the arity generator) lives in the `weakpixel/ecs` repository, module `github.com/weakpixel/ecs`. Core work is planned and merged there first; the engine then bumps the version in every `go.mod` that requires it. This repository keeps `god`, `weakpixel gen`, the tools and the Engine Runtime; the Lua bindings live in `weakpixel/lua`.
+- The ECS core (`World`, views, queries, resources, `system`, the arity generator) lives in the `weakpixel/ecs` repository, module `github.com/weakpixel/ecs`. Core work is planned and merged there first; the engine then bumps the version in every `go.mod` that requires it. This repository keeps `god`, `weakpixel gen`, the tools and the Engine Runtime; the Lua bindings live in `weakpixel/contrib` (`lua/`).
 - Carry out non-trivial implementation through `/plan` → `/implement`; keep the plan's scope and acceptance criteria authoritative.
 - Work in the order supported by current docs and plans. Use the relevant domain skill for implementation details and tests.
 - When documentation leaves a behavior decision open, record it in the plan and the owning design/guide page.

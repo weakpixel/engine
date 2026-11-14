@@ -26,7 +26,7 @@ Packages, modules and the dependency rules are in [doc/design/architecture.md](d
 
 The ECS core is its own repository: an ECS change merges in weakpixel/ecs first, then an engine PR bumps `github.com/weakpixel/ecs` in the root and `extmod` `go.mod` files. Work on both with an untracked `go.work` (`go work init . ../ecs`), never a committed `replace`. The asset system (weakpixel/asset) and the voice library (weakpixel/voice) are their own repositories in the same way: a change merges there first, then an engine PR bumps the version in `go.mod` (`go mod tidy` updates the indirect lines); add `../asset` or `../voice` to the `go.work`. Those repositories never name the engine. Don't edit the module cache.
 
-The demo games and the Lua bindings build on this module from other repositories; nothing here imports them, and the docs don't name the demos.
+The demo games and the Lua bindings (weakpixel/contrib, `lua/`) build on this module from other repositories; nothing here imports them, and the docs don't name the demos.
 
 The VSCode extension is its own repository, weakpixel/weakpixel-engine-vscode. The protocol version must match there: `bridge.Version` here, `PROTOCOL_VERSION` in its `src/controller.ts`.
 
