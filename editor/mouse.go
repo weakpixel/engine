@@ -228,7 +228,7 @@ func (s *Session) dragTo(cur, world gfx.Vec2) {
 			rot = snapTo(rot, rotateStep)
 		}
 		t.Rot = rot
-		s.syncLocal(ms.items[0].id)
+		s.dragged(ms.items[0].id)
 		ms.moved = ms.moved || rot != ms.startRot
 	case dragScale:
 		o, _ := s.handleOrigin()
@@ -247,7 +247,7 @@ func (s *Session) dragTo(cur, world gfx.Vec2) {
 			sc.Y = scaleStep / 25
 		}
 		t.Scale = sc
-		s.syncLocal(ms.items[0].id)
+		s.dragged(ms.items[0].id)
 		ms.moved = ms.moved || sc != ms.startScale
 	}
 }
@@ -291,7 +291,7 @@ func (s *Session) moveTo(cur gfx.Vec2) {
 		if p := it.start.Add(delta); p != t.Pos {
 			t.PrevPos = t.PrevPos.Add(p.Sub(t.Pos))
 			t.Pos = p
-			s.syncLocal(it.id)
+			s.dragged(it.id)
 		}
 	}
 	ms.moved = ms.moved || delta != (gfx.Vec2{})

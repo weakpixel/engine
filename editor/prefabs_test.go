@@ -116,7 +116,7 @@ func TestPrefabPlayStop(t *testing.T) {
 // kid is a visual attached to parent at the local offset (x, 0).
 func kid(id string, x float32, parent string, layer int) string {
 	return strings.Replace(visual(id, 0, 0, layer), `"Hidden":false}}}`,
-		fmt.Sprintf(`"Hidden":false},"hierarchy:Parent":{"Entity":%q,"Local":{"Pos":{"X":%g,"Y":0},"Rot":0,"Scale":{"X":1,"Y":1},"LayerOffset":0,"LayerMode":1,"YSortSide":0}}}}`, parent, x), 1)
+		fmt.Sprintf(`"Hidden":false},"hierarchy:Parent":{"Entity":%q,"Local":{"Pos":{"X":%g,"Y":0},"Rot":0,"Scale":{"X":1,"Y":1},"PlaceMode":0,"LayerOffset":0,"LayerMode":1,"YSortSide":0}}}}`, parent, x), 1)
 }
 
 // knightFixture has knight.prefab.json: a root and a sword 50 units to its

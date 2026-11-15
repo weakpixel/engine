@@ -19,6 +19,24 @@ const (
 	LayerAbsolute
 )
 
+// PlaceMode says how a child's Transform follows its parent.
+//
+// +game:enum
+type PlaceMode uint8
+
+// Place modes.
+const (
+	// PlaceRelative writes the child's Transform from the parent chain and
+	// [Local] every tick.
+	PlaceRelative PlaceMode = iota
+	// PlaceAbsolute places the child from [Local] once (when it spawns, is
+	// attached, or after [Reposition]) and then leaves its Transform alone,
+	// so it keeps its world placement while the parent moves. Its lifetime
+	// and draw layer still follow the parent, and it is the root of the
+	// placement (and the Y-sort key) of its own children.
+	PlaceAbsolute
+)
+
 // YSortSide says where a child sorts relative to its root in a Y-sorted
 // layer.
 //
@@ -47,6 +65,10 @@ type Local struct {
 	//
 	// +game:default:X=1,Y=1
 	Scale gfx.Vec2
+	// PlaceMode says how the child's Transform follows the parent. With
+	// PlaceAbsolute, Local is the placement the child starts from, not a
+	// live offset: the System never writes it.
+	PlaceMode PlaceMode
 	// LayerOffset is added to the parent's layer with LayerRelative.
 	LayerOffset int16
 	// LayerMode says how the child's layers follow the parent's.

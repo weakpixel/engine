@@ -47,6 +47,25 @@
                 "minimum": -32768,
                 "maximum": 32767
               },
+              "PlaceMode": {
+                "type": "integer",
+                "format": "int32",
+                "description": "PlaceMode says how the child's Transform follows the parent. With\nPlaceAbsolute, Local is the placement the child starts from, not a\nlive offset: the System never writes it.",
+                "minimum": 0,
+                "maximum": 255,
+                "x-enum": [
+                  {
+                    "value": 0,
+                    "name": "PlaceRelative",
+                    "doc": "PlaceRelative writes the child's Transform from the parent chain and\n[Local] every tick."
+                  },
+                  {
+                    "value": 1,
+                    "name": "PlaceAbsolute",
+                    "doc": "PlaceAbsolute places the child from [Local] once (when it spawns, is\nattached, or after [Reposition]) and then leaves its Transform alone,\nso it keeps its world placement while the parent moves. Its lifetime\nand draw layer still follow the parent, and it is the root of the\nplacement (and the Y-sort key) of its own children."
+                  }
+                ]
+              },
               "Pos": {
                 "type": "object",
                 "description": "Pos is the offset in the parent's space: scaled and rotated by the\nparent's world Scale and Rot.",
@@ -118,6 +137,7 @@
               "Pos",
               "Rot",
               "Scale",
+              "PlaceMode",
               "LayerOffset",
               "LayerMode",
               "YSortSide"
