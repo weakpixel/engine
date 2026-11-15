@@ -6,6 +6,7 @@ import (
 	"image/color"
 	"io/fs"
 	"path"
+	"slices"
 	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -51,14 +52,20 @@ type Tool struct {
 // New returns the anim tool.
 func New() toolshell.Tool { return &Tool{bar: newToolbar()} }
 
-// AsepriteSuffix is the name suffix of an Aseprite export that the tool
-// opens read-only to play its clips.
-const AsepriteSuffix = ".aseprite.json"
+// AsepriteSuffixes are the name suffixes of an Aseprite export that the
+// tool opens read-only to play its clips.
+var AsepriteSuffixes = []string{".aseprite.json", ".ase.json"}
+
+// IsAsepriteExport reports whether key names an Aseprite export by one of
+// [AsepriteSuffixes].
+func IsAsepriteExport(key string) bool {
+	return slices.ContainsFunc(AsepriteSuffixes, func(s string) bool { return strings.HasSuffix(key, s) })
+}
 
 // Check reports whether the tool can open the file at asset key.
 func (*Tool) Check(key string) error {
-	if !strings.HasSuffix(key, animfile.Suffix) && !strings.HasSuffix(key, AsepriteSuffix) {
-		return fmt.Errorf("anim: %s is not a %s or %s file", key, animfile.Suffix, AsepriteSuffix)
+	if !strings.HasSuffix(key, animfile.Suffix) && !IsAsepriteExport(key) {
+		return fmt.Errorf("anim: %s is not a %s, %s or %s file", key, animfile.Suffix, AsepriteSuffixes[0], AsepriteSuffixes[1])
 	}
 	return nil
 }
@@ -70,7 +77,7 @@ func (t *Tool) Open(s *toolshell.Shell, key string) error {
 	}
 	t.shell, t.key = s, key
 	t.st = NewState(s.Edit)
-	t.st.ReadOnly = strings.HasSuffix(key, AsepriteSuffix)
+	t.st.ReadOnly = IsAsepriteExport(key)
 	t.entity = ecs.NewEntity2(s.Engine().World(), gfx.Transform{}, gfx.Sprite{})
 	return nil
 }

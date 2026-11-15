@@ -130,7 +130,7 @@ func clipTags(fsys fs.FS, p string, entry bool) ([]string, error) {
 			return nil, err
 		}
 		sheetPath = path.Join(path.Dir(p), def.Sheet)
-	case strings.HasSuffix(lower, ".aseprite.json") && entry:
+	case (strings.HasSuffix(lower, ".aseprite.json") || strings.HasSuffix(lower, ".ase.json")) && entry:
 		sheetPath = p
 	default:
 		return nil, nil

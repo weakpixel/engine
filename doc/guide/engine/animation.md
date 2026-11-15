@@ -15,7 +15,7 @@ s.AddRunner(anim.NewAnimationSystem(w))     // simulate stage, before the extrac
 
 ## Export from Aseprite
 
-*File > Export Sprite Sheet*, JSON data (hash or array), with **Meta: Tags** enabled. You get a PNG and a JSON next to it. Each tag becomes a clip, and per-frame durations are kept.
+*File > Export Sprite Sheet*, JSON data (hash or array), with **Meta: Tags** enabled. You get a PNG and a JSON next to it; name the JSON `<name>.aseprite.json` or `<name>.ase.json` so the asset library and the editor know it as an Aseprite export (any other `*.json` still loads by key). Each tag becomes a clip, and per-frame durations are kept.
 
 | Aseprite tag direction | `Clip.Loop` |
 | --- | --- |
