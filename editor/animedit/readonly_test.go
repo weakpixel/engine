@@ -11,7 +11,13 @@ import (
 // An Aseprite export opens read-only: its tags play, no editing section or
 // tool is offered, and every edit is refused without touching the document.
 func TestAsepriteExportOpensReadOnly(t *testing.T) {
-	r := newRigKey(t, "chars/hero.aseprite.json", heroSheetJSON)
+	for _, key := range []string{"chars/hero.aseprite.json", "chars/hero.ase.json"} {
+		t.Run(key, func(t *testing.T) { testExportOpensReadOnly(t, key) })
+	}
+}
+
+func testExportOpensReadOnly(t *testing.T, key string) {
+	r := newRigKey(t, key, heroSheetJSON)
 	if !r.tool.st.ReadOnly || !r.tool.st.Ready() {
 		t.Fatalf("ReadOnly = %v, Ready = %v", r.tool.st.ReadOnly, r.tool.st.Ready())
 	}
@@ -70,13 +76,28 @@ func TestReadOnlyRefusesEdits(t *testing.T) {
 
 func TestCheckAcceptsDefinitionAndExport(t *testing.T) {
 	tool := New().(*Tool)
-	for _, key := range []string{"a.anim.json", "chars/hero.aseprite.json"} {
+	for _, key := range []string{"a.anim.json", "chars/hero.aseprite.json", "chars/hero.ase.json"} {
 		if err := tool.Check(key); err != nil {
 			t.Errorf("Check(%q) = %v", key, err)
 		}
 	}
 	err := tool.Check("a.json")
-	if err == nil || !strings.Contains(err.Error(), ".aseprite.json") {
+	if err == nil || !strings.Contains(err.Error(), ".aseprite.json") || !strings.Contains(err.Error(), ".ase.json") {
 		t.Errorf("Check(a.json) = %v", err)
+	}
+}
+
+func TestIsAsepriteExport(t *testing.T) {
+	tests := map[string]bool{
+		"chars/hero.aseprite.json": true,
+		"chars/hero.ase.json":      true,
+		"chars/hero.anim.json":     false,
+		"chars/hero.json":          false,
+		"chars/base.json":          false,
+	}
+	for key, want := range tests {
+		if got := IsAsepriteExport(key); got != want {
+			t.Errorf("IsAsepriteExport(%q) = %v, want %v", key, got, want)
+		}
 	}
 }

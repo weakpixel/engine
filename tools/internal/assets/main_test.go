@@ -238,6 +238,7 @@ func TestKeys(t *testing.T) {
 		"global/hero/hero.anim.json":     `{"version": 1, "sheet": "hero.aseprite.json"}`,
 		"global/hero/hero.aseprite.json": `{"frames": [{"filename": "a", "frame": {"x":0,"y":0,"w":1,"h":1}, "duration": 100}], "meta": {"image": "hero.png", "frameTags": [{"name": "Idle L/R", "from": 0, "to": 0, "direction": "forward"}]}}`,
 		"global/hero/hero.png":           "png",
+		"global/hero/slime.ase.json":     `{"frames": [{"filename": "a", "frame": {"x":0,"y":0,"w":1,"h":1}, "duration": 100}], "meta": {"image": "hero.png", "frameTags": [{"name": "Hop", "from": 0, "to": 0, "direction": "forward"}]}}`,
 		"world-1/world-1.world":          `{"maps": []}`,
 		"readme.txt":                     "hello",
 	}
@@ -257,12 +258,14 @@ const (
 	KeyGlobalHeroHeroAnim     = "global/hero/hero.anim.json"
 	KeyGlobalHeroHeroAseprite = "global/hero/hero.aseprite.json"
 	KeyGlobalHeroHeroPng      = "global/hero/hero.png"
+	KeyGlobalHeroSlimeAse     = "global/hero/slime.ase.json"
 	KeyWorld1World1World      = "world-1/world-1.world"
 )
 
 // Clip keys, one per tag of each clip set.
 const (
 	KeyGlobalHeroHeroAnimIdleLR = "global/hero/hero.anim.json#Idle L/R"
+	KeyGlobalHeroSlimeAseHop    = "global/hero/slime.ase.json#Hop"
 )
 `
 	if code != exitOK || out != want {

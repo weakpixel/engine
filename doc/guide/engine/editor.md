@@ -163,7 +163,7 @@ go get -tool github.com/weakpixel/engine/tools/wpix-editor
 | `fx` | `.prefab.json`, optional | A [particle effect](particles.md#authoring): a smoke effect playing at once (with no file) or the prefab's emitter, with presets, image and shader pickers and the fields that matter |
 | `sheet` | `.sheet.json` | The [grid sheet](asset-kinds.md#grid-sheet) over its texture: edit the frame size, margin and spacing, see the frame count and the index of the frame under the mouse |
 | `voice` | `*.voice.json`, `*.dialogue.json` | A [voice](speech.md#previewing-voices-and-dialogues) says a line you type in the panel, with the piano roll of its notes; a dialogue plays in a box line by line. The only tool with sound. Read-only |
-| `anim` | `.anim.json`, `.aseprite.json` | The [animation definition](animation.md#animation-definition-animjson) on its sheet: play a clip, draw and edit the pivot, body and hit and hurt boxes, and edit the rest of the format in the panel |
+| `anim` | `.anim.json`, `.aseprite.json`, `.ase.json` | The [animation definition](animation.md#animation-definition-animjson) on its sheet: play a clip, draw and edit the pivot, body and hit and hurt boxes, and edit the rest of the format in the panel |
 
 The asset root is `assets.root` of the [`.weakpixel.json`](../project-file.md) found from the file's folder, or the file's folder without one; a file outside the root is an error. The file's asset key is its path relative to the root. A PNG saved while the tool is open reloads.
 
@@ -201,7 +201,7 @@ The panel has Effect (preset and Apply preset, Keep image and shader, the live p
 
 ### The anim tool
 
-`go tool wpix-editor anim <file>.anim.json` plays the clips of the definition's sheet. An Aseprite export named `<name>.aseprite.json` opens the same way **read-only**: the clips play with the sheet's own timing, and the panel offers no editing; make a definition of it with `--sheet` (below) to add pivot and boxes. Boxes are drawn relative to the pivot, which is the origin of the view; coordinates are whole pixels. To start a definition from an Aseprite export, give a file that does not exist and the export: `wpix-editor anim --sheet player.json player.anim.json` (the same starter as `wpix anim create`; Ctrl/Cmd+S creates the file).
+`go tool wpix-editor anim <file>.anim.json` plays the clips of the definition's sheet. An Aseprite export named `<name>.aseprite.json` or `<name>.ase.json` opens the same way **read-only**: the clips play with the sheet's own timing, and the panel offers no editing; make a definition of it with `--sheet` (below) to add pivot and boxes. Boxes are drawn relative to the pivot, which is the origin of the view; coordinates are whole pixels. To start a definition from an Aseprite export, give a file that does not exist and the export: `wpix-editor anim --sheet player.json player.anim.json` (the same starter as `wpix anim create`; Ctrl/Cmd+S creates the file).
 
 | Key | Does |
 | --- | --- |

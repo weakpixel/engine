@@ -30,7 +30,7 @@ type Tool struct {
 // Tools are the tools by name. There is no global registry: adding a tool
 // is one line here, and the command line gets its subcommand from it.
 var Tools = map[string]Tool{
-	"anim":  {animedit.New, "edit an animation definition (.anim.json): pivot, body, hit and hurt boxes, clips; an Aseprite export (.aseprite.json) opens read-only", false, true, false, false},
+	"anim":  {animedit.New, "edit an animation definition (.anim.json): pivot, body, hit and hurt boxes, clips; an Aseprite export (.aseprite.json, .ase.json) opens read-only", false, true, false, false},
 	"fx":    {fxedit.New, "make a particle effect (.fx.json): presets, pickers, live preview; no file starts an untitled effect", true, false, false, false},
 	"sheet": {sheetedit.New, "edit a grid sprite sheet (.sheet.json): frame size, margin and spacing over the texture, frame count and the index under the mouse", false, false, true, false},
 	"voice": {voiceview.New, "preview a voice (.voice.json: says a line from the panel, with the piano roll of its notes) or a dialogue (.dialogue.json: plays it in a box, Next goes on) with sound; edit them in the Voice Editor", false, false, false, true},
