@@ -9,6 +9,7 @@ import (
 
 	"github.com/weakpixel/asset"
 	"github.com/weakpixel/ecs"
+	"github.com/weakpixel/ecs/system"
 	"github.com/weakpixel/engine/gfx"
 	"github.com/weakpixel/engine/god"
 	"github.com/weakpixel/engine/hierarchy"
@@ -262,7 +263,7 @@ func TestSource(t *testing.T) {
 func visual(id, art, parent string, layer int) string {
 	parentComp := ""
 	if parent != "" {
-		parentComp = `,"hierarchy:Parent":{"Entity":"` + parent + `","Local":{"Pos":{"X":8,"Y":-4},"Rot":0,"Scale":{"X":1,"Y":1},"LayerOffset":1,"LayerMode":0,"YSortSide":0}}`
+		parentComp = `,"hierarchy:Parent":{"Entity":"` + parent + `","Local":{"Pos":{"X":8,"Y":-4},"Rot":0,"Scale":{"X":1,"Y":1},"PlaceMode":0,"LayerOffset":1,"LayerMode":0,"YSortSide":0}}`
 	}
 	return fmt.Sprintf(`{"id":%q,"group":"gfx","class":"Visual","components":{
 		"gfx:Transform":{"Pos":{"X":0,"Y":0},"PrevPos":{"X":0,"Y":0},"Rot":0,"Scale":{"X":1,"Y":1}},
@@ -271,7 +272,7 @@ func visual(id, art, parent string, layer int) string {
 
 var (
 	knight = `{"objects":[` + visual("knight", "art/goblin.png", "", 3) + `,` + visual("sword", "art/archer.png", "knight", 3) + `,` + visual("glint", "art/goblin.png", "sword", 3) + `]}`
-	rider  = `{"objects":[` + visual("rider", "art/goblin.png", "", 3) + `,{"id":"horse","prefab":"prefabs/horse.prefab.json","components":{"hierarchy:Parent":{"Entity":"rider","Local":{"Pos":{"X":0,"Y":4},"Rot":0,"Scale":{"X":1,"Y":1},"LayerOffset":0,"LayerMode":0,"YSortSide":0}}}}]}`
+	rider  = `{"objects":[` + visual("rider", "art/goblin.png", "", 3) + `,{"id":"horse","prefab":"prefabs/horse.prefab.json","components":{"hierarchy:Parent":{"Entity":"rider","Local":{"Pos":{"X":0,"Y":4},"Rot":0,"Scale":{"X":1,"Y":1},"PlaceMode":0,"LayerOffset":0,"LayerMode":0,"YSortSide":0}}}}]}`
 	loose  = `{"objects":[` + visual("knight", "art/goblin.png", "", 3) + `,` + visual("sword", "art/archer.png", "knight", 3) + `,` + visual("torch", "art/goblin.png", "", 3) + `]}`
 )
 
@@ -337,5 +338,29 @@ func TestUnattachedPart(t *testing.T) {
 	_, err := prefab.LoadSync(f.srv.Global(), "prefabs/loose.prefab.json")
 	if err == nil || !strings.Contains(err.Error(), `prefab "prefabs/loose.prefab.json": object "torch" is not attached to the root (hierarchy:Parent)`) {
 		t.Fatalf("got %v", err)
+	}
+}
+
+// An absolute part starts at its Local relative to where the instance is
+// spawned, then stays there when the root moves.
+func TestAbsolutePartSpawnsRelativeToInstance(t *testing.T) {
+	f := newFixture(t)
+	abs := strings.Replace(visual("shadow", "art/archer.png", "knight", 3), `"PlaceMode":0`, `"PlaceMode":1`, 1)
+	f.files["prefabs/shadowed.prefab.json"] = &fstest.MapFile{Data: []byte(`{"objects":[` + visual("knight", "art/goblin.png", "", 3) + `,` + abs + `]}`)}
+	h := f.load(t, f.srv.Global(), "prefabs/shadowed.prefab.json")
+	f.settle()
+	at := gfx.Vec2{X: 100, Y: 50}
+	ents := f.store.SpawnAll(h, nil, gfx.Transform{Pos: at, PrevPos: at, Scale: gfx.Vec2{X: 1, Y: 1}})
+	sys := hierarchy.NewSystem(f.world)
+	ctx := &system.Context{World: f.world}
+	sys.Run(ctx)
+	want := gfx.Vec2{X: 108, Y: 46} // the instance's position plus Local (8, -4)
+	if got := ecs.GetComp[gfx.Transform](f.world, ents[1]).Pos; got != want {
+		t.Fatalf("absolute part at %v, want %v", got, want)
+	}
+	ecs.GetComp[gfx.Transform](f.world, ents[0]).Pos = gfx.Vec2{}
+	sys.Run(ctx)
+	if got := ecs.GetComp[gfx.Transform](f.world, ents[1]).Pos; got != want {
+		t.Fatalf("absolute part moved with the root to %v, want it to stay at %v", got, want)
 	}
 }

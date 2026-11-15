@@ -167,3 +167,51 @@ func TestPrefabStageEditsLocal(t *testing.T) {
 		t.Errorf("edit %+v (%s)", e, e.JSON)
 	}
 }
+
+// absKid is kid with PlaceAbsolute.
+func absKid(id string, x float32, parent string, layer int) string {
+	return strings.Replace(kid(id, x, parent, layer), `"PlaceMode":0`, `"PlaceMode":1`, 1)
+}
+
+// In edit mode an absolute child moves with a dragged parent and gets no
+// edit; dragging it reports its Local; an edit of its Parent places it anew.
+func TestAbsoluteChildInEditMode(t *testing.T) {
+	f, px := gizmoFixture(t, visual("p", 0, 0, 1), absKid("c", 40, "p", 2))
+	if got := f.pos("c").X; got != 40 {
+		t.Fatalf("absolute child starts at %v, want 40 (from Local)", got)
+	}
+	f.s.Select("p")
+	f.gesture(px(0, 0), px(10, 0))
+	f.update()
+	if got := f.pos("c").X; math.Abs(float64(got)-50) > 0.01 {
+		t.Errorf("absolute child at %v after the parent moved by 10, want 50", got)
+	}
+	if f.edits() != 1 || f.lastEdit().ID != "p" {
+		t.Errorf("edits %v, want one for p", f.events)
+	}
+	if got := f.parent("c").Local.Pos.X; got != 40 {
+		t.Errorf("child's Local.Pos.X = %v, want 40", got)
+	}
+
+	f.events = nil
+	f.s.Select("c")
+	o, to := px(50, 0), px(80, 0)
+	f.gesture(gfx.Vec2{X: o.X + handleLen/2, Y: o.Y}, gfx.Vec2{X: to.X + handleLen/2, Y: o.Y})
+	f.update()
+	e := f.lastEdit()
+	if e.ID != "c" || e.Component != ParentKey || !strings.Contains(string(e.JSON), `"Pos":{"X":70`) {
+		t.Errorf("edit %+v (%s), want c's Parent with Local.Pos.X 70", e, e.JSON)
+	}
+	if got := f.pos("c").X; math.Abs(float64(got)-80) > 0.01 {
+		t.Errorf("dragged absolute child at %v, want 80", got)
+	}
+
+	// An inspector edit of its Parent re-decodes the component and places it
+	// from the new Local.
+	f.apply(doc(visual("p", 10, 0, 1), absKid("c", 5, "p", 2)))
+	f.settle()
+	f.update()
+	if got := f.pos("c").X; math.Abs(float64(got)-15) > 0.01 {
+		t.Errorf("after an edit of Local the child is at %v, want 15", got)
+	}
+}

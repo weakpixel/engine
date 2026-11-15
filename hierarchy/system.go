@@ -22,7 +22,10 @@ const MaxDepth = 32
 // which the entities are visited does not matter and no child lists or depth
 // tags are needed. The cost is O(children x depth), with 0 allocations.
 //
-// A root without a Transform counts as a zero Transform.
+// A root without a Transform counts as a zero Transform. A child with
+// [PlaceAbsolute] is composed like this only until it is placed; after that
+// its own Transform is kept, and it stands in for the root of its
+// descendants (see [place]).
 type System struct {
 	w     *ecs.World
 	view  ecs.View2[gfx.Transform, Parent]
@@ -45,14 +48,7 @@ func (s *System) Run(*system.Context) {
 			s.dead = append(s.dead, e)
 			continue
 		}
-		world := gfx.Transform{}
-		if rt := ecs.GetCompOrNil[gfx.Transform](s.w, root); rt != nil {
-			world = *rt
-		}
-		rootY := world.Pos.Y
-		for i := n - 1; i >= 0; i-- {
-			world = Compose(world, s.chain[i].Local)
-		}
+		world, rootY := place(s.w, e, s.chain[:n], root)
 		t.Pos, t.Rot, t.Scale = world.Pos, world.Rot, world.Scale
 		if !p.placed {
 			t.PrevPos = t.Pos
@@ -153,4 +149,46 @@ func (s *System) drawnLayer(e ecs.Entity) (int16, bool) {
 		return pt.Layer, true
 	}
 	return 0, false
+}
+
+// place returns the world transform of e, whose chain (e's Parent at index
+// 0, up to but not including root) is chain, and the Y its Y-sort uses.
+//
+// The nearest link with [PlaceAbsolute] splits the chain. Once that link is
+// placed, its entity's Transform is authored, not derived, so it is read as
+// the base and the links above it are not composed: the result does not
+// depend on the order in which the System visits entities, as for the root.
+// An absolute link that is not placed yet is composed through like a
+// relative one, which gives the same Transform the System writes for it in
+// this run. The Y-sort key is the Y of that absolute link (placed or not) or
+// else of the root, so a child sorts by the part of the group that it moves
+// with.
+func place(w *ecs.World, e ecs.Entity, chain []*Parent, root ecs.Entity) (world gfx.Transform, sortY float32) {
+	abs := -1
+	for i, p := range chain {
+		if p.Local.PlaceMode == PlaceAbsolute {
+			abs = i
+			break
+		}
+	}
+	from := len(chain) - 1
+	base := root
+	if abs >= 0 && chain[abs].placed {
+		from = abs - 1
+		base = e
+		if abs > 0 {
+			base = chain[abs-1].Entity
+		}
+	}
+	if t := ecs.GetCompOrNil[gfx.Transform](w, base); t != nil {
+		world = *t
+	}
+	sortY = world.Pos.Y
+	for i := from; i >= 0; i-- {
+		world = Compose(world, chain[i].Local)
+		if i == abs {
+			sortY = world.Pos.Y
+		}
+	}
+	return world, sortY
 }

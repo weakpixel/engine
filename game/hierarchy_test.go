@@ -10,7 +10,7 @@ import (
 
 const (
 	visualAt  = `"gfx:Transform":{"Pos":{"X":%s,"Y":0},"PrevPos":{"X":0,"Y":0},"Rot":0,"Scale":{"X":1,"Y":1}},"gfx:Sprite":{"ID":"","Layer":0,"Origin":{"X":0,"Y":0},"FlipX":false,"FlipY":false,"Tint":0,"Blend":0,"Hidden":false}`
-	parentOf  = `,"hierarchy:Parent":{"Entity":"%s","Local":{"Pos":{"X":5,"Y":0},"Rot":0,"Scale":{"X":0,"Y":0},"LayerOffset":0,"LayerMode":0,"YSortSide":0}}`
+	parentOf  = `,"hierarchy:Parent":{"Entity":"%s","Local":{"Pos":{"X":5,"Y":0},"Rot":0,"Scale":{"X":0,"Y":0},"PlaceMode":0,"LayerOffset":0,"LayerMode":0,"YSortSide":0}}`
 	visualObj = `{"id":"%s","group":"gfx","class":"Visual","components":{%s%s}}`
 )
 
