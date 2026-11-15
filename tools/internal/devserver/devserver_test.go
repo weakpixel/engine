@@ -167,3 +167,35 @@ func (s *syncBuffer) String() string {
 	defer s.mu.Unlock()
 	return s.b.String()
 }
+
+func TestIgnoredFilesAreNotServedOrReported(t *testing.T) {
+	build, assets := t.TempDir(), t.TempDir()
+	write(t, filepath.Join(assets, ".assetignore"), "*.psd\n")
+	write(t, filepath.Join(assets, "global", "a.kage"), "kage")
+	write(t, filepath.Join(assets, "global", "art.psd"), "psd")
+	srv := httptest.NewServer(New(t.Context(), build, assets, time.Hour).Handler())
+	t.Cleanup(srv.Close)
+	for path, want := range map[string]int{
+		"/assets/global/a.kage":            http.StatusOK,
+		"/assets/global/art.psd":           http.StatusNotFound,
+		"/assets/.assetignore":             http.StatusNotFound,
+		"/assets/global/../global/art.psd": http.StatusNotFound,
+	} {
+		resp, err := http.Get(srv.URL + path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		resp.Body.Close()
+		if resp.StatusCode != want {
+			t.Errorf("%s: status %d, want %d", path, resp.StatusCode, want)
+		}
+	}
+	ig, err := library.ReadIgnore(os.DirFS(assets))
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := scan(assets, ig)
+	if _, ok := got["global/art.psd"]; ok || len(got) != 1 {
+		t.Fatalf("scan = %v, want only global/a.kage", got)
+	}
+}

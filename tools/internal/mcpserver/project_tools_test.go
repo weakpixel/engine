@@ -2,6 +2,8 @@ package mcpserver
 
 import (
 	"encoding/json"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -127,5 +129,22 @@ func TestStarterVoice(t *testing.T) {
 		if got := starterVoice(c.want, c.key); got != c.starter {
 			t.Errorf("starterVoice(%q, %q) = %v, want %v", c.want, c.key, got, c.starter)
 		}
+	}
+}
+
+func TestListAssetsSkipsIgnored(t *testing.T) {
+	dir := copyFixture(t)
+	if err := os.WriteFile(filepath.Join(dir, "assets", ".assetignore"), []byte("bad.level.json\nglobal/prefabs/\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	s := newServer(t, dir)
+	out := mustCall(t, s, "list_assets", `{}`)
+	got, _ := json.Marshal(out["assets"])
+	want := `[{"key":"a/a.level.json","kind":"level"},{"key":"global/dot.png","kind":"texture"}]`
+	if string(got) != want {
+		t.Errorf("assets = %s", got)
+	}
+	if _, ok := scanAssets(filepath.Join(dir, "assets"))["a/bad.level.json"]; ok {
+		t.Error("the change scan reports an ignored file")
 	}
 }

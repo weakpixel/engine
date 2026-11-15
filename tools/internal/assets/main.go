@@ -9,6 +9,7 @@
 //	wpix assets catalog [<root>] [-o <file>|-]
 //	wpix assets pack [<root>] [-o <out>]
 //	wpix assets keys [<root>] [--pkg name] [-o file|-]
+//	wpix assets embed [<root>] [--pkg name] [--var name] [--tags constraint] [-o file|-]
 //
 // check prints every finding of library.Scan, one line each
 // ("<file>: error|warn: ..."), then a summary line. With --json it prints one
@@ -21,7 +22,8 @@
 // as {"fatal": "..."} with exit code 1.
 //
 // ls prints each package with its file count, size, entries and the
-// packages it uses.
+// packages it uses. With --ignored it prints instead every file an
+// .assetignore ignores, with the line that ignores it.
 //
 // catalog writes assets.catalog.json for a loose library, so it can be
 // served from a file system that cannot list directories (HTTP). The
@@ -37,11 +39,17 @@
 //
 //	//go:generate go run github.com/weakpixel/engine/tools/wpix assets keys assets --pkg main -o zz__gen.assets.go
 //
+// embed writes a Go file that embeds the library with go:embed patterns that
+// leave out what .assetignore files ignore, for go:generate (default package
+// "main", variable "assets"):
+//
+//	//go:generate go tool wpix assets embed assets --tags "!editor" -o zz__gen.assets_embed.go
+//
 // <root> may be left out when a .weakpixel.json above the working directory
 // sets "assets.root" (doc/guide/project-file.md); an empty Root of the options
 // means the same.
 //
-// catalog, pack and keys refuse a library with errors (run check). Exit codes:
+// catalog, pack, keys and embed refuse a library with errors (run check). Exit codes:
 // 0 ok (warnings allowed), 1 errors, 2 usage error.
 package assets
 
@@ -73,7 +81,8 @@ type CheckOptions struct {
 
 // ListOptions are the arguments of `wpix assets ls`.
 type ListOptions struct {
-	Root string // library root; empty means assets.root of .weakpixel.json
+	Root    string // library root; empty means assets.root of .weakpixel.json
+	Ignored bool   // list the ignored files and the rule of each instead of the packages
 }
 
 // CatalogOptions are the arguments of `wpix assets catalog`.
@@ -159,6 +168,9 @@ func Check(opts CheckOptions, stdout io.Writer) error {
 	if opts.JSON {
 		return reportJSON(stdout, findings)
 	}
+	if ignored, err := library.IgnoredFiles(os.DirFS(root)); err == nil && len(ignored) > 0 {
+		fmt.Fprintf(stdout, "%d files ignored by %s (wpix assets ls --ignored)\n", len(ignored), library.IgnoreFile)
+	}
 	return report(stdout, findings)
 }
 
@@ -168,11 +180,31 @@ func List(opts ListOptions, stdout io.Writer) error {
 	if err != nil {
 		return err
 	}
+	if opts.Ignored {
+		return listIgnored(stdout, root)
+	}
 	cat, _, err := scan(root, false, stdout)
 	if err != nil {
 		return err
 	}
 	list(stdout, root, cat)
+	return nil
+}
+
+// listIgnored prints each ignored file with the rule that ignores it,
+// aligned: "forest/raw/hero.psd  forest/.assetignore:3".
+func listIgnored(w io.Writer, root string) error {
+	files, err := library.IgnoredFiles(os.DirFS(root))
+	if err != nil {
+		return err
+	}
+	width := 0
+	for _, f := range files {
+		width = max(width, len(f.Path))
+	}
+	for _, f := range files {
+		fmt.Fprintf(w, "%-*s  %s\n", width, f.Path, f.By)
+	}
 	return nil
 }
 

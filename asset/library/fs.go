@@ -45,6 +45,7 @@ type mountFS struct {
 	mounts atomic.Pointer[[]mount] // sorted by layer, then newest last
 	mu     sync.Mutex              // serializes writers
 	packed map[string]bool         // packages whose files live only in a pack; read-only after Open
+	ignore *Ignore                 // rules of a listed base; nil with a catalog; read-only after Open
 }
 
 func newMountFS(base fs.FS, packed map[string]bool) *mountFS {
@@ -137,6 +138,9 @@ func resolve[R any](m *mountFS, opName, name string, op func(fsys fs.FS, name st
 		if !errors.Is(err, fs.ErrNotExist) {
 			return r, err
 		}
+	}
+	if ok, by := m.ignore.Match(name, false); ok && name != "." {
+		return zero, &fs.PathError{Op: opName, Path: name, Err: fmt.Errorf("library: %s is ignored by %s: %w", name, by, fs.ErrNotExist)}
 	}
 	if p := PackageOf(name); p != "" && m.packed[p] && !packMounted {
 		return zero, &fs.PathError{Op: opName, Path: name, Err: fmt.Errorf("library: package %s is packed and not loaded (load it with LoadPackage, or a level of it): %w", p, fs.ErrNotExist)}

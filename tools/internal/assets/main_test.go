@@ -93,7 +93,7 @@ func runKeys(opts KeysOptions) (int, string, string) {
 
 func TestCheck(t *testing.T) {
 	code, out, _ := runCheck(CheckOptions{Root: writeFiles(t, goodLib)})
-	if code != exitOK || out != "readme.txt: warn: unused: no known kind and nothing references it (keep source files outside the library)\n0 errors, 1 warnings\n" {
+	if code != exitOK || out != "readme.txt: warn: unused: no known kind and nothing references it (keep source files outside the library, or ignore them in .assetignore)\n0 errors, 1 warnings\n" {
 		t.Fatalf("good: code %d\n%s", code, out)
 	}
 	code, out, _ = runCheck(CheckOptions{Root: writeFiles(t, badLib)})

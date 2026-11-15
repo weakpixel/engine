@@ -13,7 +13,8 @@ run:
 dev:
 	go run . -assets assets
 
-# Game Object code (game/zz__gen.go) and GOD files (build/god/, not committed) from the +game markers.
+# Game Object code (game/zz__gen.go) and GOD files (build/god/, not committed) from the +game markers,
+# and the embed list of the assets (zz__gen.assets_embed.go, without what assets/.assetignore ignores).
 generate:
 	go generate ./...
 

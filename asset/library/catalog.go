@@ -112,18 +112,34 @@ const maxTextureSide = 8192
 // case mismatches, references that leave the root, global/ or boot/ using
 // another package, references outside a package's fence, cycles between
 // packages (a warning), names outside [a-z0-9._-], unused files of no
-// known kind, and textures over 8192 pixels. The error is for a file
+// known kind, and textures over 8192 pixels. Files an [IgnoreFile] ignores
+// are not part of the catalog; bad ignore lines, references and
+// library.json entries naming ignored files, and ignored library files
+// (library.json, the catalog, global/) are errors. The error is for a file
 // system that cannot be listed or read, or an invalid library.json.
 func Scan(fsys fs.FS) (*Catalog, []Finding, error) {
-	files, err := listFiles(fsys)
+	cat, findings, _, err := scan(fsys)
+	return cat, findings, err
+}
+
+// scan is Scan plus the ignore rules it listed with.
+func scan(fsys fs.FS) (*Catalog, []Finding, *Ignore, error) {
+	files, ig, bad, err := listLibrary(fsys)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	cfg, err := readConfig(fsys)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
-	s := &scanner{fsys: fsys, cfg: cfg, files: map[string]bool{}, lower: map[string]string{}, referenced: map[string]bool{}}
+	s := &scanner{fsys: fsys, cfg: cfg, ignore: ig, files: map[string]bool{}, lower: map[string]string{}, referenced: map[string]bool{}}
+	for _, e := range bad {
+		var ie *IgnoreError
+		if errors.As(e, &ie) {
+			s.add(Error, ie.File, fmt.Sprintf("line %d: %s", ie.Line, ie.Msg))
+		}
+	}
+	s.checkIgnoredReserved()
 	for _, f := range files {
 		s.files[f] = true
 		s.lower[strings.ToLower(f)] = f
@@ -142,7 +158,11 @@ func Scan(fsys fs.FS) (*Catalog, []Finding, error) {
 		g.Files = append(g.Files, f)
 	}
 	if pkgs[GlobalDir] == nil {
-		s.add(Error, GlobalDir, "missing: a library needs a global/ package (loaded at boot)")
+		if ok, by := ig.Match(GlobalDir, true); ok {
+			s.add(Error, GlobalDir, fmt.Sprintf("ignored by %s: a library needs a global/ package (loaded at boot)", by))
+		} else {
+			s.add(Error, GlobalDir, "missing: a library needs a global/ package (loaded at boot)")
+		}
 	}
 	refs := map[string][]ref{} // file -> what it references
 	for _, f := range files {
@@ -150,7 +170,7 @@ func Scan(fsys fs.FS) (*Catalog, []Finding, error) {
 		if jsonFile(f) {
 			data, err := fs.ReadFile(fsys, f)
 			if err != nil {
-				return nil, nil, err
+				return nil, nil, nil, err
 			}
 			refs[f] = scanRefs(f, data)
 		}
@@ -182,7 +202,11 @@ func Scan(fsys fs.FS) (*Catalog, []Finding, error) {
 		for _, key := range cfg.Entries[name] {
 			p, _, _ := strings.Cut(key, "#")
 			if !s.files[p] {
-				s.add(Error, ConfigFile, fmt.Sprintf("entry %q: no such file", key))
+				if ok, by := ig.Match(p, false); ok {
+					s.add(Error, ConfigFile, fmt.Sprintf("entry %q: the file is ignored by %s", key, by))
+				} else {
+					s.add(Error, ConfigFile, fmt.Sprintf("entry %q: no such file", key))
+				}
 				continue
 			}
 			g.Entries = append(g.Entries, key)
@@ -216,17 +240,18 @@ func Scan(fsys fs.FS) (*Catalog, []Finding, error) {
 	s.checkCycles(cat)
 	for _, f := range files {
 		if KindOf(f) == KindUnknown && !s.referenced[f] && f != CatalogFile && f != ConfigFile {
-			s.add(Warning, f, "unused: no known kind and nothing references it (keep source files outside the library)")
+			s.add(Warning, f, "unused: no known kind and nothing references it (keep source files outside the library, or ignore them in "+IgnoreFile+")")
 		}
 	}
 	slices.SortStableFunc(s.findings, func(a, b Finding) int { return strings.Compare(a.Path, b.Path) })
-	return cat, s.findings, nil
+	return cat, s.findings, ig, nil
 }
 
 // scanner collects findings while Scan runs.
 type scanner struct {
 	fsys       fs.FS
 	cfg        Config
+	ignore     *Ignore
 	files      map[string]bool
 	lower      map[string]string // lower-case path -> path, for case mismatches
 	referenced map[string]bool
@@ -246,6 +271,10 @@ func (s *scanner) checkRef(f string, r ref) {
 		return
 	}
 	if !s.files[r.Path] {
+		if ok, by := s.ignore.Match(r.Path, false); ok {
+			s.add(Error, f, fmt.Sprintf("reference %q: %s is ignored by %s", r.Raw, r.Path, by))
+			return
+		}
 		if actual, ok := s.lower[strings.ToLower(r.Path)]; ok {
 			s.add(Error, f, fmt.Sprintf("reference %q: case mismatch, the file is %s (embed, zip and HTTP are case-sensitive)", r.Raw, actual))
 			s.referenced[actual] = true
@@ -268,6 +297,19 @@ func (s *scanner) checkRef(f string, r ref) {
 	default:
 		if pc, ok := s.cfg.Packages[from]; ok && pc.Uses != nil && !slices.Contains(pc.Uses, to) {
 			s.add(Error, f, fmt.Sprintf("reference %q: package %s uses package %s, which its uses in %s do not list", r.Raw, from, to, ConfigFile))
+		}
+	}
+}
+
+// checkIgnoredReserved reports ignore rules that hide the library's own
+// files: without them the library would not open as written.
+func (s *scanner) checkIgnoredReserved() {
+	for _, f := range []string{ConfigFile, CatalogFile} {
+		if _, err := fs.Stat(s.fsys, f); err != nil {
+			continue
+		}
+		if ok, by := s.ignore.Match(f, false); ok {
+			s.add(Error, f, fmt.Sprintf("ignored by %s: the library reads this file itself, it cannot be ignored", by))
 		}
 	}
 }
@@ -334,26 +376,99 @@ func (s *scanner) checkTexture(f string) {
 	}
 }
 
-// listFiles returns every regular file of fsys, sorted, without the
-// reserved top folders (packs/, and names starting with "." or "_").
+// listFiles returns every file of the library in fsys, sorted: the
+// regular files without the reserved top folders (packs/, and names
+// starting with "." or "_"), the ignore files and what they ignore.
 func listFiles(fsys fs.FS) ([]string, error) {
+	files, _, _, err := listLibrary(fsys)
+	return files, err
+}
+
+// Files returns the files of the library in fsys as keys, sorted, the way
+// [Scan] lists them: every regular file except the reserved top folders
+// (packs/, names starting with "." or "_"), the [IgnoreFile] files and
+// the files they ignore. It also lists files at the root and files of no
+// known kind. The error is for a file system that cannot be listed; bad
+// ignore lines are skipped (Scan reports them).
+func Files(fsys fs.FS) ([]string, error) { return listFiles(fsys) }
+
+// listLibrary is listFiles plus the ignore rules and their bad lines.
+func listLibrary(fsys fs.FS) ([]string, *Ignore, []error, error) {
 	var files []string
-	err := fs.WalkDir(fsys, ".", func(p string, d fs.DirEntry, err error) error {
+	ig, bad, err := walkLibrary(fsys, func(p string) { files = append(files, p) })
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("library: list files: %w", err)
+	}
+	return files, ig, bad, nil
+}
+
+// DiffFiles compares the files of two libraries, as [Scan] lists them
+// (ignored files left out): missing are the files of want that got lacks,
+// extra those of got that want lacks, both sorted. A game's test compares
+// its embedded assets with the folder on disk this way, so a stale
+// generated embed list (wpix assets embed) fails the test.
+func DiffFiles(want, got fs.FS) (missing, extra []string, err error) {
+	w, err := listFiles(want)
+	if err != nil {
+		return nil, nil, err
+	}
+	g, err := listFiles(got)
+	if err != nil {
+		return nil, nil, err
+	}
+	for _, f := range w {
+		if _, ok := slices.BinarySearch(g, f); !ok {
+			missing = append(missing, f)
+		}
+	}
+	for _, f := range g {
+		if _, ok := slices.BinarySearch(w, f); !ok {
+			extra = append(extra, f)
+		}
+	}
+	return missing, extra, nil
+}
+
+// IgnoredFile is a file an [IgnoreFile] keeps out of the library.
+type IgnoredFile struct {
+	Path string // the file's key
+	By   string // the deciding rule: "forest/.assetignore:3"
+}
+
+// IgnoredFiles lists the files of fsys that ignore files keep out of the
+// library, sorted, with the rule that ignores each (for a file inside an
+// ignored folder, the folder's rule). Reserved top folders and the ignore
+// files themselves are not listed. The error is for a file system that
+// cannot be listed; bad ignore lines are skipped (wpix assets check
+// reports them).
+func IgnoredFiles(fsys fs.FS) ([]IgnoredFile, error) {
+	ig, err := ReadIgnore(fsys)
+	if ig == nil {
+		return nil, err
+	}
+	var out []IgnoredFile
+	err = fs.WalkDir(fsys, ".", func(p string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		if d.IsDir() && p != "." && !strings.Contains(p, "/") && reservedFolder(p) {
-			return fs.SkipDir
+		if d.IsDir() {
+			if p != "." && !strings.Contains(p, "/") && reservedFolder(p) {
+				return fs.SkipDir
+			}
+			return nil
 		}
-		if d.Type().IsRegular() {
-			files = append(files, p)
+		if !d.Type().IsRegular() || path.Base(p) == IgnoreFile {
+			return nil
+		}
+		if ok, by := ig.Match(p, false); ok {
+			out = append(out, IgnoredFile{Path: p, By: by})
 		}
 		return nil
 	})
 	if err != nil {
 		return nil, fmt.Errorf("library: list files: %w", err)
 	}
-	return files, nil
+	return out, nil
 }
 
 // readConfig reads library.json; a missing file is the zero Config.
