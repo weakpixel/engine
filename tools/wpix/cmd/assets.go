@@ -33,7 +33,7 @@ func newAssetsCmd() *cobra.Command {
 			"library root as its one argument; it may be left out when a .weakpixel.json above the working\n" +
 			"directory sets assets.root.",
 	})
-	cmd.AddCommand(newAssetsCheckCmd(), newAssetsLsCmd(), newAssetsCatalogCmd(), newAssetsPackCmd(), newAssetsKeysCmd())
+	cmd.AddCommand(newAssetsCheckCmd(), newAssetsLsCmd(), newAssetsCatalogCmd(), newAssetsPackCmd(), newAssetsKeysCmd(), newAssetsEmbedCmd())
 	return cmd
 }
 
@@ -70,6 +70,8 @@ func newAssetsLsCmd() *cobra.Command {
 			return assets.List(opts, cmd.OutOrStdout())
 		},
 	}
+
+	cmd.Flags().BoolVar(&opts.Ignored, "ignored", false, "list the files .assetignore files ignore, with the line that ignores each")
 
 	return cmd
 }
@@ -133,6 +135,31 @@ func newAssetsKeysCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&opts.Pkg, "pkg", "assets", "package name of the generated file")
+	cmd.Flags().StringVarP(&opts.Out, "out", "o", "-", `output file, "-" for stdout`)
+
+	return cmd
+}
+
+func newAssetsEmbedCmd() *cobra.Command {
+	var opts assets.EmbedOptions
+
+	cmd := &cobra.Command{
+		Use:   "embed [flags] [root]",
+		Short: "Write the go:embed file of a library, without the files .assetignore ignores",
+		Long: "embed writes a Go file that declares an embed.FS of the library with go:embed patterns that leave out\n" +
+			"what the .assetignore files ignore: a folder where nothing below it is left out, single files elsewhere.\n" +
+			"The root is named relative to the package folder. It is meant for go:generate. It refuses a library\n" +
+			"with errors (run check).",
+		Args: rootArg, ValidArgsFunction: completeRoot,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			opts.Root = rootOf(args)
+			return assets.Embed(opts, cmd.OutOrStdout())
+		},
+	}
+
+	cmd.Flags().StringVar(&opts.Pkg, "pkg", "main", "package name of the generated file")
+	cmd.Flags().StringVar(&opts.Var, "var", "assets", "name of the embed.FS variable")
+	cmd.Flags().StringVar(&opts.Tags, "tags", "", `build constraint of the generated file, such as "!editor"`)
 	cmd.Flags().StringVarP(&opts.Out, "out", "o", "-", `output file, "-" for stdout`)
 
 	return cmd

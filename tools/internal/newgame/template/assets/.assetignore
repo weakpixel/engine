@@ -1,0 +1,8 @@
+# Files in assets/ that the game does not ship: they are not embedded,
+# packed or loaded. The syntax is that of .gitignore, and an .assetignore
+# in a folder applies to the files below it. go tool wpix assets ls --ignored
+# lists what is ignored; run make generate after a change.
+#
+# *.aseprite
+# *.psd
+# drafts/

@@ -57,7 +57,8 @@ run:
 dev:
 	go run . -assets assets
 
-# Game Object code (game/zz__gen.go) and GOD files (build/god/, not committed) from the +game markers.
+# Game Object code (game/zz__gen.go) and GOD files (build/god/, not committed) from the +game markers,
+# and the embed list of the assets (zz__gen.assets_embed.go, without what assets/.assetignore ignores).
 generate:
 	go generate ./...
 
@@ -142,6 +143,7 @@ The engine's command-line tools run as `go tool wpix <command>` at the engine ve
 | --- | --- |
 | `main.go` | Opens the window and runs the game; `-assets <dir>` reads loose files, `-pack <dir>` writes the packed build |
 | `assets.go`, `assets_web.go` | Where the assets come from: embedded, or packs over HTTP in the `webassets` browser build |
+| `zz__gen.assets_embed.go` | The embed list of `assets/`, written by `make generate` |
 | `watch.go`, `watch_web.go` | Pushed asset changes for hot reload: none, or from the dev server in the `webdev` browser build |
 | `editor.go` | The editor build (`-tags editor`) that the VSCode extension runs |
 | `main_test.go`, `editor_test.go` | Run the game, and the editor build, without a window: the player walks, the editor opens the level |
@@ -149,6 +151,7 @@ The engine's command-line tools run as `go tool wpix <command>` at the engine ve
 | `game/components.go` | The `PlayerControl` component and the `Player` Game Object |
 | `game/player-system.go` | Moves the player by the move action |
 | `assets/` | The [asset library](https://github.com/weakpixel/engine/blob/main/doc/guide/engine/asset-library.md#the-layout): `global/` loads at start, every other folder is a package (`start/` holds the first level) |
+| `assets/.assetignore` | Files in `assets/` the game does not ship ([`.gitignore` syntax](https://github.com/weakpixel/engine/blob/main/doc/guide/engine/asset-library.md#ignoring-files)) |
 | `assets/start/start.level.json` | The first level. Open it in VSCode to edit it |
 | `assets/global/prefabs/player.prefab.json` | The player prefab the level places |
 | `assets/global/input/player.bindings.json` | Keys and gamepad buttons of the actions |
@@ -171,19 +174,27 @@ Install the [Weakpixel VSCode extension](https://github.com/weakpixel/weakpixel-
 
 package main
 
-import (
-	"embed"
-	"io/fs"
-)
+import "io/fs"
 
 // assets is the game's asset library (doc/guide/engine/asset-library.md),
-// embedded in the binary so that it runs anywhere, the browser included.
+// embedded in the binary so that it runs anywhere, the browser included. The
+// variable is in zz__gen.assets_embed.go: wpix assets embed writes its
+// go:embed patterns so that the files assets/.assetignore ignores stay out
+// (make generate after changing an .assetignore).
 //
-//go:embed assets
-var assets embed.FS
+//go:generate go tool wpix assets embed assets --tags "!editor && !(js && webassets)" -o zz__gen.assets_embed.go
 
 // gameAssets is the library the game runs on: the embedded assets folder.
 func gameAssets() (fs.FS, error) { return fs.Sub(assets, "assets") }
+-- assets/.assetignore --
+# Files in assets/ that the game does not ship: they are not embedded,
+# packed or loaded. The syntax is that of .gitignore, and an .assetignore
+# in a folder applies to the files below it. go tool wpix assets ls --ignored
+# lists what is ignored; run make generate after a change.
+#
+# *.aseprite
+# *.psd
+# drafts/
 -- assets/global/input/player.bindings.json --
 {
   "version": 1,
@@ -258,6 +269,34 @@ sha256 c1792893a0fdf6752a414d3d287b1c108de5c0035cb4cc86c6de004b06be4000
       "prefab": "global/prefabs/player.prefab.json"
     }
   ]
+}
+-- assets_test.go --
+//go:build !editor && !(js && webassets)
+
+package main
+
+import (
+	"os"
+	"testing"
+
+	"github.com/weakpixel/engine/asset/library"
+)
+
+// TestEmbeddedAssetsMatchLibrary fails when zz__gen.assets_embed.go is
+// stale: a file was added where the embed list names single files, or an
+// .assetignore changed. Run make generate.
+func TestEmbeddedAssetsMatchLibrary(t *testing.T) {
+	embedded, err := gameAssets()
+	if err != nil {
+		t.Fatal(err)
+	}
+	missing, extra, err := library.DiffFiles(os.DirFS("assets"), embedded)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(missing) > 0 || len(extra) > 0 {
+		t.Fatalf("the embedded assets differ from assets/ (run make generate):\nnot embedded: %v\nembedded but ignored: %v", missing, extra)
+	}
 }
 -- assets_web.go --
 //go:build !editor && js && webassets

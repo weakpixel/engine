@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/weakpixel/engine/asset/library"
 	"github.com/weakpixel/engine/internal/jsonedit"
 )
 
@@ -125,9 +126,11 @@ type stamp struct {
 }
 
 // scanAssets returns the stamp of every file under root by asset key. Hidden
-// files (the temporary files of an atomic write) are left out.
+// files (the temporary files of an atomic write) and the files .assetignore
+// files ignore are left out.
 func scanAssets(root string) map[string]stamp {
 	out := map[string]stamp{}
+	ig, _ := library.ReadIgnore(os.DirFS(root)) // bad lines: wpix assets check reports them
 	filepath.WalkDir(root, func(p string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return nil
@@ -146,7 +149,7 @@ func scanAssets(root string) map[string]stamp {
 			return nil
 		}
 		rel, err := filepath.Rel(root, p)
-		if err == nil {
+		if ignored, _ := ig.Match(filepath.ToSlash(rel), false); err == nil && !ignored {
 			out[filepath.ToSlash(rel)] = stamp{fi.ModTime(), fi.Size()}
 		}
 		return nil

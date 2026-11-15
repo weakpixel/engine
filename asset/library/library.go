@@ -28,12 +28,15 @@ type Library struct {
 // Open opens the library at the root of base. If base has an
 // assets.catalog.json it is read; otherwise base is listed with [Scan]
 // (its findings are ignored here: run wpix assets check). A file system
-// that cannot list directories (HTTP) needs a catalog.
+// that cannot list directories (HTTP) needs a catalog. A listed base keeps
+// the rules of its ignore files ([IgnoreFile]): [Library.FS] does not
+// serve an ignored file from it, so a loose library behaves like its
+// packed or embedded build. Mounted overlays are not filtered.
 //
 // It returns an error for an invalid catalog or library.json, or a base
 // without a catalog that cannot be listed.
 func Open(base fs.FS) (*Library, error) {
-	cat, err := loadCatalog(base)
+	cat, ig, err := loadCatalog(base)
 	if err != nil {
 		return nil, err
 	}
@@ -46,23 +49,27 @@ func Open(base fs.FS) (*Library, error) {
 		}
 	}
 	l.fs = newMountFS(base, packed)
+	l.fs.ignore = ig
 	return l, nil
 }
 
 // loadCatalog reads the catalog of base, or scans base when it has none.
-func loadCatalog(base fs.FS) (*Catalog, error) {
+// A scanned base also returns its ignore rules; with a catalog the
+// catalog is the file list and the rules are nil.
+func loadCatalog(base fs.FS) (*Catalog, *Ignore, error) {
 	data, err := fs.ReadFile(base, CatalogFile)
 	if err == nil {
-		return ReadCatalog(data)
+		cat, err := ReadCatalog(data)
+		return cat, nil, err
 	}
 	if !errors.Is(err, fs.ErrNotExist) {
-		return nil, fmt.Errorf("library: %s: %w", CatalogFile, err)
+		return nil, nil, fmt.Errorf("library: %s: %w", CatalogFile, err)
 	}
 	if _, err := fs.ReadDir(base, "."); err != nil {
-		return nil, fmt.Errorf("library: the file system cannot list directories and has no %s (write one with wpix assets catalog): %w", CatalogFile, err)
+		return nil, nil, fmt.Errorf("library: the file system cannot list directories and has no %s (write one with wpix assets catalog): %w", CatalogFile, err)
 	}
-	cat, _, err := Scan(base)
-	return cat, err
+	cat, _, ig, err := scan(base)
+	return cat, ig, err
 }
 
 // FS returns the file system to read assets from: give it to

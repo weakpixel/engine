@@ -250,12 +250,14 @@ type assetFile struct {
 }
 
 // assetFiles lists every file below the asset root, sorted by key.
-// Folders and files starting with "." are skipped.
+// Folders and files starting with "." are skipped, and so are the files
+// .assetignore files ignore: they are not part of the game.
 func (t *tools) assetFiles() ([]assetFile, error) {
 	root := t.p.AssetRoot
 	if root == "" {
 		return nil, errNoAssetRoot
 	}
+	ig, _ := library.ReadIgnore(os.DirFS(root)) // bad lines: wpix assets check reports them
 	var files []assetFile
 	err := filepath.WalkDir(root, func(p string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -275,6 +277,9 @@ func (t *tools) assetFiles() ([]assetFile, error) {
 			return err
 		}
 		key := filepath.ToSlash(rel)
+		if ignored, _ := ig.Match(key, false); ignored {
+			return nil
+		}
 		kind := string(library.KindOf(key))
 		if kind == "" {
 			kind = "unknown"

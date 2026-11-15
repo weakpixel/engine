@@ -23,7 +23,7 @@ npx http-server build/web/mygame                # any static server; file:// doe
 
 `Config.FS` works as on the desktop:
 
-- **Embedded** (`embed.FS`): nothing to serve, but the assets are part of the download.
+- **Embedded** (`embed.FS`): nothing to serve, but the assets are part of the download. An [asset library](asset-library.md#embedding) generates its `go:embed` patterns, so files its `.assetignore` files ignore stay out.
 - **Over HTTP** with [`httpfs`](assets.md#reading-assets-over-http) (`github.com/weakpixel/asset/httpfs`): the game downloads files as it loads them.
 
 `os.DirFS` does not exist in a browser. Hot reload by polling (`WatchInterval`) is for local files; over HTTP, the dev server `wpix serve` finds the changes and pushes them to the page, which feeds them to `Config.AssetChanges` with `httpfs.WatchChanges` ([hot reload](assets.md#hot-reload)). A game made with `wpix new` does this with `make web-dev`: it builds with the tags `webassets,webdev`, serves `assets/` as loose files (the server builds the catalog the browser cannot list) and reloads whatever you save in the open page, shaders included.

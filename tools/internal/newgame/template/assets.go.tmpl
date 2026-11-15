@@ -2,16 +2,15 @@
 
 package main
 
-import (
-	"embed"
-	"io/fs"
-)
+import "io/fs"
 
 // assets is the game's asset library (doc/guide/engine/asset-library.md),
-// embedded in the binary so that it runs anywhere, the browser included.
+// embedded in the binary so that it runs anywhere, the browser included. The
+// variable is in zz__gen.assets_embed.go: wpix assets embed writes its
+// go:embed patterns so that the files assets/.assetignore ignores stay out
+// (make generate after changing an .assetignore).
 //
-//go:embed assets
-var assets embed.FS
+//go:generate go tool wpix assets embed assets --tags "!editor && !(js && webassets)" -o zz__gen.assets_embed.go
 
 // gameAssets is the library the game runs on: the embedded assets folder.
 func gameAssets() (fs.FS, error) { return fs.Sub(assets, "assets") }

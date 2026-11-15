@@ -23,6 +23,7 @@ assets/                          the library root (assets.root in .weakpixel.jso
 | `global/` | `game.New` into `Global()` ([Engine](#engine)) | global scope |
 | any other top folder | whatever loads one of its files: a level, `LoadPackage`, a key | the scope that loads it |
 | `packs/`, folders starting with `.` or `_` | nothing: reserved | |
+| `.assetignore` in any folder | nothing: [keeps files out](#ignoring-files) | |
 | files at the root | plain keys | |
 
 A package's inner folders are yours. The ones above are a recommendation and only `music/` changes how a file loads (music instead of sound). There is no nesting: a package is always the first folder below the root, and deeper folders are ordinary folders inside it.
@@ -54,6 +55,46 @@ A package loads without a list of files because the file name says the kind. Loa
 | `*.voice.json`, `*.lang.json`, `*.dialogue.json` | voice, language, dialogue | `speech.Voice`, `speech.Language`, `speech.Dialogue` (`speech`; a voice names its language and samples, a dialogue its voice files, relative to itself) |
 
 Use lower-case names of `[a-z0-9._-]`. Embedded files, zips and HTTP are case-sensitive while macOS and Windows are not, so `Hero.png` referenced as `player.png` works on your machine and fails in the browser. `wpix assets check` warns about both.
+
+## Ignoring files
+
+A file named `.assetignore`, in the library root or in any folder below it, keeps files out of the library: work files, source art next to its export, drafts. It has the syntax and meaning of [`.gitignore`](https://git-scm.com/docs/gitignore), relative to the folder that holds it:
+
+```
+# forest/.assetignore
+*.psd          # any .psd below forest/
+raw/           # every folder named raw below forest/
+/drafts/       # only forest/drafts/
+!keep.psd      # re-include
+```
+
+- Blank lines and lines starting with `#` are nothing; `\#` and `\!` escape a leading `#` or `!`; trailing spaces are dropped unless escaped with `\`.
+- `!` re-includes what an earlier rule ignored. A file inside an ignored folder cannot be re-included, as in git.
+- A trailing `/` matches folders only. A `/` at the start or in the middle anchors the pattern to the folder of the `.assetignore`; without one the pattern matches a name at any depth below it.
+- `*` and `?` do not cross `/`, `[a-z]` and `[!a-z]` are classes, `**` matches any number of folders (`**/tmp`, `raw/**`, `a/**/b`).
+- Of the rules that match a path, the one in the deepest `.assetignore`, and there the last line, wins. Matching is case-sensitive, like keys.
+
+An ignored file is not part of the library:
+
+| Where | |
+| --- | --- |
+| `wpix assets check`, `ls`, `catalog`, `keys` | Not listed, no findings about it. `check` prints how many files are ignored; `ls --ignored` lists them with the line that ignores each. |
+| `wpix assets pack` | Not in any pack, not copied loose, not in the catalog. |
+| Embedded builds | Not embedded: [`wpix assets embed`](#embedding) writes the `go:embed` patterns. |
+| `library.Open` of a folder | Not served: loading it fails with `library: <key> is ignored by <dir>/.assetignore:<line>: file does not exist`, so a loose run behaves like the packed or embedded build. Overlays (`Mount`) are not filtered, and with a catalog the catalog is the file list. |
+| `wpix serve` | Answers 404 and reports no changes for it. |
+
+The `.assetignore` files themselves are never assets. `check` reports, all at once, a bad pattern (`forest/.assetignore: error: line 3: bad pattern "[a"`, the other lines still apply), a reference to an ignored file (`reference "art.psd": global/art.psd is ignored by .assetignore:1`), a `library.json` entry naming one, and a rule that ignores `library.json`, `assets.catalog.json` or `global/`. Ignoring a whole other package is fine: the package is gone. Rules are read when the library opens; a changed `.assetignore` takes effect at the next start.
+
+### Embedding
+
+`//go:embed assets` cannot leave files out, so a game that embeds its library generates its embed patterns:
+
+```go
+//go:generate go tool wpix assets embed assets --tags "!editor" -o zz__gen.assets_embed.go
+```
+
+The generated file declares `var assets embed.FS` (`--var`, `--pkg` default `main`) with one `//go:embed` line per pattern: a folder where nothing below it is left out, so a file added there embeds without regenerating, and single files elsewhere. A library without `.assetignore` gives `//go:embed assets`. It also embeds files below the top folder whose names start with `.` or `_`, which the library lists and a plain folder embed skips. The root is named relative to the package folder; names with `*?[\"` and a library with errors are refused. Regenerate after changing an `.assetignore`. `library.DiffFiles(os.DirFS("assets"), embedded)` returns the files that differ, so a test can catch a stale list (a game made with `wpix new` has one in `assets_test.go`).
 
 ## What a package loads
 
@@ -179,10 +220,11 @@ For a browser build the library is served as packs: see [packed assets over HTTP
 
 ```bash
 go run ./tools/wpix assets check   [--json] [root]       # findings, exit 1 on errors
-go run ./tools/wpix assets ls      [root]                 # packages, sizes, entries, uses
+go run ./tools/wpix assets ls      [--ignored] [root]     # packages, sizes, entries, uses; or the ignored files
 go run ./tools/wpix assets catalog [root] [-o file|-]     # catalog for a loose library served over HTTP
 go run ./tools/wpix assets pack    [root] [-o out]        # packed build; out (default build/assets) must be empty
 go run ./tools/wpix assets keys    [root] [--pkg p] [-o f] # optional Go constants, see above
+go run ./tools/wpix assets embed   [root] [--pkg p] [--var v] [--tags c] [-o f] # go:embed file, see embedding
 ```
 
 `check` reports, all at once:
@@ -199,12 +241,15 @@ go run ./tools/wpix assets keys    [root] [--pkg p] [-o f] # optional Go constan
 | An entry or fence in `library.json` for a missing file or package | error |
 | Packages that use each other in a cycle | warning |
 | A name outside `[a-z0-9._-]` | warning |
-| A file of no known kind that nothing references (source files such as `*.aseprite` belong outside the library) | warning |
+| A file of no known kind that nothing references (source files such as `*.aseprite` belong outside the library or in an [`.assetignore`](#ignoring-files)) | warning |
 | A texture larger than 8192 pixels, which fails in most browsers | warning |
+| A bad line in an `.assetignore` | error |
+| A reference or `library.json` entry naming an ignored file | error |
+| An `.assetignore` rule that ignores `library.json`, `assets.catalog.json` or `global/` | error |
 
 `check --json` prints one JSON object instead, for editors: `{"findings": [{"severity": "error|warn", "path": "forest/cave.level.json", "msg": "..."}], "errors": 1, "warnings": 0}` (`findings` is `[]` when clean). A library that cannot be read at all, for example an invalid `library.json`, prints `{"fatal": "..."}` and exits 1. The exit codes are the same as without the flag.
 
-References are what the loaders read as dependencies (Tiled `source`, `image`, `fileName`; sheet and export `image`; the definition's `sheet`), plus every string in a GOD document whose name has a known kind. `catalog`, `pack` and `keys` refuse a library with errors.
+References are what the loaders read as dependencies (Tiled `source`, `image`, `fileName`; sheet and export `image`; the definition's `sheet`), plus every string in a GOD document whose name has a known kind. `catalog`, `pack`, `keys` and `embed` refuse a library with errors.
 
 Write a catalog for development only when you serve loose files over HTTP; a catalog in a folder you edit goes stale, and `Open` prefers it over listing.
 

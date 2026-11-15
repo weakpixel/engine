@@ -72,13 +72,14 @@ go run ./tools/wpix anim create --file chars/player.json [-o chars/player.anim.j
 
 ```bash
 go run ./tools/wpix assets check   [--json] [root]
-go run ./tools/wpix assets ls      [root]
+go run ./tools/wpix assets ls      [--ignored] [root]
 go run ./tools/wpix assets catalog [root] [-o file|-]
 go run ./tools/wpix assets pack    [root] [-o out]          # default build/assets
 go run ./tools/wpix assets keys    [root] [--pkg name] [-o file|-]
+go run ./tools/wpix assets embed   [root] [--pkg name] [--var name] [--tags constraint] [-o file|-]
 ```
 
-`check` reports missing references, case mismatches, levels using each other's files, bad names and oversized textures (`check --json` prints the findings as JSON for editors); `catalog` and `pack` write the catalog and the packed build (`pack -o` must be empty or missing, default `build/assets`); `keys` writes optional Go constants for the keys ([generated keys](engine/asset-library.md#generated-keys-optional)). `<root>` may be left out when [`assets.root`](project-file.md) is set. Exit codes 0 ok, 1 errors, 2 usage. Details: [Asset library: wpix assets](engine/asset-library.md#weakpixel-assets).
+`check` reports missing references, case mismatches, levels using each other's files, bad names and oversized textures (`check --json` prints the findings as JSON for editors); `catalog` and `pack` write the catalog and the packed build (`pack -o` must be empty or missing, default `build/assets`); `keys` writes optional Go constants for the keys ([generated keys](engine/asset-library.md#generated-keys-optional)); `embed` writes the `go:embed` file of the library without the files `.assetignore` ignores, and `ls --ignored` lists those files ([ignoring files](engine/asset-library.md#ignoring-files)). `<root>` may be left out when [`assets.root`](project-file.md) is set. Exit codes 0 ok, 1 errors, 2 usage. Details: [Asset library: wpix assets](engine/asset-library.md#wpix-assets).
 
 ## tileset
 

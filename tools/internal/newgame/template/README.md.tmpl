@@ -30,6 +30,7 @@ The engine's command-line tools run as `go tool wpix <command>` at the engine ve
 | --- | --- |
 | `main.go` | Opens the window and runs the game; `-assets <dir>` reads loose files, `-pack <dir>` writes the packed build |
 | `assets.go`, `assets_web.go` | Where the assets come from: embedded, or packs over HTTP in the `webassets` browser build |
+| `zz__gen.assets_embed.go` | The embed list of `assets/`, written by `make generate` |
 | `watch.go`, `watch_web.go` | Pushed asset changes for hot reload: none, or from the dev server in the `webdev` browser build |
 | `editor.go` | The editor build (`-tags editor`) that the VSCode extension runs |
 | `main_test.go`, `editor_test.go` | Run the game, and the editor build, without a window: the player walks, the editor opens the level |
@@ -37,6 +38,7 @@ The engine's command-line tools run as `go tool wpix <command>` at the engine ve
 | `game/components.go` | The `PlayerControl` component and the `Player` Game Object |
 | `game/player-system.go` | Moves the player by the move action |
 | `assets/` | The [asset library](https://github.com/weakpixel/engine/blob/main/doc/guide/engine/asset-library.md#the-layout): `global/` loads at start, every other folder is a package (`start/` holds the first level) |
+| `assets/.assetignore` | Files in `assets/` the game does not ship ([`.gitignore` syntax](https://github.com/weakpixel/engine/blob/main/doc/guide/engine/asset-library.md#ignoring-files)) |
 | `assets/start/start.level.json` | The first level. Open it in VSCode to edit it |
 | `assets/global/prefabs/player.prefab.json` | The player prefab the level places |
 | `assets/global/input/player.bindings.json` | Keys and gamepad buttons of the actions |
