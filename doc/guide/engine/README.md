@@ -1,6 +1,6 @@
 # Engine Runtime guide
 
-The Engine Runtime is the 2D game layer of the Weakpixel Engine, built on the [ECS](https://github.com/weakpixel/ecs) (module `github.com/weakpixel/ecs`) and [Ebiten](https://ebitengine.org). Import path: `github.com/weakpixel/engine`, part of the root Go module. Only the Engine Runtime packages that say so import Ebiten; the ECS never does ([dependency rules](../../design/architecture.md)).
+The Engine Runtime is the 2D game layer of the Weakpixel engine, built on the [ECS](https://github.com/weakpixel/ecs) (module `github.com/weakpixel/ecs`) and [Ebiten](https://ebitengine.org). Import path: `github.com/weakpixel/engine`, part of the root Go module. Only the Engine Runtime packages that say so import Ebiten; the ECS never does ([dependency rules](../../design/architecture.md)).
 
 **New game?** `go run github.com/weakpixel/engine/tools/wpix@latest new mygame` creates a project that already runs, tests, builds for the browser and opens in the level editor ([wpix new](../tools.md#new)); its code is the shortest tour of the pieces below.
 

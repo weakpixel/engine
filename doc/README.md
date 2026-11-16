@@ -1,6 +1,6 @@
-# Weakpixel Engine documentation
+# Weakpixel engine documentation
 
-The documentation has two parts. The **guide** is for people who build games with the Weakpixel Engine: what the API does and how to use it. The **design** part is for people who work on the engine itself: how it is built, why, and what is not built yet. Every topic has one home; other pages link to it instead of repeating it.
+The documentation has two parts. The **guide** is for people who build games with the Weakpixel engine: what the API does and how to use it. The **design** part is for people who work on the engine itself: how it is built, why, and what is not built yet. Every topic has one home; other pages link to it instead of repeating it.
 
 ## Guide
 
