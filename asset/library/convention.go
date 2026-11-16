@@ -49,7 +49,7 @@ const (
 	KindUnknown  Kind = ""
 	KindTexture  Kind = "texture"  // *.png, *.jpg, *.jpeg
 	KindAtlas    Kind = "atlas"    // *.sheet.json (grid), *.atlas.json (TexturePacker)
-	KindClipSet  Kind = "clipset"  // *.anim.json, *.aseprite.json
+	KindClipSet  Kind = "clipset"  // *.anim.json, *.aseprite.json, *.ase.json
 	KindTileset  Kind = "tileset"  // *.tsj
 	KindMap      Kind = "map"      // *.tmj
 	KindWorld    Kind = "world"    // *.world
@@ -81,6 +81,7 @@ var suffixKinds = []struct {
 	{".bindings.json", KindBindings},
 	{".anim.json", KindClipSet},
 	{".aseprite.json", KindClipSet},
+	{".ase.json", KindClipSet},
 	{".atlas.json", KindAtlas},
 	{".sheet.json", KindAtlas},
 	{".tsj", KindTileset},

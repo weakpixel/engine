@@ -17,4 +17,4 @@
 // Package game never imports room: rooms are opt-in.
 package room
 
-//go:generate go run github.com/weakpixel/engine/tools/weakpixel gen
+//go:generate go run github.com/weakpixel/engine/tools/wpix gen

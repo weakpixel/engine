@@ -506,7 +506,7 @@ func TestCreateGolden(t *testing.T) {
 // are listed with their part id, after their root.
 func TestObjectsMessageHasParts(t *testing.T) {
 	kid := strings.Replace(visual("sword", 0, 0), `"Hidden":false}}}`,
-		`"Hidden":false},"hierarchy:Parent":{"Entity":"knight","Local":{"Pos":{"X":5,"Y":0},"Rot":0,"Scale":{"X":1,"Y":1},"LayerOffset":0,"LayerMode":0,"YSortSide":0}}}}`, 1)
+		`"Hidden":false},"hierarchy:Parent":{"Entity":"knight","Local":{"Pos":{"X":5,"Y":0},"Rot":0,"Scale":{"X":1,"Y":1},"PlaceMode":0,"LayerOffset":0,"LayerMode":0,"YSortSide":0}}}}`, 1)
 	f := newFixtureFiles(t, fstest.MapFS{"knight.prefab.json": {Data: []byte(`{"objects":[` + visual("knight", 0, 0) + `,` + kid + `]}`)}})
 	f.recv(documentMsg(`{"id":"k1","prefab":"knight.prefab.json"}`))
 	for range 400 {

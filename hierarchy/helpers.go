@@ -55,7 +55,8 @@ func Attach(w *ecs.World, child, parent ecs.Entity, keepWorld bool) {
 
 // WorldOf returns the world Transform (Pos, Rot, Scale) of e as the [System]
 // would write it now: the Locals of e's chain composed onto its root's
-// Transform. Use it where placement is read between a structural change and
+// Transform, or onto the Transform of the nearest [PlaceAbsolute] link once
+// that is placed (e's own Transform if e is that link). Use it where placement is read between a structural change and
 // the next System run, such as a tool framing objects that were just spawned
 // and whose Transform is not placed yet. An entity without a Parent gets its
 // own Transform. ok is false when e or a link of its chain is dead, or when e
@@ -63,7 +64,7 @@ func Attach(w *ecs.World, child, parent ecs.Entity, keepWorld bool) {
 // allocating, and panics like the System on a cycle or a chain deeper than
 // [MaxDepth].
 func WorldOf(w *ecs.World, e ecs.Entity) (gfx.Transform, bool) {
-	var chain [MaxDepth]Local // on the stack: no allocation per call
+	var chain [MaxDepth]*Parent // on the stack: no allocation per call
 	n := 0
 	root := e
 	for {
@@ -77,20 +78,51 @@ func WorldOf(w *ecs.World, e ecs.Entity) (gfx.Transform, bool) {
 		if n == MaxDepth {
 			panic(fmt.Sprintf("hierarchy: cycle or chain deeper than %d at %v", MaxDepth, e))
 		}
-		chain[n] = p.Local
+		chain[n] = p
 		n++
 		root = p.Entity
 	}
-	world := gfx.Transform{}
-	if t := ecs.GetCompOrNil[gfx.Transform](w, root); t != nil {
-		world = *t
-	} else if n == 0 {
+	if n == 0 && !ecs.HasComp[gfx.Transform](w, e) {
 		return gfx.Transform{}, false
 	}
-	for i := n - 1; i >= 0; i-- {
-		world = Compose(world, chain[i])
-	}
+	world, _ := place(worldTransforms{w}, e, chain[:n], root)
 	return world, true
+}
+
+// SetPlace sets the [PlaceMode] of child. Switching to PlaceAbsolute keeps
+// child where it is: its Transform already holds the world placement. With
+// PlaceRelative and keepWorld, the Local (Pos, Rot, Scale) is computed with
+// [LocalOf] from the parent's [WorldOf] and child's Transform so that child
+// stays where it is; without keepWorld it moves back to its Local in the next
+// System run. Use it rather than writing Local.PlaceMode when the child
+// should not jump. It panics with "hierarchy: SetPlace: <child> has no
+// Parent". The component is changed in place: no archetype move.
+func SetPlace(w *ecs.World, child ecs.Entity, mode PlaceMode, keepWorld bool) {
+	p := ecs.GetCompOrNil[Parent](w, child)
+	if p == nil {
+		panic(fmt.Sprintf("hierarchy: SetPlace: %v has no Parent", child))
+	}
+	if mode == PlaceRelative && keepWorld && p.Local.PlaceMode == PlaceAbsolute {
+		if t := ecs.GetCompOrNil[gfx.Transform](w, child); t != nil {
+			parent, _ := WorldOf(w, p.Entity)
+			l := LocalOf(parent, *t)
+			p.Local.Pos, p.Local.Rot, p.Local.Scale = l.Pos, l.Rot, l.Scale
+		}
+	}
+	p.Local.PlaceMode = mode
+}
+
+// Reposition places child from its Local again in the next [System] run, in
+// either [PlaceMode]; for a [PlaceAbsolute] child it is the way to move it
+// back next to its parent. Like the first placement it sets PrevPos, so the
+// move is not interpolated. It panics with
+// "hierarchy: Reposition: <child> has no Parent".
+func Reposition(w *ecs.World, child ecs.Entity) {
+	p := ecs.GetCompOrNil[Parent](w, child)
+	if p == nil {
+		panic(fmt.Sprintf("hierarchy: Reposition: %v has no Parent", child))
+	}
+	p.placed = false
 }
 
 // Detach removes child's [Parent]. The Transform already holds the world

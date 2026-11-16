@@ -1,10 +1,10 @@
-// Package anim implements `weakpixel anim`. It checks and creates *.anim.json animation definitions
+// Package anim implements `wpix anim`. It checks and creates *.anim.json animation definitions
 // (doc/guide/engine/animation.md) without loading images or starting Ebiten.
 //
 // Usage:
 //
-//	weakpixel anim validate <file.anim.json>...
-//	weakpixel anim create --file <sheet.json> [-o <out.anim.json>|-] [--force]
+//	wpix anim validate <file.anim.json>...
+//	wpix anim create --file <sheet.json> [-o <out.anim.json>|-] [--force]
 //
 // validate checks each definition against its Aseprite sheet JSON with the
 // same rules as the anim loader (package animfile). It prints one line per

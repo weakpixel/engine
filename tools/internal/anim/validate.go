@@ -10,7 +10,7 @@ import (
 	"github.com/weakpixel/engine/anim/animfile"
 )
 
-// ValidateOptions are the arguments of `weakpixel anim validate`.
+// ValidateOptions are the arguments of `wpix anim validate`.
 type ValidateOptions struct {
 	Files []string // the *.anim.json definitions to check
 }

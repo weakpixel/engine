@@ -12,7 +12,7 @@ import (
 	"github.com/weakpixel/engine/editor/hostlink"
 	"github.com/weakpixel/engine/editor/toolshell"
 	"github.com/weakpixel/engine/game"
-	"github.com/weakpixel/engine/tools/weakpixel-editor/internal/editorapp"
+	"github.com/weakpixel/engine/tools/wpix-editor/internal/editorapp"
 )
 
 // main runs the tool the host page names (weakpixelHost.tool) on the file
@@ -22,11 +22,11 @@ func main() {
 	name := hostlink.Tool()
 	t, ok := editorapp.Tools[name]
 	if !ok {
-		log.Fatalf("weakpixel-editor: the host page names no known tool: %q", name)
+		log.Fatalf("wpix-editor: the host page names no known tool: %q", name)
 	}
 	base, ok := hostlink.AssetBase()
 	if !ok {
-		log.Fatal("weakpixel-editor: the host page has no assetBase")
+		log.Fatal("wpix-editor: the host page has no assetBase")
 	}
 	fsys, err := httpfs.New(base, nil)
 	if err != nil {
@@ -35,7 +35,7 @@ func main() {
 	inbox := new(toolshell.Inbox)
 	tr, ok := hostlink.ConnectPage(inbox.Push)
 	if !ok {
-		log.Fatal("weakpixel-editor: the host page has no weakpixelHost")
+		log.Fatal("wpix-editor: the host page has no weakpixelHost")
 	}
 	tool := t.New()
 	overlay := toolshell.NewOverlayFS(fsys)

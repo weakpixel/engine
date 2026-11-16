@@ -12,25 +12,27 @@ The engine builds on three standalone modules with no dependencies of their own:
 | [github.com/weakpixel/asset](https://github.com/weakpixel/asset) | Handles, stores, scopes, background loading, hot reload; `httpfs` for browser builds |
 | [github.com/weakpixel/voice](https://github.com/weakpixel/voice) | Dialogue text to musical gibberish on a small synthesizer |
 
+Lua scripting is an optional add-on in the [weakpixel/contrib](https://github.com/weakpixel/contrib) repository: [`github.com/weakpixel/contrib/lua`](https://github.com/weakpixel/contrib/tree/main/lua) runs Lua systems on Game Object schemas.
+
 ## What is in this module
 
 | Part | Import path | What it is |
 | --- | --- | --- |
 | Engine Runtime | `github.com/weakpixel/engine/game`, `gfx`, `render`, `anim`, `tilemap`, `collision`, `physics`, `sound`, `speech`, `input`, `room`, ... | The 2D runtime: [engine guide](doc/guide/engine/README.md), start with [`game.Engine`](doc/guide/engine/engine.md) |
 | GOD runtime | `github.com/weakpixel/engine/god` | Registered Game Object schemas, JSON loading and saving |
-| Generator | `go run github.com/weakpixel/engine/tools/weakpixel gen` | `// +game:*` markers to typed views and GOD files (`<god.specs>/<group>.god.json`) |
-| Tools | `github.com/weakpixel/engine/tools/weakpixel` | `new`, `gen`, `doc`, `assets`, `anim`, `serve`, `mcp` and more ([tools](doc/guide/tools.md)) |
-| Editor | `github.com/weakpixel/engine/editor/...`, `tools/weakpixel-editor` | The level editor core for the VSCode extension and the tool shell ([editor](doc/guide/engine/editor.md)) |
+| Generator | `go run github.com/weakpixel/engine/tools/wpix gen` | `// +game:*` markers to typed views and GOD files (`<god.specs>/<group>.god.json`) |
+| Tools | `github.com/weakpixel/engine/tools/wpix` | `new`, `gen`, `doc`, `assets`, `anim`, `serve`, `mcp` and more ([tools](doc/guide/tools.md)) |
+| Editor | `github.com/weakpixel/engine/editor/...`, `tools/wpix-editor` | The level editor core for the VSCode extension and the tool shell ([editor](doc/guide/engine/editor.md)) |
 | Math | `github.com/weakpixel/engine/xmath` | `float32` vectors, rectangles and matrices |
 
 `god` imports only the ECS module and the standard library, so a program that uses just the ECS and Game Objects compiles no Ebiten code.
 
 ## Quick start
 
-A new game, ready to run, test, build for the browser and edit in VSCode ([weakpixel new](doc/guide/tools.md#new)):
+A new game, ready to run, test, build for the browser and edit in VSCode ([wpix new](doc/guide/tools.md#new)):
 
 ```bash
-go run github.com/weakpixel/engine/tools/weakpixel@latest new mygame
+go run github.com/weakpixel/engine/tools/wpix@latest new mygame
 cd mygame && go run .
 ```
 

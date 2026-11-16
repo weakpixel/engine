@@ -9,7 +9,7 @@ import (
 )
 
 // NewDefinition returns the text of the starter definition of the Aseprite
-// export at sheetPath, to be saved as defPath (the same text "weakpixel anim
+// export at sheetPath, to be saved as defPath (the same text "wpix anim
 // create" writes). The "sheet" value is the export's path relative to the
 // definition's folder.
 func NewDefinition(sheetPath, defPath string) ([]byte, error) {

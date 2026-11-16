@@ -224,7 +224,7 @@ Room exits and spawn points are Game Objects too (`room:ExitArea`, `room:SpawnPo
 
 Use Tiled objects for **map data** that is not an entity: regions, trigger areas, paths and named points. Read them in a system once the level has spawned (`Level.Spawned()`), with the [query API](#query-api); the hero starts at the `player` object this way.
 
-Preview a map, a tileset or a world with `weakpixel-editor view <file>`: layers toggle, objects are outlined and named, tile ids, collision shapes and animations show on a tileset, and a world shows its maps with the levels that use them.
+Preview a map, a tileset or a world with `wpix-editor view <file>`: layers toggle, objects are outlined and named, tile ids, collision shapes and animations show on a tileset, and a world shows its maps with the levels that use them.
 
 ## Costs
 

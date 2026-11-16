@@ -57,7 +57,7 @@ func (t *tools) projectTools() []*mcp.Tool {
 				"limit":  mcp.Integer("at most this many keys (default 200)", 1, maxAssets),
 			}), readOnly, t.listAssets),
 		tool("check_assets", "Check assets",
-			"Checks the asset library like `weakpixel assets check`: missing references, case mismatches, oversized textures and "+
+			"Checks the asset library like `wpix assets check`: missing references, case mismatches, oversized textures and "+
 				"other findings, each with the file. Changes nothing.",
 			mcp.Object(nil), readOnly, t.checkAssets),
 		tool("list_documents", "List documents",
@@ -250,12 +250,14 @@ type assetFile struct {
 }
 
 // assetFiles lists every file below the asset root, sorted by key.
-// Folders and files starting with "." are skipped.
+// Folders and files starting with "." are skipped, and so are the files
+// .assetignore files ignore: they are not part of the game.
 func (t *tools) assetFiles() ([]assetFile, error) {
 	root := t.p.AssetRoot
 	if root == "" {
 		return nil, errNoAssetRoot
 	}
+	ig, _ := library.ReadIgnore(os.DirFS(root)) // bad lines: wpix assets check reports them
 	var files []assetFile
 	err := filepath.WalkDir(root, func(p string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -275,6 +277,9 @@ func (t *tools) assetFiles() ([]assetFile, error) {
 			return err
 		}
 		key := filepath.ToSlash(rel)
+		if ignored, _ := ig.Match(key, false); ignored {
+			return nil
+		}
 		kind := string(library.KindOf(key))
 		if kind == "" {
 			kind = "unknown"

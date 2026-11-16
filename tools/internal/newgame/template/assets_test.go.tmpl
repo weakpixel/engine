@@ -1,0 +1,27 @@
+//go:build !editor && !(js && webassets)
+
+package main
+
+import (
+	"os"
+	"testing"
+
+	"github.com/weakpixel/engine/asset/library"
+)
+
+// TestEmbeddedAssetsMatchLibrary fails when zz__gen.assets_embed.go is
+// stale: a file was added where the embed list names single files, or an
+// .assetignore changed. Run make generate.
+func TestEmbeddedAssetsMatchLibrary(t *testing.T) {
+	embedded, err := gameAssets()
+	if err != nil {
+		t.Fatal(err)
+	}
+	missing, extra, err := library.DiffFiles(os.DirFS("assets"), embedded)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(missing) > 0 || len(extra) > 0 {
+		t.Fatalf("the embedded assets differ from assets/ (run make generate):\nnot embedded: %v\nembedded but ignored: %v", missing, extra)
+	}
+}

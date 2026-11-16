@@ -28,6 +28,7 @@ func TestKindOf(t *testing.T) {
 	tests := map[string]Kind{
 		"a/hero.anim.json":      KindClipSet,
 		"a/hero.aseprite.json":  KindClipSet,
+		"a/hero.ase.json":       KindClipSet,
 		"a/ui.atlas.json":       KindAtlas,
 		"a/tiles.sheet.json":    KindAtlas,
 		"a/HERO.PNG":            KindTexture,

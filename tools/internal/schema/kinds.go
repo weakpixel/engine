@@ -170,7 +170,7 @@ func projectShape() (*god.TypeSchema, error) {
 			"out":   str("The merged project GOD."),
 		}),
 		"godDoc": section("Rendered GOD documentation.", map[string]*god.TypeSchema{"out": str("Output folder.")}),
-		"schema": section("JSON schemas for editors.", map[string]*god.TypeSchema{"out": str("Folder weakpixel schema writes into.")}),
+		"schema": section("JSON schemas for editors.", map[string]*god.TypeSchema{"out": str("Folder wpix schema writes into.")}),
 		"assets": section("The asset library.", map[string]*god.TypeSchema{
 			"root":    str("Library root; asset keys are relative to it."),
 			"prefabs": str("Folder of new prefabs under the root."),

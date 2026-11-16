@@ -1,4 +1,4 @@
-// Package mcpserver implements `weakpixel mcp`: an MCP server over stdio
+// Package mcpserver implements `wpix mcp`: an MCP server over stdio
 // that lets an AI agent read and edit a weakpixel game project (components, object
 // types, assets, levels and prefabs). The protocol layer is
 // tools/internal/mcp; this package holds the tools. Design and decisions:
@@ -18,7 +18,7 @@ import (
 	"github.com/weakpixel/engine/tools/internal/mcp"
 )
 
-// Options are the arguments of `weakpixel mcp`.
+// Options are the arguments of `wpix mcp`.
 type Options struct {
 	ProjectOptions
 	// Version is the server version reported to the client.
@@ -43,9 +43,9 @@ func Run(ctx context.Context, opts Options, stdin io.Reader, stdout, stderr io.W
 		return err
 	}
 	defer t.game.shutdown()
-	fmt.Fprintf(stderr, "weakpixel mcp: project %s, asset root %q\n", p.Root, p.AssetRoot)
+	fmt.Fprintf(stderr, "wpix mcp: project %s, asset root %q\n", p.Root, p.AssetRoot)
 	for _, w := range p.Warnings {
-		fmt.Fprintf(stderr, "weakpixel mcp: warning: %s\n", w)
+		fmt.Fprintf(stderr, "wpix mcp: warning: %s\n", w)
 	}
 	return s.Serve(ctx, stdin, stdout)
 }

@@ -9,8 +9,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/weakpixel/engine/tools/internal/cli"
-	"github.com/weakpixel/engine/tools/weakpixel-editor/internal/editorapp"
-	"github.com/weakpixel/engine/tools/weakpixel-editor/internal/native"
+	"github.com/weakpixel/engine/tools/wpix-editor/internal/editorapp"
+	"github.com/weakpixel/engine/tools/wpix-editor/internal/native"
 )
 
 // addToolCmds adds one subcommand per tool, in name order.
@@ -41,7 +41,7 @@ func newToolCmd(name string, tool editorapp.Tool, run runFunc) *cobra.Command {
 		},
 	}
 	if tool.Sheet {
-		cmd.Flags().StringVar(&sheet, "sheet", "", "Aseprite export (.aseprite.json) a definition that does not exist yet starts from")
+		cmd.Flags().StringVar(&sheet, "sheet", "", "Aseprite export (.aseprite.json or .ase.json) a definition that does not exist yet starts from")
 		_ = cmd.MarkFlagFilename("sheet", "json")
 		cmd.Long = tool.Summary + "\n\nThe file may be one that does not exist yet when --sheet is given.\n\n" + keys
 	}

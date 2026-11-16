@@ -75,7 +75,7 @@ func TestGameProcess(t *testing.T) {
 		t.Fatalf("game_start = %v", out)
 	}
 	if _, err := os.Stat(filepath.Join(dir, "build", "weakpixel-mcp", "game")); err != nil {
-		t.Errorf("the binary is not under build/weakpixel-mcp/: %v", err)
+		t.Errorf("the binary is not under build/wpix-mcp/: %v", err)
 	}
 	if matches, _ := filepath.Glob(filepath.Join(dir, "game", "game*")); len(matches) > 0 {
 		t.Errorf("a binary was written next to the source: %v", matches)

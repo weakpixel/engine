@@ -1,6 +1,6 @@
 # Toolbar icons
 
-All editors of `weakpixel-editor` share these icons; a tool never keeps icons of its own.
+All editors of `wpix-editor` share these icons; a tool never keeps icons of its own.
 
 The SVG files are icons from [Tabler Icons](https://github.com/tabler/tabler-icons)
 (outline set, the `main` branch on 2026-10-21; the icon version is in each file's header),

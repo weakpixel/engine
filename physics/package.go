@@ -20,4 +20,4 @@
 // doc/guide/engine/physics.md.
 package physics
 
-//go:generate go run github.com/weakpixel/engine/tools/weakpixel gen
+//go:generate go run github.com/weakpixel/engine/tools/wpix gen

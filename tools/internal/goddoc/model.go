@@ -14,13 +14,13 @@ import (
 	"github.com/weakpixel/engine/god"
 )
 
-// supportedVersion is the only "version" of a GOD file weakpixel doc reads.
+// supportedVersion is the only "version" of a GOD file wpix doc reads.
 const supportedVersion = 0
 
 // generatorName is the "generator" of the merged GOD that --format god
 // writes. Directory walks skip such files, so a merged GOD in the specs
 // folder is not read back as an input.
-const generatorName = "weakpixel doc"
+const generatorName = "wpix doc"
 
 // document is the merged documentation of all loaded definition files. Every
 // renderer works from it, so every format shows the same content.
@@ -91,7 +91,7 @@ type fieldRow struct {
 	Default     string          // the editor's initial value, as JSON (an enum by constant name); "" when none
 }
 
-// godFile is a GOD file: one package's (weakpixel gen) or a merged one (--format god).
+// godFile is a GOD file: one package's (wpix gen) or a merged one (--format god).
 type godFile struct {
 	Version    int                   `json:"version"`
 	Generator  string                `json:"generator"`
@@ -127,7 +127,7 @@ func loadDocument(title string, files []string) (*document, error) {
 			continue
 		}
 		if f.Version != supportedVersion {
-			errs = append(errs, fmt.Errorf("%s: unsupported version %d (want %d); regenerate with weakpixel gen", file, f.Version, supportedVersion))
+			errs = append(errs, fmt.Errorf("%s: unsupported version %d (want %d); regenerate with wpix gen", file, f.Version, supportedVersion))
 			continue
 		}
 		loaded = append(loaded, f)

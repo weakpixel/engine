@@ -1,14 +1,15 @@
-// Package assets implements `weakpixel assets`. It checks, lists, catalogs and packs an asset library
+// Package assets implements `wpix assets`. It checks, lists, catalogs and packs an asset library
 // laid out in the standard convention (doc/guide/engine/asset-library.md)
 // without starting Ebiten.
 //
 // Usage:
 //
-//	weakpixel assets check [--json] [<root>]
-//	weakpixel assets ls [<root>]
-//	weakpixel assets catalog [<root>] [-o <file>|-]
-//	weakpixel assets pack [<root>] [-o <out>]
-//	weakpixel assets keys [<root>] [--pkg name] [-o file|-]
+//	wpix assets check [--json] [<root>]
+//	wpix assets ls [<root>]
+//	wpix assets catalog [<root>] [-o <file>|-]
+//	wpix assets pack [<root>] [-o <out>]
+//	wpix assets keys [<root>] [--pkg name] [-o file|-]
+//	wpix assets embed [<root>] [--pkg name] [--var name] [--tags constraint] [-o file|-]
 //
 // check prints every finding of library.Scan, one line each
 // ("<file>: error|warn: ..."), then a summary line. With --json it prints one
@@ -21,7 +22,8 @@
 // as {"fatal": "..."} with exit code 1.
 //
 // ls prints each package with its file count, size, entries and the
-// packages it uses.
+// packages it uses. With --ignored it prints instead every file an
+// .assetignore ignores, with the line that ignores it.
 //
 // catalog writes assets.catalog.json for a loose library, so it can be
 // served from a file system that cannot list directories (HTTP). The
@@ -35,13 +37,19 @@
 // of a known kind and the clip tags (default package "assets", default
 // output stdout), for go:generate:
 //
-//	//go:generate go run github.com/weakpixel/engine/tools/weakpixel assets keys assets --pkg main -o zz__gen.assets.go
+//	//go:generate go run github.com/weakpixel/engine/tools/wpix assets keys assets --pkg main -o zz__gen.assets.go
+//
+// embed writes a Go file that embeds the library with go:embed patterns that
+// leave out what .assetignore files ignore, for go:generate (default package
+// "main", variable "assets"):
+//
+//	//go:generate go tool wpix assets embed assets --tags "!editor" -o zz__gen.assets_embed.go
 //
 // <root> may be left out when a .weakpixel.json above the working directory
 // sets "assets.root" (doc/guide/project-file.md); an empty Root of the options
 // means the same.
 //
-// catalog, pack and keys refuse a library with errors (run check). Exit codes:
+// catalog, pack, keys and embed refuse a library with errors (run check). Exit codes:
 // 0 ok (warnings allowed), 1 errors, 2 usage error.
 package assets
 
@@ -65,30 +73,31 @@ import (
 // cannot clobber anything.
 const DefaultPackOut = "build/assets"
 
-// CheckOptions are the arguments of `weakpixel assets check`.
+// CheckOptions are the arguments of `wpix assets check`.
 type CheckOptions struct {
 	Root string // library root; empty means assets.root of .weakpixel.json
 	JSON bool   // print one JSON object instead of lines
 }
 
-// ListOptions are the arguments of `weakpixel assets ls`.
+// ListOptions are the arguments of `wpix assets ls`.
 type ListOptions struct {
-	Root string // library root; empty means assets.root of .weakpixel.json
+	Root    string // library root; empty means assets.root of .weakpixel.json
+	Ignored bool   // list the ignored files and the rule of each instead of the packages
 }
 
-// CatalogOptions are the arguments of `weakpixel assets catalog`.
+// CatalogOptions are the arguments of `wpix assets catalog`.
 type CatalogOptions struct {
 	Root string // library root; empty means assets.root of .weakpixel.json
 	Out  string // output file, "-" for stdout; empty means <Root>/assets.catalog.json
 }
 
-// PackOptions are the arguments of `weakpixel assets pack`.
+// PackOptions are the arguments of `wpix assets pack`.
 type PackOptions struct {
 	Root string // library root; empty means assets.root of .weakpixel.json
 	Out  string // output folder, which must not exist or be empty; empty means DefaultPackOut
 }
 
-// KeysOptions are the arguments of `weakpixel assets keys`.
+// KeysOptions are the arguments of `wpix assets keys`.
 type KeysOptions struct {
 	Root string // library root; empty means assets.root of .weakpixel.json
 	Pkg  string // package name of the generated file; empty means "assets"
@@ -105,7 +114,7 @@ func (e *libraryError) Error() string {
 			fmt.Fprintln(&b, f)
 		}
 	}
-	b.WriteString("the library has errors; fix them first (weakpixel assets check)")
+	b.WriteString("the library has errors; fix them first (wpix assets check)")
 	return b.String()
 }
 
@@ -159,6 +168,9 @@ func Check(opts CheckOptions, stdout io.Writer) error {
 	if opts.JSON {
 		return reportJSON(stdout, findings)
 	}
+	if ignored, err := library.IgnoredFiles(os.DirFS(root)); err == nil && len(ignored) > 0 {
+		fmt.Fprintf(stdout, "%d files ignored by %s (wpix assets ls --ignored)\n", len(ignored), library.IgnoreFile)
+	}
 	return report(stdout, findings)
 }
 
@@ -168,11 +180,31 @@ func List(opts ListOptions, stdout io.Writer) error {
 	if err != nil {
 		return err
 	}
+	if opts.Ignored {
+		return listIgnored(stdout, root)
+	}
 	cat, _, err := scan(root, false, stdout)
 	if err != nil {
 		return err
 	}
 	list(stdout, root, cat)
+	return nil
+}
+
+// listIgnored prints each ignored file with the rule that ignores it,
+// aligned: "forest/raw/hero.psd  forest/.assetignore:3".
+func listIgnored(w io.Writer, root string) error {
+	files, err := library.IgnoredFiles(os.DirFS(root))
+	if err != nil {
+		return err
+	}
+	width := 0
+	for _, f := range files {
+		width = max(width, len(f.Path))
+	}
+	for _, f := range files {
+		fmt.Fprintf(w, "%-*s  %s\n", width, f.Path, f.By)
+	}
 	return nil
 }
 

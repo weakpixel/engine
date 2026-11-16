@@ -2,7 +2,7 @@
 
 The Engine Runtime is the 2D game layer of the Weakpixel Engine, built on the [ECS](https://github.com/weakpixel/ecs) (module `github.com/weakpixel/ecs`) and [Ebiten](https://ebitengine.org). Import path: `github.com/weakpixel/engine`, part of the root Go module. Only the Engine Runtime packages that say so import Ebiten; the ECS never does ([dependency rules](../../design/architecture.md)).
 
-**New game?** `go run github.com/weakpixel/engine/tools/weakpixel@latest new mygame` creates a project that already runs, tests, builds for the browser and opens in the level editor ([weakpixel new](../tools.md#new)); its code is the shortest tour of the pieces below.
+**New game?** `go run github.com/weakpixel/engine/tools/wpix@latest new mygame` creates a project that already runs, tests, builds for the browser and opens in the level editor ([wpix new](../tools.md#new)); its code is the shortest tour of the pieces below.
 
 **Start with [`game.Engine`](engine.md)**: one struct that wires the World, assets, renderer, camera and schedule and runs with `ebiten.RunGame`. The other pages explain the pieces it is made of.
 
@@ -12,7 +12,7 @@ The Engine Runtime is the 2D game layer of the Weakpixel Engine, built on the [E
 | [getting-started.md](getting-started.md) | The smallest game wired by hand from the low-level pieces: schedule, resources, `Update`/`Draw` |
 | [components.md](components.md) | `gfx`: `Transform`, `Sprite`, `Animator`, `Label`, ... and the zero-value rules |
 | [asset-kinds.md](asset-kinds.md) | What each asset kind is (sprite, atlas, clip, font, ...), what it is for, how to load it, file formats |
-| [asset-library.md](asset-library.md) | The standard asset folder layout: packages, `global/` and `boot/`, `LoadLevelBase`, `LoadPackage`, packs, `weakpixel assets` |
+| [asset-library.md](asset-library.md) | The standard asset folder layout: packages, `global/` and `boot/`, `LoadLevelBase`, `LoadPackage`, packs, `wpix assets` |
 | [assets.md](assets.md) | The engine's asset server, game-facing handles, hot reload and HTTP (the asset system itself: [`github.com/weakpixel/asset`](https://github.com/weakpixel/asset/blob/main/doc/guide.md)) |
 | [rendering.md](rendering.md) | `extract` + `render`: queue, camera, layers, interpolation, culling, writing an extract system |
 | [camera.md](camera.md) | `camera`: the follow camera, its modes (`default`, `smooth`, `deadzone`, `spring`, `lookahead`) and how to combine them, bounds, snapping |
@@ -28,7 +28,7 @@ The Engine Runtime is the 2D game layer of the Weakpixel Engine, built on the [E
 | [physics.md](physics.md) | `physics`: `Body`, `Velocity`, `Touching`, `Material`, the solver, tiles, one-way and moving platforms, `Follow` with tweens, `MoveAndSlide`, `NewMoveSystem`, hooks |
 | [hierarchy.md](hierarchy.md) | `hierarchy`: attaching an entity to a parent, local placement, layers and Y-sorting of children, deleting subtrees |
 | [rooms.md](rooms.md) | `room`: exits and spawn points placed in the editor, moving between levels, fade, iris and custom transitions |
-| [animation.md](animation.md) | `anim`: Aseprite clips, `*.anim.json` definitions, hit/hurt boxes, `weakpixel anim` |
+| [animation.md](animation.md) | `anim`: Aseprite clips, `*.anim.json` definitions, hit/hurt boxes, `wpix anim` |
 | [game-objects.md](game-objects.md) | Authoring levels and prefabs as GOD: `resolver`, asset fields, runtime fields |
 | [editor.md](editor.md) | `editor`: the level editor core (a `game.Tool`): applying a level document by id, picking and dragging, Play/Stop, the protocol bridge, making a game editable in VSCode |
 | [web.md](web.md) | Running a game in the browser: building to wasm, the web shell, assets over HTTP, browser differences |
@@ -47,11 +47,11 @@ The Engine Runtime is the 2D game layer of the Weakpixel Engine, built on the [E
 | `extract` | Systems that turn components into queue items during `Update`, plus `AssetSystem` and `SortQueue`. |
 | `camera` | Follow camera: the `Target` component, `Rig` (follow modes, bounds, snapping) and the `System` that moves `render.Camera`. |
 | `anim` | `Clip`/`ClipSet` assets from Aseprite exports and `*.anim.json` definitions, `AnimationSystem`, `ShapesOf`. |
-| `anim/animfile` | Parsing and checks of the animation file formats, shared by `anim` and `weakpixel anim`. |
+| `anim/animfile` | Parsing and checks of the animation file formats, shared by `anim` and `wpix anim`. |
 | `tiled` | The Tiled JSON file model (`.tmj`, `.tsj`, `.world`) and its checks; standard library only. |
 | `tilemap` | `Tileset`/`Map`/`World` assets, the `TileLayer` component, `Spawn`/`SpawnWorld`, `TilemapExtract`, the map data API, `CollisionGrid`. |
 | `particles` | `System` (simulates `gfx.Particles` pools) and `Extract` (one sprite item per live particle). |
-| `particles/fxfile` | Parsing, checks and writing of the `*.fx.json` effect file, shared by `particles`, the `fx` tool and `weakpixel mcp`. No Ebiten. |
+| `particles/fxfile` | Parsing, checks and writing of the `*.fx.json` effect file, shared by `particles`, the `fx` tool and `wpix mcp`. No Ebiten. |
 | `tween` | `Tweens` (the resource that owns running tweens), `To`/`From`, `Lens` and the built-in lenses, `Ease`, `Sequence`, `System`. Standard library, `ecs`, `ecs/system`, `gfx` and `xmath` only. |
 | `collision` | Opt-in collision detection: the `collision:Collider` component, layer helpers, `Space` (contacts, queries, tile grids), `System`, `Enter`/`Exit` events, the `Grid` broad phase. Standard library, `ecs`, `ecs/system`, `gfx` and `xmath` only; `game` never adds it. |
 | `physics` | Opt-in physics on top of `collision`: the `Body`, `Velocity`, `Touching`, `Material` and `Follow` components, the `System` (integration, impulse solver, one-way and moving platforms), `MoveAndSlide`, `MoveSystem`, the `Impact` event. Standard library, `ecs`, `ecs/system`, `gfx`, `xmath`, `collision` and `tween` only; `game` never adds it. |

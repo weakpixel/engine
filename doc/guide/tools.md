@@ -1,89 +1,90 @@
 # Tools
 
-The engine's command-line tools are subcommands of one command, `weakpixel`. It runs with `go run`, so nothing needs installing. The commands below run from the repository root; from another module, use the full import path (`go run github.com/weakpixel/engine/tools/weakpixel gen`).
+The engine's command-line tools are subcommands of one command, `wpix`. It runs with `go run`, so nothing needs installing. The commands below run from the repository root; from another module, use the full import path (`go run github.com/weakpixel/engine/tools/wpix gen`).
 
 | Command | Does |
 | --- | --- |
-| [`weakpixel gen`](#gen) | Generates Game Object code and the package's GOD file from `+game:*` markers |
-| [`weakpixel doc`](#doc) | Merges the GOD files of a project into one GOD, or documents them as HTML or Markdown |
-| [`weakpixel anim`](#anim) | Validates and creates `*.anim.json` animation definitions |
-| [`weakpixel assets`](#assets) | Checks, lists, catalogs and packs an asset library |
-| [`weakpixel tileset`](#tileset) | Packs a texture atlas of differently sized sprites into a uniform-tile sheet and a Tiled tileset |
-| [`weakpixel schema`](#schema) | Writes JSON Schemas for the game's JSON files, so editors complete and check them |
-| [`weakpixel framelog`](#framelog) | Summarizes a frame log and lists the frames that stutter |
-| [`weakpixel serve`](#serve) | Serves a browser build for development and pushes asset changes to the open page |
-| [`weakpixel new`](#new) | Creates a game project that runs, tests, builds for the browser and opens in the level editor |
-| [`weakpixel mcp`](#mcp) | Serves the project to an AI agent over the Model Context Protocol: components, object types, assets, levels and prefabs |
-| `weakpixel help [command]`, `weakpixel version` | Lists the commands or shows one command's usage; prints the module version |
+| [`wpix gen`](#gen) | Generates Game Object code and the package's GOD file from `+game:*` markers |
+| [`wpix doc`](#doc) | Merges the GOD files of a project into one GOD, or documents them as HTML or Markdown |
+| [`wpix anim`](#anim) | Validates and creates `*.anim.json` animation definitions |
+| [`wpix assets`](#assets) | Checks, lists, catalogs and packs an asset library |
+| [`wpix tileset`](#tileset) | Packs a texture atlas of differently sized sprites into a uniform-tile sheet and a Tiled tileset |
+| [`wpix schema`](#schema) | Writes JSON Schemas for the game's JSON files, so editors complete and check them |
+| [`wpix framelog`](#framelog) | Summarizes a frame log and lists the frames that stutter |
+| [`wpix serve`](#serve) | Serves a browser build for development and pushes asset changes to the open page |
+| [`wpix new`](#new) | Creates a game project that runs, tests, builds for the browser and opens in the level editor |
+| [`wpix mcp`](#mcp) | Serves the project to an AI agent over the Model Context Protocol: components, object types, assets, levels and prefabs |
+| `wpix help [command]`, `wpix version` | Lists the commands or shows one command's usage; prints the module version |
 | [VSCode extension](#vscode-extension) | Edits `*.level.json` levels and `*.prefab.json` prefabs in a live view of the game ([own repository](https://github.com/weakpixel/weakpixel-engine-vscode)) |
 
-Every subcommand exits 0 on success, 1 on errors in the input and 2 on a usage error. The commands are built on [Cobra](https://github.com/spf13/cobra): flags are GNU style (`--long`, and `-o` where a command has an output file), may stand before or after the arguments, and a single-dash long flag such as `-format` is a usage error. `weakpixel help <command>` (or `<command> --help`) lists a command's flags. Shell completion scripts are not provided.
+Every subcommand exits 0 on success, 1 on errors in the input and 2 on a usage error. The commands are built on [Cobra](https://github.com/spf13/cobra): flags are GNU style (`--long`, and `-o` where a command has an output file), may stand before or after the arguments, and a single-dash long flag such as `-format` is a usage error. `wpix help <command>` (or `<command> --help`) lists a command's flags. Shell completion scripts are not provided.
 
 ## Using it in a game
 
-`go run github.com/weakpixel/engine/tools/weakpixel <command>` always works and uses the engine version in your `go.mod`. To type less, register it once as a Go tool and call it as `go tool weakpixel`:
+`go run github.com/weakpixel/engine/tools/wpix <command>` always works and uses the engine version in your `go.mod`. To type less, register it once as a Go tool and call it as `go tool wpix`:
 
 ```sh
-go get -tool github.com/weakpixel/engine/tools/weakpixel
-go tool weakpixel doc
+go get -tool github.com/weakpixel/engine/tools/wpix
+go tool wpix doc
 ```
 
-The `//go:generate` lines below also work as `//go:generate go tool weakpixel gen` once the tool is registered.
+The `//go:generate` lines below also work as `//go:generate go tool wpix gen` once the tool is registered.
 
 ## gen
 
 ```go
-//go:generate go run github.com/weakpixel/engine/tools/weakpixel gen
+//go:generate go run github.com/weakpixel/engine/tools/wpix gen
 ```
 
 Put the directive in a package that declares `+game:*` markers, run `go mod tidy` once (the generator needs `golang.org/x/tools`) and `go generate`. It writes `zz__gen.go` next to the sources and the package's GOD file into the project's specs folder as `<group>.god.json` (`god.specs` of [`.weakpixel.json`](project-file.md), found by walking up from the package directory), or, without that key, into `build/god` below the module root (build output: it stays out of git, and a fresh clone needs `go generate` once before the extension shows GOD data). `zz__gen.god.json` files from earlier versions next to the sources are removed. It removes stale files it wrote earlier, and refuses to overwrite another package's file in the specs folder (two packages with the same group). Problems are reported all at once as `file:line:col: message`. Markers and the generated API: [Game Object API](ecs/api-game-object.md). The JSON file: [GOD](ecs/game-object-definition.md#2-god-json-schema).
 
 ## doc
 
-`weakpixel doc` merges the GOD files of a project into one GOD or one document.
+`wpix doc` merges the GOD files of a project into one GOD or one document.
 
 ```sh
-go run github.com/weakpixel/engine/tools/weakpixel doc                       # docs from .weakpixel.json: god.specs -> godDoc.out/index.html
-go run github.com/weakpixel/engine/tools/weakpixel doc --format god          # merged project GOD -> god.out
-go run github.com/weakpixel/engine/tools/weakpixel doc ./...                 # god-doc.html (without a .weakpixel.json)
-go run github.com/weakpixel/engine/tools/weakpixel doc -o docs.md ./...      # Markdown
-go run github.com/weakpixel/engine/tools/weakpixel doc --split -o docs ./... # Markdown, one file per group
+go run github.com/weakpixel/engine/tools/wpix doc                       # docs from .weakpixel.json: god.specs -> godDoc.out/index.html
+go run github.com/weakpixel/engine/tools/wpix doc --format god          # merged project GOD -> god.out
+go run github.com/weakpixel/engine/tools/wpix doc ./...                 # god-doc.html (without a .weakpixel.json)
+go run github.com/weakpixel/engine/tools/wpix doc -o docs.md ./...      # Markdown
+go run github.com/weakpixel/engine/tools/wpix doc --split -o docs ./... # Markdown, one file per group
 ```
 
 - Defaults come from the project's [`.weakpixel.json`](project-file.md) (found by walking up from the working directory); flags and inputs override them.
-- Inputs are GOD files (`*.god.json`), directories (searched recursively) or patterns ending in `...` (default: `god.specs`, else `build/god` when it exists, else `./...`). A walk skips merged GOD files that `--format god` wrote (`"generator": "weakpixel doc"`); named explicitly, they are read. The filesystem is walked directly, so no module loading happens and nested modules are included. Below the root of a search, `vendor`, `testdata`, `node_modules` and directories starting with `.` or `_` are skipped; a root named explicitly is always searched. An input that matches no file is an error.
+- Inputs are GOD files (`*.god.json`), directories (searched recursively) or patterns ending in `...` (default: `god.specs`, else `build/god` when it exists, else `./...`). A walk skips merged GOD files that `--format god` wrote (`"generator": "wpix doc"`); named explicitly, they are read. The filesystem is walked directly, so no module loading happens and nested modules are included. Below the root of a search, `vendor`, `testdata`, `node_modules` and directories starting with `.` or `_` are skipped; a root named explicitly is always searched. An input that matches no file is an error.
 - All inputs are merged: components by `group:name`, objects by `group:class`. Identical definitions (docs ignored) collapse into one; a different definition under the same key is an error naming both files (`b.god.json: component g:C differs from the one in a.god.json`), and so is an object using a component no input defines. All problems are reported at once.
 - The document has an index of all objects (grouped by `group`) and an index of all component types by key, each with its Go type and the objects that use it (possibly none). Components reached through an embedded object are labelled `embedded (Common)`. A field of a [`+game:enum`](ecs/game-object-definition.md#enums) type has the type `enum (A, B, ...)` and lists each value with its name and doc. A field with a [`+game:default`](ecs/game-object-definition.md#defaults) shows `Default: <value>` in its description (an enum by constant name). Output is deterministic.
 - `--format html|md|god` (default: from the `-o` extension, `.md`/`.markdown` is Markdown, `.god.json` is god, else HTML), `-o file` or `--output file` (`-` is stdout; default `index.html`/`god.md` in `godDoc.out`, else `god-doc.html`/`god-doc.md`; for `god`, `god.out`, which it then requires), `--title text`. `--split` (Markdown only) makes `-o` a directory (default `godDoc.out`, else `god-doc/`) holding `index.md`, `components.md` and one `group-<name>.md` per group.
-- `god` writes the merged GOD: the [GOD layout](ecs/game-object-definition.md#2-god-json-schema) without `package`, with `"generator": "weakpixel doc"`.
+- `god` writes the merged GOD: the [GOD layout](ecs/game-object-definition.md#2-god-json-schema) without `package`, with `"generator": "wpix doc"`.
 - HTML is one self-contained file (inline CSS and JS, no network); the filter box, the Objects/Components tabs and the light/dark toggle are optional enhancements. The page follows the browser's color scheme until the user toggles it; the choice is kept in `localStorage`. Markdown is GitHub-flavoured with tables.
-- Only `version` 0 files are read; regenerate others with `weakpixel gen`.
+- Only `version` 0 files are read; regenerate others with `wpix gen`.
 
 ## anim
 
 ```bash
-go run ./tools/weakpixel anim validate chars/player.anim.json [more.anim.json ...]
-go run ./tools/weakpixel anim create --file chars/player.json [-o chars/player.anim.json | -o -] [--force]   # --file is also -f
+go run ./tools/wpix anim validate chars/player.anim.json [more.anim.json ...]
+go run ./tools/wpix anim create --file chars/player.json [-o chars/player.anim.json | -o -] [--force]   # --file is also -f
 ```
 
-`validate` checks a definition against its Aseprite sheet with the loader's rules; `create` writes a starter definition. Output, levels and flags: [Animation: weakpixel anim](engine/animation.md#tooling-weakpixel-anim).
+`validate` checks a definition against its Aseprite sheet with the loader's rules; `create` writes a starter definition. Output, levels and flags: [Animation: wpix anim](engine/animation.md#tooling-weakpixel-anim).
 
 ## assets
 
 ```bash
-go run ./tools/weakpixel assets check   [--json] [root]
-go run ./tools/weakpixel assets ls      [root]
-go run ./tools/weakpixel assets catalog [root] [-o file|-]
-go run ./tools/weakpixel assets pack    [root] [-o out]          # default build/assets
-go run ./tools/weakpixel assets keys    [root] [--pkg name] [-o file|-]
+go run ./tools/wpix assets check   [--json] [root]
+go run ./tools/wpix assets ls      [--ignored] [root]
+go run ./tools/wpix assets catalog [root] [-o file|-]
+go run ./tools/wpix assets pack    [root] [-o out]          # default build/assets
+go run ./tools/wpix assets keys    [root] [--pkg name] [-o file|-]
+go run ./tools/wpix assets embed   [root] [--pkg name] [--var name] [--tags constraint] [-o file|-]
 ```
 
-`check` reports missing references, case mismatches, levels using each other's files, bad names and oversized textures (`check --json` prints the findings as JSON for editors); `catalog` and `pack` write the catalog and the packed build (`pack -o` must be empty or missing, default `build/assets`); `keys` writes optional Go constants for the keys ([generated keys](engine/asset-library.md#generated-keys-optional)). `<root>` may be left out when [`assets.root`](project-file.md) is set. Exit codes 0 ok, 1 errors, 2 usage. Details: [Asset library: weakpixel assets](engine/asset-library.md#weakpixel-assets).
+`check` reports missing references, case mismatches, levels using each other's files, bad names and oversized textures (`check --json` prints the findings as JSON for editors); `catalog` and `pack` write the catalog and the packed build (`pack -o` must be empty or missing, default `build/assets`); `keys` writes optional Go constants for the keys ([generated keys](engine/asset-library.md#generated-keys-optional)); `embed` writes the `go:embed` file of the library without the files `.assetignore` ignores, and `ls --ignored` lists those files ([ignoring files](engine/asset-library.md#ignoring-files)). `<root>` may be left out when [`assets.root`](project-file.md) is set. Exit codes 0 ok, 1 errors, 2 usage. Details: [Asset library: wpix assets](engine/asset-library.md#wpix-assets).
 
 ## tileset
 
 ```bash
-go run ./tools/weakpixel tileset from-atlas [-o out.png] [--tile WxH] [--columns n] [--margin n] [--spacing n] [--align center|topleft|bottomleft] [--image atlas.png] [--name s] <atlas.xml>...
+go run ./tools/wpix tileset from-atlas [-o out.png] [--tile WxH] [--columns n] [--margin n] [--spacing n] [--align center|topleft|bottomleft] [--image atlas.png] [--name s] <atlas.xml>...
 ```
 
 `from-atlas` reads one or more packed Starling/ShoeBox `TextureAtlas` (`<SubTexture>` XML plus its PNG) and writes a PNG in which every sub-texture sits in a cell of one size, plus a Tiled JSON tileset (`.tsj`) next to it. Load the `.tsj` as a [tileset](engine/tilemaps.md) or open it in Tiled.
@@ -97,16 +98,16 @@ go run ./tools/weakpixel tileset from-atlas [-o out.png] [--tile WxH] [--columns
 ## schema
 
 ```bash
-go run ./tools/weakpixel schema [-o dir] [god inputs...]   # -o is also --out
+go run ./tools/wpix schema [-o dir] [god inputs...]   # -o is also --out
 ```
 
-Writes `<kind>.schema.json` (JSON Schema draft-07) for `anim`, `sheet` (grid sheets), `atlas` (TexturePacker), `bindings`, `library`, `weakpixel` (`.weakpixel.json`), and `level` and `prefab`. The first six have a fixed shape; `level` and `prefab` come from the project's GOD files: every registered component is a property of `components` with its field types, `x-enum` names, asset kinds and doc comments, an object of a known class requires its non-optional components, and an object with `prefab` takes overrides, where nothing is required. A tool such as the VSCode extension points `jsonValidation` at the files. The GOD inputs are files, directories or `./...` patterns as for `weakpixel doc`, default `god.specs` of [`.weakpixel.json`](project-file.md), else `./...`; without GOD files `level` and `prefab` are skipped. Output folder: `-o`, else `schema.out`, else `build/schema`. The files are generated: don't edit them.
+Writes `<kind>.schema.json` (JSON Schema draft-07) for `anim`, `sheet` (grid sheets), `atlas` (TexturePacker), `bindings`, `library`, `weakpixel` (`.weakpixel.json`), and `level` and `prefab`. The first six have a fixed shape; `level` and `prefab` come from the project's GOD files: every registered component is a property of `components` with its field types, `x-enum` names, asset kinds and doc comments, an object of a known class requires its non-optional components, and an object with `prefab` takes overrides, where nothing is required. A tool such as the VSCode extension points `jsonValidation` at the files. The GOD inputs are files, directories or `./...` patterns as for `wpix doc`, default `god.specs` of [`.weakpixel.json`](project-file.md), else `./...`; without GOD files `level` and `prefab` are skipped. Output folder: `-o`, else `schema.out`, else `build/schema`. The files are generated: don't edit them.
 
 ## framelog
 
 ```bash
 WEAKPIXEL_FRAMELOG=/tmp/frames.csv go run .   # play, then quit
-go run ./tools/weakpixel framelog [--skip 60] /tmp/frames.csv
+go run ./tools/wpix framelog [--skip 60] /tmp/frames.csv
 ```
 
 Reads a [frame log](engine/engine.md#frame-log) and prints the frame count, histograms of the draw gaps (whole milliseconds) and of the ticks per frame, then one line per hitch with its reasons:
@@ -123,7 +124,7 @@ Reads a [frame log](engine/engine.md#frame-log) and prints the frame count, hist
 ## serve
 
 ```bash
-go tool weakpixel serve [--addr :8080] [--assets <dir>] <dir>
+go tool wpix serve [--addr :8080] [--assets <dir>] <dir>
 ```
 
 Serves `<dir>` (the page and `game.wasm`) at `/` and the `--assets` directory at `/assets/`, both with `Cache-Control: no-cache`. It polls the asset tree every 250 ms (modtime and size) and sends the keys of new, changed and removed files, slash-separated and relative to the asset directory, as server-sent events on `/_weakpixel/changes`: one `data: {"paths": [...]}` per batch, the [change-event format](https://github.com/weakpixel/asset/blob/main/doc/guide.md#change-events) `httpfs.WatchChanges` reads. The game side is `httpfs.WatchChanges` and `game.Config.AssetChanges` ([hot reload](engine/assets.md#hot-reload)). A browser cannot list directories, so `/assets/assets.catalog.json` is answered from a scan of the asset directory on every request, unless the directory has its own catalog; a file added while the page is open shows after a reload of the page. `make web-dev` of a new game runs it. Exit codes: 0 ok, 1 the server failed, 2 usage error.
@@ -131,16 +132,16 @@ Serves `<dir>` (the page and `game.wasm`) at `/` and the `--assets` directory at
 ## new
 
 ```sh
-go run github.com/weakpixel/engine/tools/weakpixel@latest new [flags] <dir>
+go run github.com/weakpixel/engine/tools/wpix@latest new [flags] <dir>
 ```
 
-Creates a game module in `<dir>` and makes it ready to open: it writes the files, then runs `git init`, `go mod tidy`, `go generate ./...` and `go build ./...` in it. The new module requires the engine at the version the tool runs as (a pseudo-version of `main` under `@latest`) and registers the tool, so every other command runs there as `go tool weakpixel <command>` at that version.
+Creates a game module in `<dir>` and makes it ready to open: it writes the files, then runs `git init`, `go mod tidy`, `go generate ./...` and `go build ./...` in it. The new module requires the engine at the version the tool runs as (a pseudo-version of `main` under `@latest`) and registers the tool, so every other command runs there as `go tool wpix <command>` at that version.
 
 | Flag | Default | Does |
 | --- | --- | --- |
 | `--module path` | the base name of `<dir>` | The module path |
 | `--name group` | the base name of `<dir>` in lower case, other characters as `_` | The game's Game Object group (`+game:group:name`), `[a-z][a-z0-9_]*`, not an engine group such as `gfx` |
-| `--replace path` | none | Adds `replace github.com/weakpixel/engine => <path>` (absolute) for a local engine checkout. Required when the tool runs from a checkout (`go run ./tools/weakpixel new`), where its version is unknown |
+| `--replace path` | none | Adds `replace github.com/weakpixel/engine => <path>` (absolute) for a local engine checkout. Required when the tool runs from a checkout (`go run ./tools/wpix new`), where its version is unknown |
 | `--force` | off | Writes into a directory that is not empty. Existing files are never overwritten: if any file the tool would write exists, it names every one and writes nothing, with or without `--force` |
 | `--no-git` | off | Skips `git init` (it is also skipped, with a note, when `git` is not installed) |
 | `--no-run` | off | Only writes the files: no `git init`, `go mod tidy`, `go generate` or `go build` |
@@ -151,7 +152,7 @@ What it creates:
 
 | Path | What |
 | --- | --- |
-| `go.mod` | The module, requiring the engine, with `tool github.com/weakpixel/engine/tools/weakpixel` |
+| `go.mod` | The module, requiring the engine, with `tool github.com/weakpixel/engine/tools/wpix` |
 | `.weakpixel.json` | [Project settings](project-file.md): `god.specs` `build/god` (the default), `god.out` `build/god/project.god.json`, `godDoc.out` `build/god-doc`, `assets.root` `assets`, `editor.snap` 8 |
 | `main.go` | Opens the window and runs the game (not in the editor build). `-assets <dir>` reads loose files with hot reload, `-pack <dir>` writes the [packed build](engine/asset-library.md#packs) |
 | `assets.go`, `assets_web.go` | The asset library: embedded, or packs over HTTP in the browser build with the `webassets` tag |
@@ -170,15 +171,15 @@ The first level is `start/start.level.json` in the package `start`. `game.LoadFi
 ## mcp
 
 ```sh
-go tool weakpixel mcp [--project dir] [--game dir] [--tags editor,...]
+go tool wpix mcp [--project dir] [--game dir] [--tags editor,...]
 ```
 
 An [MCP](https://modelcontextprotocol.io) server on stdin and stdout for an AI agent such as Claude Code. It serves one client until stdin closes. stdout carries only protocol messages; diagnostics go to stderr. It speaks the protocol revision 2026-07-28 (stateless: no handshake, `server/discover`, the version in each request's `_meta`) and, for older clients, 2025-11-25 and 2025-06-18 through `initialize`. It offers tools only: no resources, prompts or subscriptions. It is written on the standard library; no MCP SDK is linked.
 
-Register it in a game made by [`weakpixel new`](#new):
+Register it in a game made by [`wpix new`](#new):
 
 ```sh
-claude mcp add weakpixel -- go tool weakpixel mcp
+claude mcp add weakpixel -- go tool wpix mcp
 ```
 
 or with a `.mcp.json` at the project root:
@@ -186,12 +187,12 @@ or with a `.mcp.json` at the project root:
 ```json
 {
   "mcpServers": {
-    "weakpixel": {"command": "go", "args": ["tool", "weakpixel", "mcp"]}
+    "weakpixel": {"command": "go", "args": ["tool", "wpix", "mcp"]}
   }
 }
 ```
 
-`weakpixel new` does not write this file.
+`wpix new` does not write this file.
 
 | Flag | Default | Does |
 | --- | --- | --- |
@@ -212,7 +213,7 @@ Tools. The project and document tools only read; the edit tools further down cha
 | `list_components`, `describe_component` | Component types by key (`group:Name`, optional `group` filter); one type's JSON schema with its `x-editor` hints, the initial value an editor writes, its doc and the object types that use it |
 | `list_object_types`, `describe_object_type` | Object types by key (`group:Class`); one type's components with field, optional, readonly and embedded-via |
 | `list_assets` | Asset keys with their kind, filtered by `kind` and `prefix`, at most `limit` (default 200, up to 5000), with the total |
-| `check_assets` | The findings of [`weakpixel assets check`](#assets) |
+| `check_assets` | The findings of [`wpix assets check`](#assets) |
 | `list_documents` | Levels and prefabs with name and object count |
 | `read_document` | A level or prefab: its text, the SHA-256 of the text, its objects (index, id, type, prefab) and the problems of the offline checks below |
 | `get_object` | One object by `id` or `index`; with `merged`, a prefab instance merged over its prefab, and the fields it overrides (`gfx:Transform.Pos.X`) |
@@ -241,7 +242,7 @@ An object is selected by `id`, or by `index` for one without an id. A field is a
 
 ### The game
 
-The game tools run the project's editor build as a child process and drive it over the [editor protocol](../design/editor.md#protocol), the one the VSCode extension speaks. The build needs `editor.game` (or `--game`): `game_start` runs `go build -tags <tags> -o build/weakpixel-mcp/<name>` in that package, never next to the source, and starts the binary there. **`build/` must be in `.gitignore`** (the generated starter's is; `game_start` warns when it is not). Only one game runs at a time; it is stopped when the server ends. The tools run the project's own code only: nothing an agent writes is compiled or executed except through the files it edits.
+The game tools run the project's editor build as a child process and drive it over the [editor protocol](../design/editor.md#protocol), the one the VSCode extension speaks. The build needs `editor.game` (or `--game`): `game_start` runs `go build -tags <tags> -o build/wpix-mcp/<name>` in that package, never next to the source, and starts the binary there. **`build/` must be in `.gitignore`** (the generated starter's is; `game_start` warns when it is not). Only one game runs at a time; it is stopped when the server ends. The tools run the project's own code only: nothing an agent writes is compiled or executed except through the files it edits.
 
 By default the game opens a window, so the developer sees what the agent does. `headless: true` (or `WEAKPIXEL_HEADLESS=1` in the game's environment) runs the same build without a window or sound, ticking at the game's rate, for CI and machines without a display. A headless game draws nothing: `step`, `play` and the edit tools work, `screenshot` is refused.
 
@@ -288,4 +289,4 @@ Run from the repository root.
 | `make benchcmp new=<label>` | `benchstat bench/baseline.txt bench/<label>.txt`; fails with a hint while there is no baseline |
 | `make race`, `make vet` | Race tests and vet |
 | `make modtidy` | `go mod tidy` |
-| `make build-tools` | Builds `weakpixel` into `build/` |
+| `make build-tools` | Builds `wpix` into `build/` |

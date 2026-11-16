@@ -4,8 +4,8 @@ build/
 *.test
 *.exe
 *.wasm
-/tools/weakpixel-editor/weakpixel-editor
-/tools/weakpixel/weakpixel
+/tools/wpix-editor/wpix-editor
+/tools/wpix/wpix
 # Go workspace files (cross-repository work, never committed)
 go.work
 go.work.sum

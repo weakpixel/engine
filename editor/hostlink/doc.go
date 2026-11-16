@@ -7,7 +7,7 @@
 // starts; natively they come from WEAKPIXEL_* environment variables.
 //
 // Both the level editor's bridge (editor/bridge) and the tool shell
-// (editor/toolshell, tools/weakpixel-editor) build on it. It imports
+// (editor/toolshell, tools/wpix-editor) build on it. It imports
 // only the standard library, so a tool links neither the bridge nor the
 // level editor. See doc/design/editor.md#protocol.
 package hostlink

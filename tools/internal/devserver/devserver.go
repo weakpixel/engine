@@ -1,10 +1,10 @@
-// Package devserver implements `weakpixel serve`: a static file server for a
+// Package devserver implements `wpix serve`: a static file server for a
 // browser game's development build that pushes asset changes to the open
 // page.
 //
 // Usage:
 //
-//	weakpixel serve [--addr :8080] [--assets <dir>] <dir>
+//	wpix serve [--addr :8080] [--assets <dir>] <dir>
 //
 // It serves <dir> (the page and game.wasm) at /, and the --assets directory
 // under /assets/, both with "Cache-Control: no-cache" so the browser
@@ -32,8 +32,10 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"slices"
+	"strings"
 	"sync"
 	"time"
 
@@ -47,7 +49,7 @@ const ChangesPath = "/_weakpixel/changes"
 // pollInterval is how often the asset tree is scanned.
 const pollInterval = 250 * time.Millisecond
 
-// Options are the arguments of `weakpixel serve`.
+// Options are the arguments of `wpix serve`.
 type Options struct {
 	Dir    string // the build directory, served at /
 	Addr   string // address to listen on
@@ -89,6 +91,10 @@ func Run(ctx context.Context, opts Options, stdout io.Writer) error {
 // asset directory's changes to event-stream clients.
 type Server struct {
 	dir, assets string
+	// ignore holds the asset folder's .assetignore rules, read once by
+	// New: ignored files are neither served nor reported, as in a packed
+	// build. A changed ignore file takes effect at the next start.
+	ignore *library.Ignore
 
 	mu   sync.Mutex
 	subs map[chan []string]struct{}
@@ -100,7 +106,9 @@ type Server struct {
 func New(ctx context.Context, dir, assets string, interval time.Duration) *Server {
 	s := &Server{dir: dir, assets: assets, subs: map[chan []string]struct{}{}}
 	if assets != "" {
-		prev := scan(assets)
+		// Bad lines are skipped here; wpix assets check reports them.
+		s.ignore, _ = library.ReadIgnore(os.DirFS(assets))
+		prev := scan(assets, s.ignore)
 		go func() {
 			t := time.NewTicker(interval)
 			defer t.Stop()
@@ -109,7 +117,7 @@ func New(ctx context.Context, dir, assets string, interval time.Duration) *Serve
 				case <-ctx.Done():
 					return
 				case <-t.C:
-					cur := scan(assets)
+					cur := scan(assets, s.ignore)
 					if changed := diff(prev, cur); len(changed) > 0 {
 						s.publish(changed)
 					}
@@ -128,12 +136,25 @@ func (s *Server) Handler() http.Handler {
 	mux.Handle("/", http.FileServer(http.Dir(s.dir)))
 	if s.assets != "" {
 		mux.HandleFunc("/assets/"+library.CatalogFile, s.catalog)
-		mux.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir(s.assets))))
+		mux.Handle("/assets/", http.StripPrefix("/assets/", s.skipIgnored(http.FileServer(http.Dir(s.assets)))))
 	}
 	mux.HandleFunc(ChangesPath, s.stream)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-cache")
 		mux.ServeHTTP(w, r)
+	})
+}
+
+// skipIgnored answers 404 for an ignored asset key and for the ignore
+// files themselves, and passes everything else to next.
+func (s *Server) skipIgnored(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		key := strings.Trim(path.Clean("/"+r.URL.Path), "/")
+		if ignored, _ := s.ignore.Match(key, false); ignored || path.Base(key) == library.IgnoreFile {
+			http.NotFound(w, r)
+			return
+		}
+		next.ServeHTTP(w, r)
 	})
 }
 
@@ -208,9 +229,10 @@ type stamp struct {
 	size int64
 }
 
-// scan returns the stamp of every regular file under root, by asset key.
-// Unreadable entries are skipped: a file mid-save shows up on a later scan.
-func scan(root string) map[string]stamp {
+// scan returns the stamp of every regular file under root that ig does not
+// ignore, by asset key. Unreadable entries are skipped: a file mid-save
+// shows up on a later scan.
+func scan(root string, ig *library.Ignore) map[string]stamp {
 	out := map[string]stamp{}
 	filepath.WalkDir(root, func(p string, d fs.DirEntry, err error) error {
 		if err != nil || d.IsDir() {
@@ -224,7 +246,11 @@ func scan(root string) map[string]stamp {
 		if err != nil {
 			return nil
 		}
-		out[filepath.ToSlash(rel)] = stamp{info.ModTime(), info.Size()}
+		key := filepath.ToSlash(rel)
+		if ignored, _ := ig.Match(key, false); ignored || path.Base(key) == library.IgnoreFile {
+			return nil
+		}
+		out[key] = stamp{info.ModTime(), info.Size()}
 		return nil
 	})
 	return out

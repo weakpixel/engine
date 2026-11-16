@@ -42,7 +42,7 @@ A 2D game on the Weakpixel Engine (`github.com/weakpixel/engine`, an ECS plus a 
 
 The engine's documentation is the spec: https://github.com/weakpixel/engine/tree/main/doc/guide. Start with `engine/getting-started.md`, `ecs/api-game-object.md`, `engine/asset-library.md`, `engine/input.md` and `engine/editor.md`.
 -- Makefile --
-# The game's everyday commands. Every tool runs through "go tool weakpixel",
+# The game's everyday commands. Every tool runs through "go tool wpix",
 # at the engine version in go.mod.
 
 GOROOT := $(shell go env GOROOT)
@@ -57,7 +57,8 @@ run:
 dev:
 	go run . -assets assets
 
-# Game Object code (game/zz__gen.go) and GOD files (build/god/, not committed) from the +game markers.
+# Game Object code (game/zz__gen.go) and GOD files (build/god/, not committed) from the +game markers,
+# and the embed list of the assets (zz__gen.assets_embed.go, without what assets/.assetignore ignores).
 generate:
 	go generate ./...
 
@@ -68,12 +69,12 @@ test:
 
 # Checks the asset library: file names, groups, broken references.
 check:
-	go tool weakpixel assets check
+	go tool wpix assets check
 
 # The merged GOD (build/god/project.god.json) and HTML docs of every Game Object (build/god-doc).
 doc:
-	go tool weakpixel doc --format god
-	go tool weakpixel doc
+	go tool wpix doc --format god
+	go tool wpix doc
 
 # The browser build in build/web, assets embedded. Serve it with make serve.
 web:
@@ -97,7 +98,7 @@ web-dev:
 	mkdir -p build/web-dev
 	GOOS=js GOARCH=wasm go build -tags webassets,webdev -o build/web-dev/game.wasm .
 	cp "$(GOROOT)/lib/wasm/wasm_exec.js" web/index.html build/web-dev/
-	go tool weakpixel serve --assets assets build/web-dev
+	go tool wpix serve --assets assets build/web-dev
 
 # The level editor in a window, without VSCode.
 editor:
@@ -112,7 +113,7 @@ clean:
 -- README.md --
 # mygame
 
-A game on the [Weakpixel Engine](https://github.com/weakpixel/engine), created with `weakpixel new`.
+A game on the [Weakpixel Engine](https://github.com/weakpixel/engine), created with `wpix new`.
 
 ```sh
 make run      # play: WASD or the arrow keys walk, Shift runs, Esc quits
@@ -134,7 +135,7 @@ make test     # the game's tests, without a window
 | `make web-dev` | The browser build for development: serves it on http://localhost:8080 and reloads the assets you save in the open page |
 | `make editor` | The level editor in a window, without VSCode |
 
-The engine's command-line tools run as `go tool weakpixel <command>` at the engine version in `go.mod` (`go tool weakpixel help` lists them). `go tool weakpixel-editor view assets/<file>.png` opens a texture in the engine's viewer, with a grid, pan and zoom.
+The engine's command-line tools run as `go tool wpix <command>` at the engine version in `go.mod` (`go tool wpix help` lists them). `go tool wpix-editor view assets/<file>.png` opens a texture in the engine's viewer, with a grid, pan and zoom.
 
 ## Files
 
@@ -142,6 +143,7 @@ The engine's command-line tools run as `go tool weakpixel <command>` at the engi
 | --- | --- |
 | `main.go` | Opens the window and runs the game; `-assets <dir>` reads loose files, `-pack <dir>` writes the packed build |
 | `assets.go`, `assets_web.go` | Where the assets come from: embedded, or packs over HTTP in the `webassets` browser build |
+| `zz__gen.assets_embed.go` | The embed list of `assets/`, written by `make generate` |
 | `watch.go`, `watch_web.go` | Pushed asset changes for hot reload: none, or from the dev server in the `webdev` browser build |
 | `editor.go` | The editor build (`-tags editor`) that the VSCode extension runs |
 | `main_test.go`, `editor_test.go` | Run the game, and the editor build, without a window: the player walks, the editor opens the level |
@@ -149,6 +151,7 @@ The engine's command-line tools run as `go tool weakpixel <command>` at the engi
 | `game/components.go` | The `PlayerControl` component and the `Player` Game Object |
 | `game/player-system.go` | Moves the player by the move action |
 | `assets/` | The [asset library](https://github.com/weakpixel/engine/blob/main/doc/guide/engine/asset-library.md#the-layout): `global/` loads at start, every other folder is a package (`start/` holds the first level) |
+| `assets/.assetignore` | Files in `assets/` the game does not ship ([`.gitignore` syntax](https://github.com/weakpixel/engine/blob/main/doc/guide/engine/asset-library.md#ignoring-files)) |
 | `assets/start/start.level.json` | The first level. Open it in VSCode to edit it |
 | `assets/global/prefabs/player.prefab.json` | The player prefab the level places |
 | `assets/global/input/player.bindings.json` | Keys and gamepad buttons of the actions |
@@ -171,19 +174,27 @@ Install the [Weakpixel VSCode extension](https://github.com/weakpixel/weakpixel-
 
 package main
 
-import (
-	"embed"
-	"io/fs"
-)
+import "io/fs"
 
 // assets is the game's asset library (doc/guide/engine/asset-library.md),
-// embedded in the binary so that it runs anywhere, the browser included.
+// embedded in the binary so that it runs anywhere, the browser included. The
+// variable is in zz__gen.assets_embed.go: wpix assets embed writes its
+// go:embed patterns so that the files assets/.assetignore ignores stay out
+// (make generate after changing an .assetignore).
 //
-//go:embed assets
-var assets embed.FS
+//go:generate go tool wpix assets embed assets --tags "!editor && !(js && webassets)" -o zz__gen.assets_embed.go
 
 // gameAssets is the library the game runs on: the embedded assets folder.
 func gameAssets() (fs.FS, error) { return fs.Sub(assets, "assets") }
+-- assets/.assetignore --
+# Files in assets/ that the game does not ship: they are not embedded,
+# packed or loaded. The syntax is that of .gitignore, and an .assetignore
+# in a folder applies to the files below it. go tool wpix assets ls --ignored
+# lists what is ignored; run make generate after a change.
+#
+# *.aseprite
+# *.psd
+# drafts/
 -- assets/global/input/player.bindings.json --
 {
   "version": 1,
@@ -258,6 +269,34 @@ sha256 c1792893a0fdf6752a414d3d287b1c108de5c0035cb4cc86c6de004b06be4000
       "prefab": "global/prefabs/player.prefab.json"
     }
   ]
+}
+-- assets_test.go --
+//go:build !editor && !(js && webassets)
+
+package main
+
+import (
+	"os"
+	"testing"
+
+	"github.com/weakpixel/engine/asset/library"
+)
+
+// TestEmbeddedAssetsMatchLibrary fails when zz__gen.assets_embed.go is
+// stale: a file was added where the embed list names single files, or an
+// .assetignore changed. Run make generate.
+func TestEmbeddedAssetsMatchLibrary(t *testing.T) {
+	embedded, err := gameAssets()
+	if err != nil {
+		t.Fatal(err)
+	}
+	missing, extra, err := library.DiffFiles(os.DirFS("assets"), embedded)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(missing) > 0 || len(extra) > 0 {
+		t.Fatalf("the embedded assets differ from assets/ (run make generate):\nnot embedded: %v\nembedded but ignored: %v", missing, extra)
+	}
 }
 -- assets_web.go --
 //go:build !editor && js && webassets
@@ -429,7 +468,7 @@ import (
 // go generate writes zz__gen.go (the typed views of the Game Objects in
 // components.go) and the GOD file god/mygame.god.json, which the level
 // editor reads.
-//go:generate go tool weakpixel gen
+//go:generate go tool wpix gen
 
 // Asset keys: paths from the library root, assets/.
 const (
@@ -567,8 +606,8 @@ require (
 )
 
 tool (
-	github.com/weakpixel/engine/tools/weakpixel-editor
-	github.com/weakpixel/engine/tools/weakpixel
+	github.com/weakpixel/engine/tools/wpix-editor
+	github.com/weakpixel/engine/tools/wpix
 )
 -- main.go --
 //go:build !editor
@@ -748,7 +787,7 @@ import (
 	"github.com/weakpixel/asset/httpfs"
 )
 
-// assetChanges listens to the dev server (go tool weakpixel serve), which
+// assetChanges listens to the dev server (go tool wpix serve), which
 // sends the keys of the asset files you save, so the open page reloads them
 // without a refresh (make web-dev).
 func assetChanges() <-chan []string {

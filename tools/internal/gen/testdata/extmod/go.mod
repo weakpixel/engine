@@ -7,7 +7,7 @@ require (
 	github.com/weakpixel/engine v0.0.0-00010101000000-000000000000
 )
 
-tool github.com/weakpixel/engine/tools/weakpixel
+tool github.com/weakpixel/engine/tools/wpix
 
 require (
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect

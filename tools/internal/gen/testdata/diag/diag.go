@@ -1,4 +1,4 @@
-// Package diag exercises every validation rule in weakpixel gen with one
+// Package diag exercises every validation rule in wpix gen with one
 // deliberately invalid construct per rule. generate() must report every
 // one of them, sorted and deduplicated, in a single call.
 package diag

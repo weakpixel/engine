@@ -7,4 +7,4 @@
 // engine. Package render draws them; package extract connects the two.
 package gfx
 
-//go:generate go run github.com/weakpixel/engine/tools/weakpixel gen
+//go:generate go run github.com/weakpixel/engine/tools/wpix gen

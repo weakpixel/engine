@@ -41,7 +41,7 @@ assets, snapshot | input, simulate, camera, post | hierarchy, anim, render-prepa
 - The `hierarchy` stage writes the world `Transform` and the draw layers of entities with a `hierarchy.Parent` and deletes the children of dead parents; the `assets` stage runs it once more right after a document spawned objects. Like `anim` it is not gated by a Tool pause or `Hold`. See [hierarchy.md](hierarchy.md).
 - The `assets` stage also spawns the layers of maps from `LoadMap` that became Ready this tick, before the snapshot. The extract stage queues tiles (`tilemap.TilemapExtract`) before sprites, and the particles (`particles.Extract`) right after them. The `anim` stage runs the `AnimationSystem` and then the `particles.System`; like animations, particles keep playing while a Tool pauses the game.
 - The `input` stage starts with the engine's `inputsys.InputSystem`: it applies a newly loaded bindings file and runs `Router.Update`, so your input systems read this tick's actions. The extract stage draws the touch regions (`inputsys.TouchControlsExtract`) after labels. See [input.md](input.md).
-- `AddSystem(stage, fns...)` and `AddRunner(stage, runners...)` fill the four slots (`StageInput`, `StageSimulate`, `StageCamera`, `StagePost`). Runners get `Init`; plain functions do not. Lua systems are runners. They are the systems of the root [scene](#scenes).
+- `AddSystem(stage, fns...)` and `AddRunner(stage, runners...)` fill the four slots (`StageInput`, `StageSimulate`, `StageCamera`, `StagePost`). Runners get `Init`; plain functions do not. Lua systems ([`github.com/weakpixel/contrib/lua`](https://github.com/weakpixel/contrib/tree/main/lua)) are runners. They are the systems of the root [scene](#scenes).
 - Adding after the first `Update` panics (`game: AddSystem after the first Update`).
 - The engine snapshots `Transform.PrevPos` and `Camera.PrevPos` before your systems run. Camera systems just assign `Camera.Pos`.
 - The `camera` stage starts with the engine's `tween.System`, which advances the tweens of `Engine.Tweens()` (the `*tween.Tweens` resource): tweens your systems start run in the same tick, and stop while a Tool pauses the game. See [tweens.md](tweens.md).
@@ -58,7 +58,7 @@ assets, snapshot | input, simulate, camera, post | hierarchy, anim, render-prepa
 
 ## Startup screen
 
-With `Config.Startup` set, the game shows a startup screen from its first frame until the initial assets have loaded, and for at least 5 seconds even when loading is faster. nil, the default, shows none. A project made with `weakpixel new` turns it on in its `main` (not in its tests or editor build).
+With `Config.Startup` set, the game shows a startup screen from its first frame until the initial assets have loaded, and for at least 5 seconds even when loading is faster. nil, the default, shows none. A project made with `wpix new` turns it on in its `main` (not in its tests or editor build).
 
 ```go
 // The default: the Weakpixel Engine image on a dark background.
@@ -172,7 +172,7 @@ Where the PNG goes (`Config.Screenshots`):
 
 ### Hotkey and environment variables
 
-`Config.Screenshots.Key` (an `input.Key`, zero for none) is a development hotkey: every press, the edge from up to down of the raw key state, takes one `ShotGame` capture (`KeyTarget` picks `ShotWindow` instead). It needs no input action and works in any game. It also works while a [development tool](#development-tools) pauses the game; keys the tool's own UI used never reach it. `game.DevScreenshotKey()` is F12, or F9 in a browser, which keeps F12 for its developer tools. The [starter project](../tools.md) turns it on, and so do the `weakpixel-editor` tools.
+`Config.Screenshots.Key` (an `input.Key`, zero for none) is a development hotkey: every press, the edge from up to down of the raw key state, takes one `ShotGame` capture (`KeyTarget` picks `ShotWindow` instead). It needs no input action and works in any game. It also works while a [development tool](#development-tools) pauses the game; keys the tool's own UI used never reach it. `game.DevScreenshotKey()` is F12, or F9 in a browser, which keeps F12 for its developer tools. The [starter project](../tools.md) turns it on, and so do the `wpix-editor` tools.
 
 Without code changes:
 
@@ -183,7 +183,7 @@ Without code changes:
 | `WEAKPIXEL_SCREENSHOT_DIR` | Overrides `Config.Screenshots.Dir`. |
 | `WEAKPIXEL_SCREENSHOT_QUIT` | `1`: quit after the last `WEAKPIXEL_SCREENSHOT_AT` capture was written. |
 
-`WEAKPIXEL_SCREENSHOT_AT=1,60 WEAKPIXEL_SCREENSHOT_QUIT=1 go run ./mygame` writes two PNGs and exits, which is how to take golden images in CI. A native window still opens, because Ebiten needs a display: use `xvfb-run` on Linux CI. A bad value is logged and ignored. They work for every program built on `game.Engine`, the `weakpixel-editor` tools included.
+`WEAKPIXEL_SCREENSHOT_AT=1,60 WEAKPIXEL_SCREENSHOT_QUIT=1 go run ./mygame` writes two PNGs and exits, which is how to take golden images in CI. A native window still opens, because Ebiten needs a display: use `xvfb-run` on Linux CI. A bad value is logged and ignored. They work for every program built on `game.Engine`, the `wpix-editor` tools included.
 
 ### Host variables
 

@@ -74,6 +74,7 @@ func heroFS(t testing.TB) fstest.MapFS {
 	}
 	return fstest.MapFS{
 		"chars/hero.aseprite.json": {Data: []byte(heroSheetJSON)},
+		"chars/hero.ase.json":      {Data: []byte(heroSheetJSON)},
 		"chars/hero.png":           {Data: buf.Bytes()},
 		"chars/hero.anim.json":     {Data: []byte(strings.ReplaceAll(heroDef, `"hero.aseprite.json"`, `"hero.aseprite.json"`))},
 	}

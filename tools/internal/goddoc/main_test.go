@@ -158,7 +158,7 @@ func TestRunProjectSettings(t *testing.T) {
 		}
 	}
 	merged, _ := os.ReadFile(filepath.Join(work, "god", "project.god.json"))
-	if !strings.Contains(string(merged), `"generator": "weakpixel doc"`) || !strings.Contains(string(merged), `"name": "Score"`) {
+	if !strings.Contains(string(merged), `"generator": "wpix doc"`) || !strings.Contains(string(merged), `"name": "Score"`) {
 		t.Errorf("merged GOD: %.200s", merged)
 	}
 

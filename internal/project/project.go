@@ -1,5 +1,5 @@
 // Package project loads .weakpixel.json, the project settings file that gives
-// the tools (`weakpixel gen`, `weakpixel doc`, later the editor) their defaults. The
+// the tools (`wpix gen`, `wpix doc`, later the editor) their defaults. The
 // format is described in doc/guide/project-file.md.
 package project
 
@@ -38,7 +38,7 @@ type Settings struct {
 	// GODDocOut is god-doc's default output directory ("godDoc.out").
 	GODDocOut string
 
-	// SchemaOut is the folder `weakpixel schema` writes the JSON schemas
+	// SchemaOut is the folder `wpix schema` writes the JSON schemas
 	// into ("schema.out").
 	SchemaOut string
 
@@ -268,5 +268,5 @@ func checkObject(path string, obj map[string]json.RawMessage) []error {
 }
 
 // Keys lists the allowed keys per object path ("" is the top level), for
-// tools that describe the file, such as `weakpixel schema`.
+// tools that describe the file, such as `wpix schema`.
 func Keys() map[string][]string { return maps.Clone(known) }

@@ -4,7 +4,7 @@
 // [Encode], [Resolve]).
 //
 // Package anim's loaders are thin adapters over this package, and
-// `weakpixel anim` uses it to validate and create definitions on the command
+// `wpix anim` uses it to validate and create definitions on the command
 // line, so the loader and the tool cannot disagree about what a valid file
 // is. It imports the standard library only.
 //

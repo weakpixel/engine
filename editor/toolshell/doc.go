@@ -1,4 +1,4 @@
-// Package toolshell is the shell the weakpixel-editor tools run on: a
+// Package toolshell is the shell the wpix-editor tools run on: a
 // [game.Tool] on an engine with no game systems, so assets load through the
 // engine's asset server and the content is drawn by the engine's renderer.
 // The shell owns the viewport (pan, zoom, grid), the tool's [Panel] and,

@@ -60,6 +60,48 @@ func (s *Session) syncLocal(id string) {
 	}
 }
 
+// dragged follows a drag step that changed the Transform of object id: its
+// Local follows ([Session.syncLocal]), and its [hierarchy.PlaceAbsolute]
+// descendants are placed from their Local again, so that in edit mode they
+// move with the object like the rest of its group.
+func (s *Session) dragged(id string) {
+	s.syncLocal(id)
+	s.repositionAbsolute(id)
+}
+
+// repositionAbsolute calls [hierarchy.Reposition] on every PlaceAbsolute
+// descendant of the object id. It scans every Parent of the World: a tool
+// path, run once per drag step.
+func (s *Session) repositionAbsolute(id string) {
+	o := s.objs[id]
+	if o == nil {
+		return
+	}
+	w := s.e.World()
+	for e, p := range ecs.NewView1[hierarchy.Parent](w).Each() {
+		if p.Local.PlaceMode == hierarchy.PlaceAbsolute && descendsFrom(w, e, o.entity) {
+			// Reposition writes a field of the component in place: no
+			// structural change inside the Each.
+			hierarchy.Reposition(w, e)
+		}
+	}
+}
+
+// descendsFrom reports whether anc is an ancestor of e.
+func descendsFrom(w *ecs.World, e, anc ecs.Entity) bool {
+	for range hierarchy.MaxDepth {
+		p := ecs.GetCompOrNil[hierarchy.Parent](w, e)
+		if p == nil {
+			return false
+		}
+		if p.Entity == anc {
+			return true
+		}
+		e = p.Entity
+	}
+	return false
+}
+
 // emitPlacement reports the result of a drag of object id: its Parent for an
 // attached object, else its Transform.
 func (s *Session) emitPlacement(id string) {

@@ -10,7 +10,7 @@ import (
 	"github.com/weakpixel/engine/tools/internal/newgame"
 )
 
-// TestIntegration creates a game the way `weakpixel new` does, in a temp
+// TestIntegration creates a game the way `wpix new` does, in a temp
 // dir with a replace onto this checkout, builds it with the editor tag, runs
 // it headless through the tools and drives it: place an object, step, play,
 // pause, input, inspect, stop, read the logs. Nothing is written into the
@@ -26,7 +26,7 @@ func TestIntegration(t *testing.T) {
 	dir := filepath.Join(t.TempDir(), "mcpgame")
 	var log bytes.Buffer
 	if err := newgame.Run(newgame.Options{Dir: dir, Replace: root, NoGit: true}, &log, &log); err != nil {
-		t.Fatalf("weakpixel new: %v\n%s", err, log.String())
+		t.Fatalf("wpix new: %v\n%s", err, log.String())
 	}
 	s, p, tl, err := build(Options{ProjectOptions: ProjectOptions{Dir: dir, Game: ".", Tags: []string{"editor"}}})
 	if err != nil {
