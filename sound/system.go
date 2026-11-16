@@ -39,10 +39,13 @@ type AudioSystem struct {
 	backend  Backend
 	world    *ecs.World
 	emitters ecs.View1[gfx.SoundEmitter]
-	queue    *Queue
-	mixer    *Mixer
-	sounds   SoundStore
-	music    MusicStore
+	// transforms places emitters; a view resolves the component id once
+	// instead of per emitter and run (ecs.GetCompOrNil).
+	transforms ecs.View1[gfx.Transform]
+	queue      *Queue
+	mixer      *Mixer
+	sounds     SoundStore
+	music      MusicStore
 
 	voices  []voice
 	streams []*Stream
@@ -108,7 +111,12 @@ func NewAudioSystem(w *ecs.World, b Backend) *AudioSystem {
 	if b == nil {
 		b = NullBackend{}
 	}
-	return &AudioSystem{backend: b, world: w, emitters: ecs.NewView1[gfx.SoundEmitter](w)}
+	return &AudioSystem{
+		backend:    b,
+		world:      w,
+		emitters:   ecs.NewView1[gfx.SoundEmitter](w),
+		transforms: ecs.NewView1[gfx.Transform](w),
+	}
 }
 
 // Init implements system.Initializer. It caches the stores and the Queue
@@ -207,7 +215,7 @@ func (s *AudioSystem) runEmitters(l *Listener) {
 			continue
 		}
 		pan, atten := float32(0), float32(1)
-		if t := ecs.GetCompOrNil[gfx.Transform](s.world, e); t != nil {
+		if t := s.transforms.GetOrNil(e); t != nil {
 			pan, atten = l.place(t.Pos)
 		}
 		if em.Voice != 0 && em.Loop {

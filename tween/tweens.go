@@ -94,7 +94,7 @@ func poolFor[C, V any](tw *Tweens, lens *Lens[C, V]) *pool[C, V] {
 	} else {
 		tw.pools = append(tw.pools, make([]runner, int(lens.id)+1-len(tw.pools))...)
 	}
-	p := &pool[C, V]{lens: lens}
+	p := &pool[C, V]{lens: lens, view: ecs.NewView1[C](tw.world)}
 	tw.pools[lens.id] = p
 	tw.order = append(tw.order, p)
 	return p

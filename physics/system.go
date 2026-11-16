@@ -63,6 +63,13 @@ type System struct {
 	noVel   ecs.View2[gfx.Transform, Body] // bodies without a Velocity
 	follows ecs.View2[gfx.Transform, Follow]
 	movers  ecs.View3[gfx.Transform, collision.Collider, Touching] // MoveAndSlide movers: no Body
+	// Optional components looked up per body, contact and tick: views
+	// resolve the component ids once, where ecs.GetCompOrNil looks the
+	// type up per call.
+	colliders  ecs.View1[collision.Collider]
+	touchings  ecs.View1[Touching]
+	materials  ecs.View1[Material]
+	velocities ecs.View1[Velocity]
 
 	tileMats map[collision.TileGrid]Material
 
@@ -127,17 +134,21 @@ func NewSystem(w *ecs.World, cfg Config) *System {
 		gravity: cfg.Gravity, substeps: max(cfg.Substeps, 1), iters: cfg.Iterations,
 		defMat:   Material{Friction: 0.4},
 		resolver: cfg.Resolver, pre: cfg.PreSolve, post: cfg.PostSolve,
-		impacts: system.EventsOf[Impact](w),
-		view:    ecs.NewView3[gfx.Transform, Body, Velocity](w),
-		noVel:   ecs.NewView2[gfx.Transform, Body](w, ecs.Without[Velocity]()),
-		follows: ecs.NewView2[gfx.Transform, Follow](w),
-		movers:  ecs.NewView3[gfx.Transform, collision.Collider, Touching](w, ecs.Without[Body]()),
-		index:   map[ecs.Entity]int32{},
-		rides:   map[ecs.Entity]ride{},
-		pairs:   map[[2]ecs.Entity]int32{},
-		impSeen: map[impactKey]struct{}{},
-		impPrev: map[impactKey]struct{}{},
-		warm:    map[warmKey]warmImpulse{},
+		impacts:    system.EventsOf[Impact](w),
+		view:       ecs.NewView3[gfx.Transform, Body, Velocity](w),
+		noVel:      ecs.NewView2[gfx.Transform, Body](w, ecs.Without[Velocity]()),
+		follows:    ecs.NewView2[gfx.Transform, Follow](w),
+		movers:     ecs.NewView3[gfx.Transform, collision.Collider, Touching](w, ecs.Without[Body]()),
+		colliders:  ecs.NewView1[collision.Collider](w),
+		touchings:  ecs.NewView1[Touching](w),
+		materials:  ecs.NewView1[Material](w),
+		velocities: ecs.NewView1[Velocity](w),
+		index:      map[ecs.Entity]int32{},
+		rides:      map[ecs.Entity]ride{},
+		pairs:      map[[2]ecs.Entity]int32{},
+		impSeen:    map[impactKey]struct{}{},
+		impPrev:    map[impactKey]struct{}{},
+		warm:       map[warmKey]warmImpulse{},
 
 		warmNext: map[warmKey]warmImpulse{},
 	}

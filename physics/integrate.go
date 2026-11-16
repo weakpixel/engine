@@ -68,7 +68,7 @@ func (s *System) applyFollow(dt float32) {
 		if !f.started {
 			f.Target, f.started = c.Comp1.Pos, true
 		}
-		if v := ecs.GetCompOrNil[Velocity](s.w, e); v != nil {
+		if v := s.velocities.GetOrNil(e); v != nil {
 			v.Vel = f.Target.Sub(c.Comp1.Pos).Mul(1 / dt)
 		}
 	}
@@ -80,8 +80,8 @@ func (s *System) collect() {
 	clear(s.index)
 	for e, c := range s.view.Each() {
 		b := body{e: e, t: c.Comp1, b: c.Comp2, vel: &c.Comp3.Vel, carrier: -1}
-		b.col = ecs.GetCompOrNil[collision.Collider](s.w, e)
-		b.touching = ecs.GetCompOrNil[Touching](s.w, e)
+		b.col = s.colliders.GetOrNil(e)
+		b.touching = s.touchings.GetOrNil(e)
 		b.mat = s.materialOf(e)
 		if b.b.Kind == Dynamic {
 			m := massOf(b.b)
@@ -126,7 +126,7 @@ func (s *System) collect() {
 
 // materialOf returns e's Material or the default one.
 func (s *System) materialOf(e ecs.Entity) Material {
-	if m := ecs.GetCompOrNil[Material](s.w, e); m != nil {
+	if m := s.materials.GetOrNil(e); m != nil {
 		return *m
 	}
 	return s.defMat

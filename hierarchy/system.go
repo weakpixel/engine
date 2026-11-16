@@ -27,15 +27,32 @@ const MaxDepth = 32
 // its own Transform is kept, and it stands in for the root of its
 // descendants (see [place]).
 type System struct {
-	w     *ecs.World
-	view  ecs.View2[gfx.Transform, Parent]
-	dead  []ecs.Entity // reused; entities to delete after the loop
-	chain [MaxDepth]*Parent
+	w    *ecs.World
+	view ecs.View2[gfx.Transform, Parent]
+	// Optional components looked up per entity and tick: views resolve the
+	// component ids once, where ecs.GetCompOrNil looks the type up per call.
+	transforms ecs.View1[gfx.Transform]
+	parents    ecs.View1[Parent]
+	sprites    ecs.View1[gfx.Sprite]
+	nineSlices ecs.View1[gfx.NineSlice]
+	labels     ecs.View1[gfx.Label]
+	particles  ecs.View1[gfx.Particles]
+	dead       []ecs.Entity // reused; entities to delete after the loop
+	chain      [MaxDepth]*Parent
 }
 
 // NewSystem returns the System of w.
 func NewSystem(w *ecs.World) *System {
-	return &System{w: w, view: ecs.NewView2[gfx.Transform, Parent](w)}
+	return &System{
+		w:          w,
+		view:       ecs.NewView2[gfx.Transform, Parent](w),
+		transforms: ecs.NewView1[gfx.Transform](w),
+		parents:    ecs.NewView1[Parent](w),
+		sprites:    ecs.NewView1[gfx.Sprite](w),
+		nineSlices: ecs.NewView1[gfx.NineSlice](w),
+		labels:     ecs.NewView1[gfx.Label](w),
+		particles:  ecs.NewView1[gfx.Particles](w),
+	}
 }
 
 // Run implements system.Runner.
@@ -48,7 +65,7 @@ func (s *System) Run(*system.Context) {
 			s.dead = append(s.dead, e)
 			continue
 		}
-		world, rootY := place(s.w, e, s.chain[:n], root)
+		world, rootY := place(s.transforms, e, s.chain[:n], root)
 		t.Pos, t.Rot, t.Scale = world.Pos, world.Rot, world.Scale
 		if !p.placed {
 			t.PrevPos = t.Pos
@@ -82,7 +99,7 @@ func (s *System) walk(e ecs.Entity, p *Parent) (n int, root ecs.Entity, ok bool)
 		if !s.w.IsAlive(p.Entity) {
 			return n, p.Entity, false
 		}
-		pp := ecs.GetCompOrNil[Parent](s.w, p.Entity)
+		pp := s.parents.GetOrNil(p.Entity)
 		if pp == nil {
 			return n, p.Entity, true
 		}
@@ -97,10 +114,10 @@ func (s *System) walk(e ecs.Entity, p *Parent) (n int, root ecs.Entity, ok bool)
 // goes through it instead of reading it (the visiting order must not
 // matter); an absolute or root ancestor's layer is authored and read.
 func (s *System) writeLayers(e ecs.Entity, n int) {
-	sp := ecs.GetCompOrNil[gfx.Sprite](s.w, e)
-	ns := ecs.GetCompOrNil[gfx.NineSlice](s.w, e)
-	lb := ecs.GetCompOrNil[gfx.Label](s.w, e)
-	pt := ecs.GetCompOrNil[gfx.Particles](s.w, e)
+	sp := s.sprites.GetOrNil(e)
+	ns := s.nineSlices.GetOrNil(e)
+	lb := s.labels.GetOrNil(e)
+	pt := s.particles.GetOrNil(e)
 	if sp == nil && ns == nil && lb == nil && pt == nil {
 		return
 	}
@@ -136,19 +153,34 @@ func (s *System) writeLayers(e ecs.Entity, n int) {
 // drawnLayer returns the layer of e's first drawn component: Sprite, then
 // NineSlice, Label, Particles.
 func (s *System) drawnLayer(e ecs.Entity) (int16, bool) {
-	if sp := ecs.GetCompOrNil[gfx.Sprite](s.w, e); sp != nil {
+	if sp := s.sprites.GetOrNil(e); sp != nil {
 		return sp.Layer, true
 	}
-	if ns := ecs.GetCompOrNil[gfx.NineSlice](s.w, e); ns != nil {
+	if ns := s.nineSlices.GetOrNil(e); ns != nil {
 		return ns.Layer, true
 	}
-	if lb := ecs.GetCompOrNil[gfx.Label](s.w, e); lb != nil {
+	if lb := s.labels.GetOrNil(e); lb != nil {
 		return lb.Layer, true
 	}
-	if pt := ecs.GetCompOrNil[gfx.Particles](s.w, e); pt != nil {
+	if pt := s.particles.GetOrNil(e); pt != nil {
 		return pt.Layer, true
 	}
 	return 0, false
+}
+
+// transformSource finds an entity's Transform for place: the System's
+// View1, which resolved the component id once, or worldTransforms for the
+// helpers, which have only the World. Both are a single pointer, so passing
+// either as this interface does not allocate.
+type transformSource interface {
+	GetOrNil(e ecs.Entity) *gfx.Transform
+}
+
+// worldTransforms is the transformSource of a World without a view.
+type worldTransforms struct{ w *ecs.World }
+
+func (t worldTransforms) GetOrNil(e ecs.Entity) *gfx.Transform {
+	return ecs.GetCompOrNil[gfx.Transform](t.w, e)
 }
 
 // place returns the world transform of e, whose chain (e's Parent at index
@@ -163,7 +195,7 @@ func (s *System) drawnLayer(e ecs.Entity) (int16, bool) {
 // this run. The Y-sort key is the Y of that absolute link (placed or not) or
 // else of the root, so a child sorts by the part of the group that it moves
 // with.
-func place(w *ecs.World, e ecs.Entity, chain []*Parent, root ecs.Entity) (world gfx.Transform, sortY float32) {
+func place(transforms transformSource, e ecs.Entity, chain []*Parent, root ecs.Entity) (world gfx.Transform, sortY float32) {
 	abs := -1
 	for i, p := range chain {
 		if p.Local.PlaceMode == PlaceAbsolute {
@@ -180,7 +212,7 @@ func place(w *ecs.World, e ecs.Entity, chain []*Parent, root ecs.Entity) (world 
 			base = chain[abs-1].Entity
 		}
 	}
-	if t := ecs.GetCompOrNil[gfx.Transform](w, base); t != nil {
+	if t := transforms.GetOrNil(base); t != nil {
 		world = *t
 	}
 	sortY = world.Pos.Y

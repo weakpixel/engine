@@ -85,7 +85,7 @@ func WorldOf(w *ecs.World, e ecs.Entity) (gfx.Transform, bool) {
 	if n == 0 && !ecs.HasComp[gfx.Transform](w, e) {
 		return gfx.Transform{}, false
 	}
-	world, _ := place(w, e, chain[:n], root)
+	world, _ := place(worldTransforms{w}, e, chain[:n], root)
 	return world, true
 }
 

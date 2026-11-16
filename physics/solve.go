@@ -254,7 +254,7 @@ func (s *System) colliderOf(i int32, e ecs.Entity) (*collision.Collider, Materia
 	if i >= 0 {
 		return s.bodies[i].col, s.bodies[i].mat
 	}
-	return ecs.GetCompOrNil[collision.Collider](s.w, e), s.materialOf(e)
+	return s.colliders.GetOrNil(e), s.materialOf(e)
 }
 
 // mix combines the materials of a contact and computes its approach speed.
