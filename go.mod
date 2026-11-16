@@ -7,7 +7,7 @@ require (
 	github.com/hajimehoshi/ebiten/v2 v2.10.5
 	github.com/spf13/cobra v1.10.2
 	github.com/weakpixel/asset v0.0.1
-	github.com/weakpixel/ecs v0.0.1
+	github.com/weakpixel/ecs v0.0.2-0.20261116181306-538ee348430a
 	github.com/weakpixel/voice v0.0.2-0.20261111234614-67a64debf3ad
 	golang.org/x/image v0.47.0
 	golang.org/x/tools v0.52.0

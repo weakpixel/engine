@@ -185,7 +185,7 @@ Tweens use no randomness and no wall clock: the same ticks give the same values.
 
 ## Performance
 
-A running tween is a row in its lens's pool: per tick it costs one `ecs.GetCompOrNil`, one ease and one lerp. `Update` allocates nothing once the pools have grown, and `To` plus its options allocate nothing once the pools, the ID table and the overwrite map have room. Benchmarks are in [README.md](README.md#performance).
+A running tween is a row in its lens's pool: per tick it costs one component lookup (through a view the pool holds), one ease and one lerp. `Update` allocates nothing once the pools have grown, and `To` plus its options allocate nothing once the pools, the ID table and the overwrite map have room. Benchmarks are in [README.md](README.md#performance).
 
 ## Panics
 

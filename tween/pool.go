@@ -78,6 +78,9 @@ type runner interface {
 // for the row that moves.
 type pool[C, V any] struct {
 	lens *Lens[C, V]
+	// view finds a row's component: it resolved C's component id once,
+	// where ecs.GetCompOrNil[C] would look the type up on every row and tick.
+	view ecs.View1[C]
 	rows []track[V]
 }
 
@@ -146,7 +149,7 @@ func (p *pool[C, V]) run(tw *Tweens, dt float32) {
 			i++
 			continue
 		}
-		c := ecs.GetCompOrNil[C](w, r.entity)
+		c := p.view.GetOrNil(r.entity)
 		if c == nil {
 			tw.drop(r.id)
 			p.remove(tw, i)
@@ -241,7 +244,7 @@ func (p *pool[C, V]) complete(tw *Tweens, row int32) {
 	r := &p.rows[row]
 	var c *C
 	if tw.world.IsAlive(r.entity) {
-		c = ecs.GetCompOrNil[C](tw.world, r.entity)
+		c = p.view.GetOrNil(r.entity)
 	}
 	if c == nil {
 		tw.drop(r.id)

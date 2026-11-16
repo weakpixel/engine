@@ -41,8 +41,8 @@ github.com/srwiley/rasterx v0.0.0-20220730225603-2ab79fcdd4ef h1:Ch6Q+AZUxDBCVqd
 github.com/srwiley/rasterx v0.0.0-20220730225603-2ab79fcdd4ef/go.mod h1:nXTWP6+gD5+LUJ8krVhhoeHjvHTutPxMYl5SvkcnJNE=
 github.com/weakpixel/asset v0.0.1 h1:PkIXVQgU2Jm8iqQQ75jy6u2W7YTLKkLttg54CwDXJww=
 github.com/weakpixel/asset v0.0.1/go.mod h1:IWIyoGqh0kDCigC0dddKrsxV929ft9S/TX6f8MlJs5I=
-github.com/weakpixel/ecs v0.0.1 h1:9gEO/+v4XPiijeVScJHgcY3uTxCZqkCOzL77WcyVod0=
-github.com/weakpixel/ecs v0.0.1/go.mod h1:iJRzQcdyAGwEnlk4mye+SKEul2CEG6X6i+THoivQjLE=
+github.com/weakpixel/ecs v0.0.2-0.20261116181306-538ee348430a h1:7L9iR/HTopLtYMiFhCJe+0TmXgzJ+6JlmZJjRpjrXA8=
+github.com/weakpixel/ecs v0.0.2-0.20261116181306-538ee348430a/go.mod h1:iJRzQcdyAGwEnlk4mye+SKEul2CEG6X6i+THoivQjLE=
 github.com/weakpixel/voice v0.0.2-0.20261111234614-67a64debf3ad h1:Kg6+k4YQTbKwjZ04R74WFi8NZXlZTu/1nLhFEvvP3xM=
 github.com/weakpixel/voice v0.0.2-0.20261111234614-67a64debf3ad/go.mod h1:0KkdMBJnWbP6MWvI41k2COn+XnImxWoY+rgYb+7eY3Q=
 go.yaml.in/yaml/v3 v3.0.4/go.mod h1:DhzuOOF2ATzADvBadXxruRBLzYTpT36CKvDb3+aBEFg=

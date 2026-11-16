@@ -87,7 +87,7 @@ Measured on an Intel i7-9750H (`go test ./... -run '^$' -bench . -benchmem` at t
 
 `particles.System` and `particles.Extract` ([particles.md](particles.md)), 10,000 live particles (Xeon 2.8 GHz, `go test -bench Particle ./particles/`): the simulation takes about 72 µs for one emitter and about 79 µs for 100 emitters of 100, the extract about 375 µs (100 emitters: 390 µs); 0 allocs.
 
-`tween.System` ([tweens.md](tweens.md)), 10,000 running tweens (Xeon 2.1 GHz, `go test -bench Tween ./tween/`): about 0.46 ms for 10k on `Pos` with `InOutSine`, about 0.34 ms for 10k spread over `Pos`, `Scale`, `Tint` and `Param(0)` on 2,500 entities; 0 allocs. Most of the time is the component lookup (`ecs.GetCompOrNil`) and the sine of the ease.
+`tween.System` ([tweens.md](tweens.md)), 10,000 running tweens (Xeon 2.1 GHz, `go test -bench Tween ./tween/`): about 0.34 ms for 10k on `Pos` with `InOutSine`, about 0.24 ms for 10k spread over `Pos`, `Scale`, `Tint` and `Param(0)` on 2,500 entities; 0 allocs. Each pool looks its component up through a view, so the type is resolved once per pool, not per tween.
 
 `sound.AudioSystem.Run` allocates nothing in steady state either; starting a voice allocates its Ebiten player.
 

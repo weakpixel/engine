@@ -24,15 +24,32 @@ const MaxDepth = 32
 //
 // A root without a Transform counts as a zero Transform.
 type System struct {
-	w     *ecs.World
-	view  ecs.View2[gfx.Transform, Parent]
-	dead  []ecs.Entity // reused; entities to delete after the loop
-	chain [MaxDepth]*Parent
+	w    *ecs.World
+	view ecs.View2[gfx.Transform, Parent]
+	// Optional components looked up per entity and tick: views resolve the
+	// component ids once, where ecs.GetCompOrNil looks the type up per call.
+	transforms ecs.View1[gfx.Transform]
+	parents    ecs.View1[Parent]
+	sprites    ecs.View1[gfx.Sprite]
+	nineSlices ecs.View1[gfx.NineSlice]
+	labels     ecs.View1[gfx.Label]
+	particles  ecs.View1[gfx.Particles]
+	dead       []ecs.Entity // reused; entities to delete after the loop
+	chain      [MaxDepth]*Parent
 }
 
 // NewSystem returns the System of w.
 func NewSystem(w *ecs.World) *System {
-	return &System{w: w, view: ecs.NewView2[gfx.Transform, Parent](w)}
+	return &System{
+		w:          w,
+		view:       ecs.NewView2[gfx.Transform, Parent](w),
+		transforms: ecs.NewView1[gfx.Transform](w),
+		parents:    ecs.NewView1[Parent](w),
+		sprites:    ecs.NewView1[gfx.Sprite](w),
+		nineSlices: ecs.NewView1[gfx.NineSlice](w),
+		labels:     ecs.NewView1[gfx.Label](w),
+		particles:  ecs.NewView1[gfx.Particles](w),
+	}
 }
 
 // Run implements system.Runner.
@@ -46,7 +63,7 @@ func (s *System) Run(*system.Context) {
 			continue
 		}
 		world := gfx.Transform{}
-		if rt := ecs.GetCompOrNil[gfx.Transform](s.w, root); rt != nil {
+		if rt := s.transforms.GetOrNil(root); rt != nil {
 			world = *rt
 		}
 		rootY := world.Pos.Y
@@ -86,7 +103,7 @@ func (s *System) walk(e ecs.Entity, p *Parent) (n int, root ecs.Entity, ok bool)
 		if !s.w.IsAlive(p.Entity) {
 			return n, p.Entity, false
 		}
-		pp := ecs.GetCompOrNil[Parent](s.w, p.Entity)
+		pp := s.parents.GetOrNil(p.Entity)
 		if pp == nil {
 			return n, p.Entity, true
 		}
@@ -101,10 +118,10 @@ func (s *System) walk(e ecs.Entity, p *Parent) (n int, root ecs.Entity, ok bool)
 // goes through it instead of reading it (the visiting order must not
 // matter); an absolute or root ancestor's layer is authored and read.
 func (s *System) writeLayers(e ecs.Entity, n int) {
-	sp := ecs.GetCompOrNil[gfx.Sprite](s.w, e)
-	ns := ecs.GetCompOrNil[gfx.NineSlice](s.w, e)
-	lb := ecs.GetCompOrNil[gfx.Label](s.w, e)
-	pt := ecs.GetCompOrNil[gfx.Particles](s.w, e)
+	sp := s.sprites.GetOrNil(e)
+	ns := s.nineSlices.GetOrNil(e)
+	lb := s.labels.GetOrNil(e)
+	pt := s.particles.GetOrNil(e)
 	if sp == nil && ns == nil && lb == nil && pt == nil {
 		return
 	}
@@ -140,16 +157,16 @@ func (s *System) writeLayers(e ecs.Entity, n int) {
 // drawnLayer returns the layer of e's first drawn component: Sprite, then
 // NineSlice, Label, Particles.
 func (s *System) drawnLayer(e ecs.Entity) (int16, bool) {
-	if sp := ecs.GetCompOrNil[gfx.Sprite](s.w, e); sp != nil {
+	if sp := s.sprites.GetOrNil(e); sp != nil {
 		return sp.Layer, true
 	}
-	if ns := ecs.GetCompOrNil[gfx.NineSlice](s.w, e); ns != nil {
+	if ns := s.nineSlices.GetOrNil(e); ns != nil {
 		return ns.Layer, true
 	}
-	if lb := ecs.GetCompOrNil[gfx.Label](s.w, e); lb != nil {
+	if lb := s.labels.GetOrNil(e); lb != nil {
 		return lb.Layer, true
 	}
-	if pt := ecs.GetCompOrNil[gfx.Particles](s.w, e); pt != nil {
+	if pt := s.particles.GetOrNil(e); pt != nil {
 		return pt.Layer, true
 	}
 	return 0, false

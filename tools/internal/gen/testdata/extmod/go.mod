@@ -3,7 +3,7 @@ module extmod
 go 1.27
 
 require (
-	github.com/weakpixel/ecs v0.0.1
+	github.com/weakpixel/ecs v0.0.2-0.20261116181306-538ee348430a
 	github.com/weakpixel/engine v0.0.0-00010101000000-000000000000
 )
 
