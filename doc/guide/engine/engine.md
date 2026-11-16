@@ -61,7 +61,7 @@ assets, snapshot | input, simulate, camera, post | hierarchy, anim, render-prepa
 With `Config.Startup` set, the game shows a startup screen from its first frame until the initial assets have loaded, and for at least 5 seconds even when loading is faster. nil, the default, shows none. A project made with `wpix new` turns it on in its `main` (not in its tests or editor build).
 
 ```go
-// The default: the Weakpixel Engine image on a dark background.
+// The default: the Weakpixel engine image on a dark background.
 cfg.Startup = &game.StartupConfig{}
 
 // Replace the default, or add screens before or after it.

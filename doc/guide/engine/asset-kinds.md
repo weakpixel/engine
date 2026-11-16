@@ -169,7 +169,7 @@ img := asset.StoreOf[render.Texture](srv).Get(th).Image // valid until the next 
 
 **What it is.** A compiled [Kage](https://ebitengine.org/en/documents/shader.html) shader from a `.kage` file. A compile error fails the asset with the compiler message (see `ShaderStore.Err` or `Options.OnError`). So does a shader that declares a uniform the renderer sets with another type (`var Params float` instead of `vec4`, or `Time` as anything but `float`), so that mismatch never panics while drawing.
 
-**What it is used for.** Per-sprite effects (hit flashes, outlines, palette swaps): put the handle in `Sprite.Shader` and drive it with `Sprite.Params` ([shaders](shaders.md)). Layer and full-screen shaders are not built yet. In draw code you write with Ebiten, the zero handle and the placeholder have a nil `Shader` field: treat nil as "draw normally".
+**What it is used for.** Per-sprite effects (hit flashes, outlines, palette swaps): put the handle in `Sprite.Shader` and drive it with `Sprite.Params` ([shaders](shaders.md)). Shaders also run on [layer groups](shaders.md#layer-groups) and on the whole frame ([post-processing](shaders.md#post-processing)). In draw code you write with Ebiten, the zero handle and the placeholder have a nil `Shader` field: treat nil as "draw normally".
 
 ```go
 flash := render.LoadShader(sc, "fx/flash.kage")

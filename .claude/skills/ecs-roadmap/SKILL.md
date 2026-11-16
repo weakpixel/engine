@@ -3,7 +3,7 @@ name: ecs-roadmap
 description: Use to check ECS implementation status, sequencing, or what's next; cross-check design docs, code, and plan files.
 ---
 
-# Weakpixel Engine implementation roadmap
+# Weakpixel engine implementation roadmap
 
 The docs in `doc/` are the spec (see CLAUDE.md). Use this skill to identify current work, not as a second status ledger.
 

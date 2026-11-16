@@ -6,7 +6,7 @@ model: haiku
 
 # Documentation writer
 
-Write documentation for the Weakpixel Engine. This skill runs on the Haiku model, so keep to the rules below and verify claims against the code instead of guessing.
+Write documentation for the Weakpixel engine. This skill runs on the Haiku model, so keep to the rules below and verify claims against the code instead of guessing.
 
 ## Before writing
 

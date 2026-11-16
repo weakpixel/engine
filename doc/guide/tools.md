@@ -66,7 +66,7 @@ go run ./tools/wpix anim validate chars/player.anim.json [more.anim.json ...]
 go run ./tools/wpix anim create --file chars/player.json [-o chars/player.anim.json | -o -] [--force]   # --file is also -f
 ```
 
-`validate` checks a definition against its Aseprite sheet with the loader's rules; `create` writes a starter definition. Output, levels and flags: [Animation: wpix anim](engine/animation.md#tooling-weakpixel-anim).
+`validate` checks a definition against its Aseprite sheet with the loader's rules; `create` writes a starter definition. Output, levels and flags: [Animation: wpix anim](engine/animation.md#tooling-wpix-anim).
 
 ## assets
 
