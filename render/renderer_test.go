@@ -230,10 +230,11 @@ func TestDrawShaderStats(t *testing.T) {
 	q.Sprite(0, sprite, gfx.Vec2{}, gfx.Vec2{})
 	q.Push(Item{Kind: KindRect, Shader: flash, Scale: gfx.Vec2{X: 1, Y: 1}, Size: gfx.Vec2{X: 4, Y: 4}})
 	r.Draw(newTarget(16, 16), &q, &Camera{}, 1)
-	// The shaded sprite, then one batch of the two unshaded sprites and one
-	// of the rect's four edges (the rect ignores Shader).
-	if st := r.Stats(); st.Items != 4 || st.DrawCalls != 3 || st.Quads != 2+4 || st.ShadedQuads != 1 || st.ShaderDraws != 1 {
-		t.Fatalf("Stats = %+v, want 4 items, 3 draw calls, 6 quads, 1 shaded quad, 1 shader draw", st)
+	// The shaded sprite, then one batch of the two unshaded sprites, then
+	// the rect: its four edges into the scratch image and that as one more
+	// shaded quad.
+	if st := r.Stats(); st.Items != 4 || st.DrawCalls != 4 || st.Quads != 2+4 || st.ShadedQuads != 2 || st.ShaderDraws != 2 {
+		t.Fatalf("Stats = %+v, want 4 items, 4 draw calls, 6 quads, 2 shaded quads, 2 shader draws", st)
 	}
 }
 

@@ -117,12 +117,18 @@ type Item struct {
 	Color gfx.Color
 	Blend Blend
 
-	// Shader draws a KindSprite or KindCanvas item through a Kage shader
-	// instead of the default pipeline; other kinds ignore it. The zero
-	// handle, and a shader that is loading or failed, draw the item normally.
-	// The shader gets the sprite (or canvas) image as imageSrc0, Color (premultiplied) as the color
-	// argument of Fragment, and Params as the "Params" vec4 uniform (see
-	// [ShaderUniformParams]).
+	// Shader draws the item through a Kage shader instead of the default
+	// pipeline. The zero handle, and a shader that is loading or failed,
+	// draw the item normally. The shader gets the item's image as
+	// imageSrc0, Color (premultiplied) as the color argument of Fragment,
+	// and Params as the "Params" vec4 uniform (see [ShaderUniformParams]).
+	//
+	// For KindSprite and KindCanvas the image is the sprite's frame or the
+	// canvas. A KindText, KindNineSlice, KindRect, KindLine or KindCircle
+	// item is first drawn white, at scale 1 and unrotated, into an
+	// offscreen image with a transparent margin of 4 pixels; the shader
+	// gets that image, so it sees the whole text, panel or shape. Each such
+	// item is a draw call of its own.
 	Shader gfx.ShaderHandle
 	// Params are per-item shader parameters (a flash amount, an outline
 	// color, a dissolve threshold): what they mean is up to the shader.

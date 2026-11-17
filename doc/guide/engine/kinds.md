@@ -11,7 +11,7 @@ The kinds an asset field can name in `+game:asset:kind=...`, interpreted by `res
 | `sprite` | whole image or atlas frame | `render.Sprite` | `Sprite.ID` | `gfx.SpriteHandle` | `"ui/cursor.png"`, `"chars/player.aseprite.json#idle_0"` |
 | `clip` | Aseprite tag (from the export or an `*.anim.json`) | `anim.Clip` | `Animator.Clip` | `gfx.ClipHandle` | `"chars/player.aseprite.json#run"` |
 | `font` | font at a size | `render.Font` | `Label.Font` | `gfx.FontHandle` | `"fonts/ui.ttf#16"` |
-| `shader` | compiled Kage shader | `render.Shader` | `Sprite.Shader` | `gfx.ShaderHandle` | `"fx/flash.kage"` |
+| `shader` | compiled Kage shader | `render.Shader` | `Sprite.Shader`, `Label.Shader`, `NineSlice.Shader` | `gfx.ShaderHandle` | `"fx/flash.kage"` |
 | `sound` | effect, decoded to PCM | `sound.Sound` | `SoundEmitter.Sound` | `gfx.SoundHandle` | `"sfx/hit.wav"` |
 | `music` | track, streamed | `sound.Music` | none in `gfx` (use it in your own components) | `gfx.MusicHandle` | `"music/level1.ogg"` |
 | `effect` | particle effect (`*.fx.json`) | `particles.Effect` | `Particles.Effect` | `gfx.EffectHandle` | `"global/fx/sparks.fx.json"` |

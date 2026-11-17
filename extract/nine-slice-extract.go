@@ -108,5 +108,6 @@ func pushNineSlice(q *render.Queue, space render.Space, t *gfx.Transform, ns *gf
 		Rot: t.Rot, Scale: scaleOrOne(t.Scale), Origin: ns.Origin,
 		Size: ns.Size, Insets: ns.Insets, Tile: ns.Tile,
 		Color: ns.Tint, Blend: render.Blend(ns.Blend),
+		Shader: ns.Shader, Params: ns.Params,
 	})
 }

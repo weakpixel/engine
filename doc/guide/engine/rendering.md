@@ -131,7 +131,7 @@ The renderer batches for you; there is nothing to enable. Unshaded sprites, tile
 
 - Put sprites that are drawn together into one atlas: all frames of one texture batch, all tiles of one tileset too.
 - Keep additive or multiply sprites (particles, lights; see [particles.md](particles.md)) on their own layer, so they do not alternate with normal ones.
-- Text and layer group boundaries end the current batch. Shaded sprites batch among themselves: consecutive ones with the same shader, frame, blend mode and `Params` are one draw call (particles of one effect, for example), and a different frame or `Params` starts a new one ([shaders guide](shaders.md#performance)). In a Y-sorted layer, sprites of different textures interleave by Y and batch less.
+- Text and layer group boundaries end the current batch, and so does every shaded text, nine-slice or shape ([shaders guide](shaders.md#text-panels-and-shapes)). Shaded sprites batch among themselves: consecutive ones with the same shader, frame, blend mode and `Params` are one draw call (particles of one effect, for example), and a different frame or `Params` starts a new one ([shaders guide](shaders.md#performance)). In a Y-sorted layer, sprites of different textures interleave by Y and batch less.
 
 `Stats.Quads` counts the batched unshaded quads, `Stats.ShadedQuads` the shaded ones, and `Stats.DrawCalls` the calls they took: 10,000 tiles of one tileset are one draw call.
 

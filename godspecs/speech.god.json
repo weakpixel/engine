@@ -31,6 +31,22 @@
             "minimum": -32768,
             "maximum": 32767
           },
+          "Params": {
+            "type": "array",
+            "description": "Params are passed to Shader as its \"Params\" vec4 uniform; their meaning\nis up to the shader.",
+            "items": {
+              "type": "number",
+              "format": "float"
+            },
+            "minItems": 4,
+            "maxItems": 4
+          },
+          "Shader": {
+            "type": "string",
+            "format": "asset",
+            "description": "Shader draws the text through a Kage shader. The shader gets the whole\ntext as one image, with a transparent margin of 4 pixels around it for\noutlines and glows, and Color as its color argument. The zero handle,\nand a shader that is still loading or failed, draw the text normally.\nA shaded text is a draw call of its own. In the Game Object schema it\nis an asset key (\"fx/outline.kage\"); the handle is runtime-only\n(json:\"-\").",
+            "x-asset": "shader"
+          },
           "Text": {
             "type": "string",
             "description": "Text is the string to draw."
