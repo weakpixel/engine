@@ -241,7 +241,7 @@ Any other `*.json` loaded as an atlas, hash or array form. Trim and pivot data a
 
 ## Which kinds can be authored in levels (GOD)
 
-Component fields marked `+game:asset` are written as keys in prefab and level JSON, and `resolver` turns them into handles. Eight kinds exist: `sprite` (`Sprite.ID`), `clip` (`Animator.Clip`), `font` (`Label.Font`), `shader` (`Sprite.Shader`), `sound` (`SoundEmitter.Sound`), `effect` (`Particles.Effect`), `music` and `prefab` (the last two have no `gfx` field; use them in your own components). Package `speech` adds `voice` and `dialogue` ([speech](speech.md)). See [game-objects.md](game-objects.md) and [kinds.md](kinds.md#asset-kinds).
+Component fields marked `+game:asset` are written as keys in prefab and level JSON, and `resolver` turns them into handles. Eight kinds exist: `sprite` (`Sprite.ID`, `Sprite.Aux`), `clip` (`Animator.Clip`), `font` (`Label.Font`), `shader` (`Sprite.Shader`, `Label.Shader`, `NineSlice.Shader`), `sound` (`SoundEmitter.Sound`), `effect` (`Particles.Effect`), `music` and `prefab` (the last two have no `gfx` field; use them in your own components). Package `speech` adds `voice` and `dialogue` ([speech](speech.md)). See [game-objects.md](game-objects.md) and [kinds.md](kinds.md#asset-kinds).
 
 ## Your own kinds
 

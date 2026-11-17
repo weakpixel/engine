@@ -59,6 +59,15 @@ type Sprite struct {
 	// is up to the shader. Animate them instead of swapping shaders: changing
 	// a field does not move the entity between archetypes.
 	Params [4]float32 `json:",omitzero"`
+	// Aux is a second image for Shader (a noise texture for a dissolve, a
+	// mask, a palette), which the shader reads as imageSrc1; without Shader
+	// it is ignored. The zero handle, and a sprite that is loading or
+	// failed, give the shader no image (transparent pixels). In the Game
+	// Object schema it is an asset key ("fx/noise.png"); the handle is
+	// runtime-only (json:"-").
+	//
+	// +game:asset:kind=sprite
+	Aux SpriteHandle `json:"-"`
 	// Hidden skips the sprite. It is a field and not a tag so that toggling
 	// it does not move the entity between archetypes.
 	Hidden bool
@@ -406,6 +415,19 @@ type NineSlice struct {
 	// Tile repeats the edges and the center at the image's pixel size instead
 	// of stretching them. The last repeat in a row or column is cropped.
 	Tile bool
+	// Shader draws the panel through a Kage shader. The shader gets the
+	// whole panel at its Size as one image, with a transparent margin of 4
+	// pixels around it for outlines and glows, and Tint as its color
+	// argument. The zero handle, and a shader that is still loading or
+	// failed, draw the panel normally. A shaded panel is a draw call of its
+	// own. In the Game Object schema it is an asset key ("fx/outline.kage");
+	// the handle is runtime-only (json:"-").
+	//
+	// +game:asset:kind=shader
+	Shader ShaderHandle `json:"-"`
+	// Params are passed to Shader as its "Params" vec4 uniform; their meaning
+	// is up to the shader.
+	Params [4]float32 `json:",omitzero"`
 	// Hidden skips the panel. It is a field and not a tag so that toggling it
 	// does not move the entity between archetypes.
 	Hidden bool
@@ -431,6 +453,19 @@ type Label struct {
 	Layer int16
 	// Color is the text color. Zero means white.
 	Color Color
+	// Shader draws the text through a Kage shader. The shader gets the whole
+	// text as one image, with a transparent margin of 4 pixels around it for
+	// outlines and glows, and Color as its color argument. The zero handle,
+	// and a shader that is still loading or failed, draw the text normally.
+	// A shaded text is a draw call of its own. In the Game Object schema it
+	// is an asset key ("fx/outline.kage"); the handle is runtime-only
+	// (json:"-").
+	//
+	// +game:asset:kind=shader
+	Shader ShaderHandle `json:"-"`
+	// Params are passed to Shader as its "Params" vec4 uniform; their meaning
+	// is up to the shader.
+	Params [4]float32 `json:",omitzero"`
 }
 
 // ShapeKind selects what a DebugShape draws.

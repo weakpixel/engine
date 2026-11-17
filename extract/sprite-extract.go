@@ -99,6 +99,6 @@ func pushSprite(q *render.Queue, space render.Space, t *gfx.Transform, sp *gfx.S
 		Sprite: sp.ID, Pos: t.Pos, PrevPos: t.PrevPos,
 		Rot: t.Rot, Scale: scaleOrOne(t.Scale), Origin: sp.Origin,
 		FlipX: sp.FlipX, FlipY: sp.FlipY, Color: sp.Tint, Blend: render.Blend(sp.Blend),
-		Shader: sp.Shader, Params: sp.Params,
+		Shader: sp.Shader, Params: sp.Params, Aux: sp.Aux,
 	})
 }

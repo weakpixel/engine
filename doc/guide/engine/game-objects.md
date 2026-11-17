@@ -54,7 +54,7 @@ Both fields need `json:"-"`, cannot be combined, and `asset` needs a `kind`. Not
 
 ## Asset kinds
 
-The engine has eight kinds: `sprite` (`Sprite.ID`), `clip` (`Animator.Clip`), `font` (`Label.Font`), `shader` (`Sprite.Shader`), `sound` (`SoundEmitter.Sound`), `effect` (`Particles.Effect`) and `music` and `prefab` (no `gfx` field; for your own components). Package `speech` adds `voice` (`speech.Speaker.Voice`, a `gfx.VoiceHandle`; a `*.voice.json` key or a starter name such as `"chirpy"`) and `dialogue` (a `gfx.DialogueHandle`). Handles, Go types and key examples: [kinds.md](kinds.md#asset-kinds).
+The engine has eight kinds: `sprite` (`Sprite.ID`), `clip` (`Animator.Clip`), `font` (`Label.Font`), `shader` (`Sprite.Shader`, `Label.Shader`, `NineSlice.Shader`), `sound` (`SoundEmitter.Sound`), `effect` (`Particles.Effect`) and `music` and `prefab` (no `gfx` field; for your own components). Package `speech` adds `voice` (`speech.Speaker.Voice`, a `gfx.VoiceHandle`; a `*.voice.json` key or a starter name such as `"chirpy"`) and `dialogue` (a `gfx.DialogueHandle`). Handles, Go types and key examples: [kinds.md](kinds.md#asset-kinds).
 
 The resolver itself knows no kind. The package that owns an asset type registers its kinds in `assetkind` from an `init` function, so a kind exists in every program that links its owner. Add your own the same way: [Custom kinds](#custom-kinds).
 

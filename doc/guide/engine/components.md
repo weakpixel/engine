@@ -30,6 +30,7 @@ e := ecs.NewEntity2(w,
 | `Sprite.Origin` | the sprite's own default pivot (usually center). Written per frame by the `AnimationSystem` if the clip has a pivot |
 | `Sprite.ID`, `Animator.Clip`, `Label.Font`, `SoundEmitter.Sound` | none: placeholder / untouched / silent |
 | `Sprite.Shader` | no shader: the sprite draws normally |
+| `Sprite.Aux` | no second image: the shader's `imageSrc1` is transparent |
 | `SoundEmitter.Volume` | 1 (negative is silent) |
 | `SoundEmitter.Bus` | `sound.BusSFX` |
 | `Particles` fields | zero values: see [particles.md](particles.md#the-component); the effect itself has defaults per key, see [the effect file](particles.md#the-effect-file) |
@@ -58,6 +59,7 @@ gfx.Transform{Pos: p, PrevPos: p, Rot: 0, Scale: gfx.Vec2{X: 2, Y: 2}}
 | `Blend Blend` | how the sprite lands on what is below (`gfx.Blend`, the same values as `render.Blend`, see [kinds](kinds.md#blend-modes-renderblend)). Zero is normal. Give blended sprites a layer of their own so they batch |
 | `Shader ShaderHandle` | draws the sprite through a Kage shader (asset kind `shader`); see [shaders](shaders.md) |
 | `Params [4]float32` | the shader's `Params` vec4 uniform. Optional in GOD files (absent means zeros). Animate it rather than swapping shaders |
+| `Aux SpriteHandle` | a second image for the shader, read as `imageSrc1` (asset kind `sprite`, optional); see [a second image](shaders.md#a-second-image) |
 | `Hidden bool` | skip drawing. A field, not a tag, so toggling it does not move the entity between archetypes |
 
 ```go
@@ -95,7 +97,7 @@ box := ecs.NewEntity2(w, gfx.Transform{Pos: gfx.Vec2{X: 16, Y: 260}}, gfx.Screen
 ecs.GetComp[gfx.ScreenNineSlice](w, box).NineSlice.Size.X = 200
 ```
 
-`ScreenNineSlice{NineSlice: ns}` is the same in screen space (HUD, UI): `Transform.Pos` is in logical screen pixels, the camera is ignored and there is no culling. In a world, a `NineSlice` is culled with its size taken into account, so a panel whose pivot is off screen but whose body is visible is kept; a panel with a zero `Size` has nothing to add, so grow `NineSliceExtract.Margin` for those. The `gfx:Panel` object (`Transform`, `NineSlice`) places one in a level; the inspector shows `Insets` and `Size` as number fields and `ID` as a sprite asset field.
+`ScreenNineSlice{NineSlice: ns}` is the same in screen space (HUD, UI): `Transform.Pos` is in logical screen pixels, the camera is ignored and there is no culling. In a world, a `NineSlice` is culled with its size taken into account, so a panel whose pivot is off screen but whose body is visible is kept; a panel with a zero `Size` has nothing to add, so grow `NineSliceExtract.Margin` for those. The `gfx:Panel` object (`Transform`, `NineSlice`) places one in a level; the inspector shows `Insets` and `Size` as number fields and `ID` as a sprite asset field. `Shader` and `Params` draw the whole panel through a shader ([shaders guide](shaders.md#text-panels-and-shapes)).
 
 ## Label
 
@@ -104,7 +106,7 @@ font := render.LoadFont(sc, "fonts/ui.ttf#16")
 ecs.NewEntity2(w, gfx.Transform{Pos: gfx.Vec2{X: 8, Y: 8}}, gfx.Label{Text: "Score: 0", Font: font, Layer: 10})
 ```
 
-Drawn in screen space, not culled. Text may allocate (Ebiten's layout).
+Drawn in screen space, not culled. Text may allocate (Ebiten's layout). `Shader` and `Params` draw the text through a shader, for outlines and glows ([shaders guide](shaders.md#text-panels-and-shapes)).
 
 ## DebugShape
 

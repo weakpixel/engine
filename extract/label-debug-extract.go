@@ -32,6 +32,7 @@ func (s *LabelExtract) Run(ctx *system.Context) {
 			Kind: render.KindText, Space: render.ScreenSpace, Layer: l.Layer,
 			Pos: t.Pos, PrevPos: t.PrevPos, Rot: t.Rot, Scale: scaleOrOne(t.Scale),
 			Color: l.Color, Text: l.Text, Font: l.Font,
+			Shader: l.Shader, Params: l.Params,
 		})
 	}
 }

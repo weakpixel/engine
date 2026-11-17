@@ -230,10 +230,11 @@ func TestDrawShaderStats(t *testing.T) {
 	q.Sprite(0, sprite, gfx.Vec2{}, gfx.Vec2{})
 	q.Push(Item{Kind: KindRect, Shader: flash, Scale: gfx.Vec2{X: 1, Y: 1}, Size: gfx.Vec2{X: 4, Y: 4}})
 	r.Draw(newTarget(16, 16), &q, &Camera{}, 1)
-	// The shaded sprite, then one batch of the two unshaded sprites and one
-	// of the rect's four edges (the rect ignores Shader).
-	if st := r.Stats(); st.Items != 4 || st.DrawCalls != 3 || st.Quads != 2+4 || st.ShadedQuads != 1 || st.ShaderDraws != 1 {
-		t.Fatalf("Stats = %+v, want 4 items, 3 draw calls, 6 quads, 1 shaded quad, 1 shader draw", st)
+	// The shaded sprite, then one batch of the two unshaded sprites, then
+	// the rect: its four edges into the scratch image and that as one more
+	// shaded quad.
+	if st := r.Stats(); st.Items != 4 || st.DrawCalls != 4 || st.Quads != 2+4 || st.ShadedQuads != 2 || st.ShaderDraws != 2 {
+		t.Fatalf("Stats = %+v, want 4 items, 4 draw calls, 6 quads, 2 shaded quads, 2 shader draws", st)
 	}
 }
 
@@ -281,6 +282,43 @@ func TestDrawShadedBatches(t *testing.T) {
 			st := r.Stats()
 			if st.DrawCalls != tc.calls || st.ShadedQuads != shaded || st.ShaderDraws != tc.calls-(len(tc.sprites)-shaded) {
 				t.Fatalf("Stats = %+v, want %d draw calls, %d shaded quads", st, tc.calls, shaded)
+			}
+		})
+	}
+}
+
+// TestDrawShadedAuxBatches checks that Item.Aux is part of the shaded batch
+// key: equal second images share a draw call, different ones do not, and a
+// failed one counts as none.
+func TestDrawShadedAuxBatches(t *testing.T) {
+	files := fstest.MapFS{"fx/a.kage": textFile(kageFlash)}
+	e := newAssetEnv(t, files, 0)
+	frames := e.loadSheet(files, "s", 3)
+	sc := e.srv.NewScope("fx")
+	sh := LoadShader(sc, "fx/a.kage")
+	failed := LoadSprite(sc, "missing.png")
+	e.settle(sc)
+	r := NewRenderer(StoresOf(e.srv))
+	none := gfx.SpriteHandle{}
+	for _, tc := range []struct {
+		name  string
+		aux   []gfx.SpriteHandle
+		calls int
+	}{
+		{"equal", []gfx.SpriteHandle{frames[1], frames[1], frames[1]}, 1},
+		{"different", []gfx.SpriteHandle{frames[1], frames[2], frames[2]}, 2},
+		{"none then one", []gfx.SpriteHandle{none, frames[1]}, 2},
+		{"failed is none", []gfx.SpriteHandle{none, failed, none}, 1},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var q Queue
+			for _, aux := range tc.aux {
+				it := q.Sprite(0, frames[0], gfx.Vec2{}, gfx.Vec2{})
+				it.Shader, it.Aux = sh, aux
+			}
+			r.Draw(newTarget(16, 16), &q, &Camera{}, 1)
+			if st := r.Stats(); st.ShaderDraws != tc.calls || st.ShadedQuads != len(tc.aux) {
+				t.Fatalf("Stats = %+v, want %d shader draws", st, tc.calls)
 			}
 		})
 	}

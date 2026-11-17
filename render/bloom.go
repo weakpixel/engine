@@ -12,6 +12,12 @@ type BloomOptions struct {
 	// quarter-size image: 1 blurs over about 8 frame pixels each way. Default
 	// 1.
 	Radius float32
+	// Src is the image whose bright parts glow. The zero value,
+	// [TargetChain], is the chain so far: the whole frame. [TargetGroup]
+	// makes only the layers of one layer group glow (neon signs, magic,
+	// lasers) while equally bright sprites elsewhere do not; the glow is
+	// still added to the chain. Any target a pass may read works.
+	Src TargetID
 }
 
 func (o BloomOptions) withDefaults() BloomOptions {
@@ -37,7 +43,7 @@ type Bloom struct {
 }
 
 // AddBloom appends a bloom to the chain: the bright parts of the chain so far
-// are shrunk to a half and then a quarter of the screen size, blurred there
+// (or of opts.Src) are shrunk to a half and then a quarter of the screen size, blurred there
 // and added back, so bright pixels glow. It declares three targets (half,
 // quarter and a quarter-size scratch image) and appends five passes that run
 // the engine's own shaders, which need no asset and are ready on the first
@@ -67,6 +73,7 @@ func (p *PostChain) AddBloom(opts BloomOptions) Bloom {
 func (b Bloom) Set(p *PostChain, opts BloomOptions) {
 	o := opts.withDefaults()
 	ps := p.Passes[b.first : b.first+bloomPasses]
+	ps[0].Src = o.Src
 	ps[0].Params = [4]float32{o.Threshold}
 	ps[2].Params = [4]float32{o.Radius, 0}
 	ps[3].Params = [4]float32{0, o.Radius}

@@ -109,7 +109,22 @@ func (r *Renderer) drawNineSlice(dst *ebiten.Image, it *Item, t transform) {
 		size.Y = float32(frame.Dy())
 	}
 	pivot := gfx.Vec2{X: it.Origin.X * size.X, Y: it.Origin.Y * size.Y}
+	if sh := r.shader(it.Shader); sh != nil {
+		lo := gfx.Vec2{X: -pivot.X, Y: -pivot.Y}
+		if region, at, ok := r.beginScratch(lo, size); ok {
+			r.nineSliceQuads(region, it, sp, pivot, at)
+			r.endScratch(dst, region, sh, it, t, lo)
+			return
+		}
+	}
 	r.setStyle(it.Color, it.Blend)
+	r.nineSliceQuads(dst, it, sp, pivot, t)
+}
+
+// nineSliceQuads queues the pieces of the panel of it, whose pivot (in
+// panel pixels) is placed at t, in the current style.
+func (r *Renderer) nineSliceQuads(dst *ebiten.Image, it *Item, sp *Sprite, pivot gfx.Vec2, t transform) {
+	frame := sp.Image.Bounds()
 	src := sp.source()
 	nineSlice(frame.Size(), it.Insets, it.Size, it.Tile, func(rect image.Rectangle, d gfx.Rect) {
 		g := &r.opts.GeoM

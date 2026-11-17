@@ -164,7 +164,7 @@ func TestSpriteItemFields(t *testing.T) {
 	params := [4]float32{0.5, 0, 0, 1}
 	e := ecs.NewEntity2(s.w,
 		gfx.Transform{Pos: gfx.Vec2{X: 5, Y: 6}, PrevPos: gfx.Vec2{X: 4, Y: 6}, Rot: 0.5},
-		gfx.Sprite{ID: s.h(9), Layer: 2, Origin: gfx.Vec2{X: 0.5, Y: 1}, FlipX: true, Tint: gfx.White, Shader: fx, Params: params})
+		gfx.Sprite{ID: s.h(9), Layer: 2, Origin: gfx.Vec2{X: 0.5, Y: 1}, FlipX: true, Tint: gfx.White, Shader: fx, Params: params, Aux: s.h(2)})
 	_ = e
 	s.tick()
 	it := s.queue.At(0)
@@ -174,7 +174,7 @@ func TestSpriteItemFields(t *testing.T) {
 		Kind: render.KindSprite, Layer: 2, SortY: 6, Sprite: s.sprites[8],
 		Pos: gfx.Vec2{X: 5, Y: 6}, PrevPos: gfx.Vec2{X: 5, Y: 6}, Rot: 0.5,
 		Scale: gfx.Vec2{X: 1, Y: 1}, Origin: gfx.Vec2{X: 0.5, Y: 1}, FlipX: true, Color: gfx.White,
-		Shader: fx, Params: params,
+		Shader: fx, Params: params, Aux: s.h(2),
 	}
 	if *it != want {
 		t.Fatalf("item = %+v\nwant   %+v", *it, want)
@@ -219,7 +219,8 @@ func TestQueueOrderByLayerAndY(t *testing.T) {
 func TestOtherExtractors(t *testing.T) {
 	s := newScene(t)
 	ecs.NewEntity2(s.w, gfx.Transform{Pos: gfx.Vec2{X: 8, Y: 9}}, gfx.ScreenSprite{Sprite: gfx.Sprite{ID: s.h(5), Layer: 3}})
-	ecs.NewEntity2(s.w, gfx.Transform{Pos: gfx.Vec2{X: 1, Y: 2}}, gfx.Label{Text: "hi", Layer: 4})
+	fx := render.LoadShader(s.srv.Global(), "fx/outline.kage")
+	ecs.NewEntity2(s.w, gfx.Transform{Pos: gfx.Vec2{X: 1, Y: 2}}, gfx.Label{Text: "hi", Layer: 4, Shader: fx, Params: [4]float32{1, 2}})
 	ecs.NewEntity2(s.w, gfx.Transform{Pos: gfx.Vec2{X: 0, Y: 0}}, gfx.DebugShape{Kind: gfx.ShapeCircle, Size: gfx.Vec2{X: 4}})
 	ecs.NewEntity2(s.w, gfx.Transform{Pos: gfx.Vec2{X: 900, Y: 0}}, gfx.DebugShape{}) // culled
 	s.tick()
@@ -237,7 +238,7 @@ func TestOtherExtractors(t *testing.T) {
 	if it := byKind[render.KindSprite]; it.Space != render.ScreenSpace || it.Sprite != s.sprites[4] || it.Pos.X != 8 {
 		t.Fatalf("screen sprite item = %+v", it)
 	}
-	if it := byKind[render.KindText]; it.Text != "hi" || it.Space != render.ScreenSpace || it.Layer != 4 {
+	if it := byKind[render.KindText]; it.Text != "hi" || it.Space != render.ScreenSpace || it.Layer != 4 || it.Shader != fx || it.Params != [4]float32{1, 2} {
 		t.Fatalf("label item = %+v", it)
 	}
 	if it := byKind[render.KindCircle]; it.Space != render.WorldSpace || it.Layer != extract.DebugLayer || it.Size.X != 4 {
@@ -366,10 +367,12 @@ func TestGfxBlendMatchesRender(t *testing.T) {
 
 func TestNineSliceItemFields(t *testing.T) {
 	s := newScene(t)
+	fx := render.LoadShader(s.srv.Global(), "fx/outline.kage")
 	ecs.NewEntity2(s.w,
 		gfx.Transform{Pos: gfx.Vec2{X: 5, Y: 6}, Rot: 0.5},
 		gfx.NineSlice{ID: s.h(3), Insets: gfx.Insets{Left: 1, Top: 2, Right: 3, Bottom: 4}, Size: gfx.Vec2{X: 20, Y: 10},
-			Layer: 2, Origin: gfx.Vec2{X: 0.5, Y: 0.5}, Tint: gfx.White, Blend: gfx.BlendLighten, Tile: true})
+			Layer: 2, Origin: gfx.Vec2{X: 0.5, Y: 0.5}, Tint: gfx.White, Blend: gfx.BlendLighten, Tile: true,
+			Shader: fx, Params: [4]float32{0.5}})
 	ecs.NewEntity2(s.w, gfx.Transform{Pos: gfx.Vec2{X: 1, Y: 1}}, gfx.NineSlice{ID: s.h(1), Hidden: true})
 	ecs.NewEntity2(s.w, gfx.Transform{Pos: gfx.Vec2{X: 7, Y: 8}}, gfx.ScreenNineSlice{NineSlice: gfx.NineSlice{ID: s.h(2), Size: gfx.Vec2{X: 9, Y: 9}}})
 	s.tick()
@@ -381,6 +384,7 @@ func TestNineSliceItemFields(t *testing.T) {
 		Pos: gfx.Vec2{X: 5, Y: 6}, PrevPos: gfx.Vec2{X: 5, Y: 6}, Rot: 0.5, Scale: gfx.Vec2{X: 1, Y: 1},
 		Origin: gfx.Vec2{X: 0.5, Y: 0.5}, Size: gfx.Vec2{X: 20, Y: 10}, Insets: gfx.Insets{Left: 1, Top: 2, Right: 3, Bottom: 4},
 		Tile: true, Color: gfx.White, Blend: render.BlendLighten,
+		Shader: fx, Params: [4]float32{0.5},
 	}
 	var world, screen *render.Item
 	for i := range s.queue.Len() {
