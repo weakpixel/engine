@@ -59,6 +59,7 @@ type Engine struct {
 	// or Config.SampleRate under NoAudio.
 	sampleRate   int
 	audioRunners []system.Runner // see AddAudioRunner
+	extracts     []system.Runner // see AddExtract
 	sounds       *sound.Queue
 	mixer        *sound.Mixer
 	listener     *sound.Listener
@@ -473,6 +474,31 @@ func (e *Engine) AddAudioRunner(runners ...system.Runner) {
 		}
 	}
 	e.audioRunners = append(e.audioRunners, runners...)
+}
+
+// AddExtract adds runners to the extract stage, after the engine's own
+// extract systems (tiles, sprites, nine-slices, particles, screen items,
+// labels, touch controls) and before the debug shapes and the sort. They
+// fill the render.Queue (a world resource) with items of their own, such as
+// shapes, text or sprites drawn through a shader, and the engine sorts them
+// with the rest. Like the other extract systems they run every tick,
+// whatever the scene stack, a Tool's pause or Hold do, so what they queue
+// also shows in the editor. A runner that implements system.Initializer is
+// initialized before its first Run. Use it for drawing only, never for game
+// logic. See doc/guide/engine/rendering.md#writing-your-own.
+//
+// Panics with "game: AddSystem after the first Update" once the schedule is
+// built, and with "game: nil system".
+func (e *Engine) AddExtract(runners ...system.Runner) {
+	if e.built {
+		panicf("AddSystem after the first Update")
+	}
+	for _, r := range runners {
+		if r == nil {
+			panicf("nil system")
+		}
+	}
+	e.extracts = append(e.extracts, runners...)
 }
 
 // Start registers fn to run once, at the first Update, after the schedule

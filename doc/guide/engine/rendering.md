@@ -32,7 +32,7 @@ s.AddRunner(sprites, extract.NewLabelExtract(w))
 
 1. A struct with a prebuilt view and a `resources` value.
 2. `Init` caches resources; `Run` loops the view and calls `queue.Push` (no lookups or allocations). If it culls, it culls against `cam.DrawBounds(screen.Size)` (see [Camera](#camera)) and reports the number of skipped items once per `Run` with `queue.AddCulled(n)`.
-3. Add it with `AddRunner` between `ResetQueue` and `SortQueue` (with `game.Engine`: `AddRunner(game.StagePost, ...)`).
+3. Add it with `AddRunner` between `ResetQueue` and `SortQueue`. With `game.Engine`, add it with `Engine.AddExtract(...)` ([engine.md](engine.md)); a system in `StagePost` runs before `ResetQueue` empties the queue, so its items never draw.
 4. Add an extract test and a check in `TestTickNoAllocs` (`extract`).
 
 ```go
