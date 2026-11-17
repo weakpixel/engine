@@ -168,6 +168,7 @@ func (e *Engine) buildSchedule() {
 	if !e.cfg.Input.HideTouchControls {
 		s.AddRunner(e.touchDrawer)
 	}
+	s.AddRunner(e.extracts...) // AddExtract: the game's own items, sorted with the rest
 	s.AddRunner(
 		&debugRunner{inner: extract.NewDebugExtract(w), on: &e.debug},
 		extract.NewSortQueue(w),
