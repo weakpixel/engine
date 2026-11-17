@@ -433,12 +433,29 @@ func (r *Renderer) shader(h gfx.ShaderHandle) *ebiten.Shader {
 	return r.stores.Shaders.Get(h).Shader
 }
 
+// aux returns the image of a shaded item's second image h, or nil: the
+// zero handle (checked first, so most items skip the store lookup), a
+// sprite that is loading or failed, or a Renderer without a sprite store.
+// It is never the placeholder sprite, so a shader that reads imageSrc1
+// sees transparent pixels until the image is ready instead of the
+// placeholder's checkerboard.
+func (r *Renderer) aux(h gfx.SpriteHandle) *ebiten.Image {
+	if h.IsZero() || r.stores.Sprites.s == nil {
+		return nil
+	}
+	sp := r.stores.Sprites.Get(h)
+	if sp == r.placeholder {
+		return nil
+	}
+	return sp.Image
+}
+
 // drawShaded draws img through sh with the placement and style that
 // drawSprite or drawCanvas already put into r.opts: into the pending batch,
 // or as its own draw call when batching is off. The quad has img's size, so
 // the same GeoM places it exactly like DrawImage.
 func (r *Renderer) drawShaded(dst, img *ebiten.Image, sh *ebiten.Shader, it *Item) {
-	r.addShadedQuad(dst, img, &r.opts.GeoM, &r.opts.ColorScale, r.blend, sh, &it.Params)
+	r.addShadedQuad(dst, img, r.aux(it.Aux), &r.opts.GeoM, &r.opts.ColorScale, r.blend, sh, &it.Params)
 	if r.noBatch {
 		r.flush()
 	}

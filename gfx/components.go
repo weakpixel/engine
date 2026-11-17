@@ -59,6 +59,15 @@ type Sprite struct {
 	// is up to the shader. Animate them instead of swapping shaders: changing
 	// a field does not move the entity between archetypes.
 	Params [4]float32 `json:",omitzero"`
+	// Aux is a second image for Shader (a noise texture for a dissolve, a
+	// mask, a palette), which the shader reads as imageSrc1; without Shader
+	// it is ignored. The zero handle, and a sprite that is loading or
+	// failed, give the shader no image (transparent pixels). In the Game
+	// Object schema it is an asset key ("fx/noise.png"); the handle is
+	// runtime-only (json:"-").
+	//
+	// +game:asset:kind=sprite
+	Aux SpriteHandle `json:"-"`
 	// Hidden skips the sprite. It is a field and not a tag so that toggling
 	// it does not move the entity between archetypes.
 	Hidden bool

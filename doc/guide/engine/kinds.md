@@ -8,7 +8,7 @@ The kinds an asset field can name in `+game:asset:kind=...`, interpreted by `res
 
 | Kind | Loads | Go asset type | Component field | Handle | Key example |
 | --- | --- | --- | --- | --- | --- |
-| `sprite` | whole image or atlas frame | `render.Sprite` | `Sprite.ID` | `gfx.SpriteHandle` | `"ui/cursor.png"`, `"chars/player.aseprite.json#idle_0"` |
+| `sprite` | whole image or atlas frame | `render.Sprite` | `Sprite.ID`, `Sprite.Aux` | `gfx.SpriteHandle` | `"ui/cursor.png"`, `"chars/player.aseprite.json#idle_0"` |
 | `clip` | Aseprite tag (from the export or an `*.anim.json`) | `anim.Clip` | `Animator.Clip` | `gfx.ClipHandle` | `"chars/player.aseprite.json#run"` |
 | `font` | font at a size | `render.Font` | `Label.Font` | `gfx.FontHandle` | `"fonts/ui.ttf#16"` |
 | `shader` | compiled Kage shader | `render.Shader` | `Sprite.Shader`, `Label.Shader`, `NineSlice.Shader` | `gfx.ShaderHandle` | `"fx/flash.kage"` |
@@ -40,7 +40,7 @@ Every asset type, its key and its file formats: [asset-kinds.md](asset-kinds.md)
 
 | Kind | Draws | Uses |
 | --- | --- | --- |
-| `KindSprite` | a sprite | `Sprite`, `Scale`, `Origin`, `FlipX/Y`, `Color` (tint), `Shader`, `Params` ([shaders](shaders.md)) |
+| `KindSprite` | a sprite | `Sprite`, `Scale`, `Origin`, `FlipX/Y`, `Color` (tint), `Shader`, `Params`, `Aux` ([shaders](shaders.md)) |
 | `KindRect` | a 1-px rect outline (top-left at `Pos`) | `Size`, `Color` |
 | `KindLine` | a line from `Pos` | `Size` (end offset), `Color` |
 | `KindCircle` | a circle outline | `Size.X` (radius), `Color` |

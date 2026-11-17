@@ -131,7 +131,7 @@ The renderer batches for you; there is nothing to enable. Unshaded sprites, tile
 
 - Put sprites that are drawn together into one atlas: all frames of one texture batch, all tiles of one tileset too.
 - Keep additive or multiply sprites (particles, lights; see [particles.md](particles.md)) on their own layer, so they do not alternate with normal ones.
-- Text and layer group boundaries end the current batch, and so does every shaded text, nine-slice or shape ([shaders guide](shaders.md#text-panels-and-shapes)). Shaded sprites batch among themselves: consecutive ones with the same shader, frame, blend mode and `Params` are one draw call (particles of one effect, for example), and a different frame or `Params` starts a new one ([shaders guide](shaders.md#performance)). In a Y-sorted layer, sprites of different textures interleave by Y and batch less.
+- Text and layer group boundaries end the current batch, and so does every shaded text, nine-slice or shape ([shaders guide](shaders.md#text-panels-and-shapes)). Shaded sprites batch among themselves: consecutive ones with the same shader, frame, blend mode, `Params` and `Aux` image are one draw call (particles of one effect, for example), and a different frame or `Params` starts a new one ([shaders guide](shaders.md#performance)). In a Y-sorted layer, sprites of different textures interleave by Y and batch less.
 
 `Stats.Quads` counts the batched unshaded quads, `Stats.ShadedQuads` the shaded ones, and `Stats.DrawCalls` the calls they took: 10,000 tiles of one tileset are one draw call.
 
@@ -151,7 +151,7 @@ canvases.Free(id)               // the ID and its copies go stale
 ```
 
 - `Paint` draws the items like `Draw` with a camera centered on the canvas, so world and screen space both are canvas pixels; interpolation is off. Sprites that are not ready paint their placeholder, so paint once they are ready. It runs on the game goroutine, in `Update` or `Draw`.
-- A canvas item uses `Pos`, `PrevPos`, `Rot`, `Scale`, `FlipX/Y`, `Color`, `Blend` and `Origin` (a fraction of the canvas size; zero is the top-left corner). It ignores `Shader`. A zero or stale ID, or a renderer without canvases, draws nothing.
+- A canvas item uses `Pos`, `PrevPos`, `Rot`, `Scale`, `FlipX/Y`, `Color`, `Blend` and `Origin` (a fraction of the canvas size; zero is the top-left corner); `Shader`, `Params` and `Aux` draw it through a shader like a sprite. A zero or stale ID, or a renderer without canvases, draws nothing.
 - Each canvas is its own image, so each canvas item is its own batch (Ebiten may still merge canvases that share one of its internal atlas pages).
 - `Len()` and `Bytes()` (4 bytes per pixel) report what is allocated. Up to 16 freed images are kept for reuse by `New`.
 - Panics: `render: canvas size` (`New` with a non-positive side), `render: stale canvas` (`Paint` with a zero or freed ID).

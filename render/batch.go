@@ -35,6 +35,13 @@ import (
 // shaded batches. Ebiten could not merge them on the GPU anyway: it passes
 // each source region to the shader as uniforms, and merges only draws with
 // equal uniforms.
+//
+// A shaded quad may have a second image, Item.Aux, which the shader reads as
+// imageSrc1. It is part of the batch key like the first one. In pixel mode
+// Ebiten allows source images of different sizes, so Aux need not match the
+// frame. imageSrc1At takes imageSrc0Origin plus a position inside Aux's
+// region, so a shader maps its position there first (see the guide's
+// shaders page).
 
 // quadBatch is the pending batch: its quads' vertices and what they share.
 // The vertex and index slices are reused across batches and frames, so a
@@ -44,7 +51,9 @@ type quadBatch struct {
 	blend    Blend
 	// shader is the shader of a shaded batch (nil: unshaded) and params
 	// its Params uniform, copied into the Renderer's uniform map at flush.
+	// aux is the shader's second image, imageSrc1 (nil: none).
 	shader *ebiten.Shader
+	aux    *ebiten.Image
 	params [4]float32
 	verts  []ebiten.Vertex
 	// indices is the fixed two-triangle pattern of every quad, grown to the
@@ -58,28 +67,29 @@ type quadBatch struct {
 // flushes the pending batch first if that one draws onto another target,
 // from another source or with another blend mode.
 func (r *Renderer) addQuad(dst, src *ebiten.Image, rect image.Rectangle, g *ebiten.GeoM, cs *ebiten.ColorScale, blend Blend) {
-	r.queueQuad(dst, src, rect, g, cs, blend, nil, nil)
+	r.queueQuad(dst, src, nil, rect, g, cs, blend, nil, nil)
 	r.stats.Quads++
 }
 
-// addShadedQuad queues all of img drawn through sh with Params params,
-// placed by g and scaled by the premultiplied cs (the shader's color
-// argument), onto dst. It flushes the pending batch first if that one has
-// another target, image, blend mode, shader or Params.
-func (r *Renderer) addShadedQuad(dst, img *ebiten.Image, g *ebiten.GeoM, cs *ebiten.ColorScale, blend Blend, sh *ebiten.Shader, params *[4]float32) {
-	r.queueQuad(dst, img, img.Bounds(), g, cs, blend, sh, params)
+// addShadedQuad queues all of img drawn through sh with Params params and
+// the second image aux (nil: none), placed by g and scaled by the
+// premultiplied cs (the shader's color argument), onto dst. It flushes the
+// pending batch first if that one has another target, image, second image,
+// blend mode, shader or Params.
+func (r *Renderer) addShadedQuad(dst, img, aux *ebiten.Image, g *ebiten.GeoM, cs *ebiten.ColorScale, blend Blend, sh *ebiten.Shader, params *[4]float32) {
+	r.queueQuad(dst, img, aux, img.Bounds(), g, cs, blend, sh, params)
 	r.stats.ShadedQuads++
 }
 
 // queueQuad adds one quad to the pending batch after flushing it if its key
-// (target, source, blend, shader, Params) differs. params is nil for
-// unshaded quads.
-func (r *Renderer) queueQuad(dst, src *ebiten.Image, rect image.Rectangle, g *ebiten.GeoM, cs *ebiten.ColorScale, blend Blend, sh *ebiten.Shader, params *[4]float32) {
+// (target, source, second image, blend, shader, Params) differs. aux and
+// params are nil for unshaded quads.
+func (r *Renderer) queueQuad(dst, src, aux *ebiten.Image, rect image.Rectangle, g *ebiten.GeoM, cs *ebiten.ColorScale, blend Blend, sh *ebiten.Shader, params *[4]float32) {
 	b := &r.batch
-	if len(b.verts) > 0 && (b.dst != dst || b.src != src || b.blend != blend || b.shader != sh || (sh != nil && b.params != *params)) {
+	if len(b.verts) > 0 && (b.dst != dst || b.src != src || b.aux != aux || b.blend != blend || b.shader != sh || (sh != nil && b.params != *params)) {
 		r.flush()
 	}
-	b.dst, b.src, b.blend, b.shader = dst, src, blend, sh
+	b.dst, b.src, b.aux, b.blend, b.shader = dst, src, aux, blend, sh
 	if sh != nil {
 		b.params = *params
 	}
@@ -152,7 +162,7 @@ func (r *Renderer) flush() {
 	b.verts = b.verts[:0]
 	// Don't keep images or shaders alive (or deallocated ones referenced)
 	// past Draw.
-	b.dst, b.src, b.shader = nil, nil, nil
+	b.dst, b.src, b.aux, b.shader = nil, nil, nil, nil
 }
 
 // flushShaded draws the n quads of a shaded batch. The vertex colors are the
@@ -162,10 +172,10 @@ func (r *Renderer) flushShaded(n int) {
 	b := &r.batch
 	o := &r.sopts
 	o.Blend = ebitenBlend(b.blend)
-	o.Images[0] = b.src
+	o.Images[0], o.Images[1] = b.src, b.aux
 	// In place, never r.sopts.Uniforms[...] = ...: see newUniforms.
 	copy(r.params, b.params[:])
 	b.dst.DrawTrianglesShader32(b.verts, b.indices[:6*n], b.shader, o)
-	o.Images[0] = nil
+	o.Images[0], o.Images[1] = nil, nil
 	r.stats.ShaderDraws++
 }

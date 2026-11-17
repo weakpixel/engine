@@ -287,6 +287,43 @@ func TestDrawShadedBatches(t *testing.T) {
 	}
 }
 
+// TestDrawShadedAuxBatches checks that Item.Aux is part of the shaded batch
+// key: equal second images share a draw call, different ones do not, and a
+// failed one counts as none.
+func TestDrawShadedAuxBatches(t *testing.T) {
+	files := fstest.MapFS{"fx/a.kage": textFile(kageFlash)}
+	e := newAssetEnv(t, files, 0)
+	frames := e.loadSheet(files, "s", 3)
+	sc := e.srv.NewScope("fx")
+	sh := LoadShader(sc, "fx/a.kage")
+	failed := LoadSprite(sc, "missing.png")
+	e.settle(sc)
+	r := NewRenderer(StoresOf(e.srv))
+	none := gfx.SpriteHandle{}
+	for _, tc := range []struct {
+		name  string
+		aux   []gfx.SpriteHandle
+		calls int
+	}{
+		{"equal", []gfx.SpriteHandle{frames[1], frames[1], frames[1]}, 1},
+		{"different", []gfx.SpriteHandle{frames[1], frames[2], frames[2]}, 2},
+		{"none then one", []gfx.SpriteHandle{none, frames[1]}, 2},
+		{"failed is none", []gfx.SpriteHandle{none, failed, none}, 1},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var q Queue
+			for _, aux := range tc.aux {
+				it := q.Sprite(0, frames[0], gfx.Vec2{}, gfx.Vec2{})
+				it.Shader, it.Aux = sh, aux
+			}
+			r.Draw(newTarget(16, 16), &q, &Camera{}, 1)
+			if st := r.Stats(); st.ShaderDraws != tc.calls || st.ShadedQuads != len(tc.aux) {
+				t.Fatalf("Stats = %+v, want %d shader draws", st, tc.calls)
+			}
+		})
+	}
+}
+
 // TestDrawShadedNoAllocs is TestDrawNoAllocs for shaded sprites: the
 // Renderer adds nothing to what Ebiten's DrawRectShader costs by itself.
 func TestDrawShadedNoAllocs(t *testing.T) {

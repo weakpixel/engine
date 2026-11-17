@@ -751,6 +751,12 @@
       "schema": {
         "type": "object",
         "properties": {
+          "Aux": {
+            "type": "string",
+            "format": "asset",
+            "description": "Aux is a second image for Shader (a noise texture for a dissolve, a\nmask, a palette), which the shader reads as imageSrc1; without Shader\nit is ignored. The zero handle, and a sprite that is loading or\nfailed, give the shader no image (transparent pixels). In the Game\nObject schema it is an asset key (\"fx/noise.png\"); the handle is\nruntime-only (json:\"-\").",
+            "x-asset": "sprite"
+          },
           "Blend": {
             "type": "integer",
             "format": "int32",

@@ -164,7 +164,7 @@ func TestSpriteItemFields(t *testing.T) {
 	params := [4]float32{0.5, 0, 0, 1}
 	e := ecs.NewEntity2(s.w,
 		gfx.Transform{Pos: gfx.Vec2{X: 5, Y: 6}, PrevPos: gfx.Vec2{X: 4, Y: 6}, Rot: 0.5},
-		gfx.Sprite{ID: s.h(9), Layer: 2, Origin: gfx.Vec2{X: 0.5, Y: 1}, FlipX: true, Tint: gfx.White, Shader: fx, Params: params})
+		gfx.Sprite{ID: s.h(9), Layer: 2, Origin: gfx.Vec2{X: 0.5, Y: 1}, FlipX: true, Tint: gfx.White, Shader: fx, Params: params, Aux: s.h(2)})
 	_ = e
 	s.tick()
 	it := s.queue.At(0)
@@ -174,7 +174,7 @@ func TestSpriteItemFields(t *testing.T) {
 		Kind: render.KindSprite, Layer: 2, SortY: 6, Sprite: s.sprites[8],
 		Pos: gfx.Vec2{X: 5, Y: 6}, PrevPos: gfx.Vec2{X: 5, Y: 6}, Rot: 0.5,
 		Scale: gfx.Vec2{X: 1, Y: 1}, Origin: gfx.Vec2{X: 0.5, Y: 1}, FlipX: true, Color: gfx.White,
-		Shader: fx, Params: params,
+		Shader: fx, Params: params, Aux: s.h(2),
 	}
 	if *it != want {
 		t.Fatalf("item = %+v\nwant   %+v", *it, want)

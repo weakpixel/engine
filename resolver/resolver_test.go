@@ -104,23 +104,24 @@ func TestShaderOnLabelAndPanel(t *testing.T) {
 }
 
 // TestShaderRoundTrip checks the "shader" kind: Sprite.Shader is an asset
-// key in GOD and Params an optional array that defaults to zeros.
+// key in GOD, Params an optional array that defaults to zeros and Aux an
+// optional sprite key.
 func TestShaderRoundTrip(t *testing.T) {
 	s := newScene(t)
-	doc := strings.Replace(prefab, `"Hidden":false`, `"Hidden":false,"Shader":"fx/flash.kage","Params":[1,0,0,0.5]`, 1)
+	doc := strings.Replace(prefab, `"Hidden":false`, `"Hidden":false,"Shader":"fx/flash.kage","Params":[1,0,0,0.5],"Aux":"fx/noise.png"`, 1)
 	objs, err := god.Deserialize(s.world, strings.NewReader(doc))
 	if err != nil {
 		t.Fatal(err)
 	}
 	sprite := ecs.GetComp[gfx.Sprite](s.world, objs[0].Entity)
-	if sprite.Shader.IsZero() || sprite.Params != [4]float32{1, 0, 0, 0.5} {
+	if sprite.Shader.IsZero() || sprite.Params != [4]float32{1, 0, 0, 0.5} || sprite.Aux.IsZero() || sprite.Aux == sprite.ID {
 		t.Fatalf("sprite = %+v", sprite)
 	}
 	var out strings.Builder
 	if err := god.Serialize(s.world, &out, objs...); err != nil {
 		t.Fatal(err)
 	}
-	for _, want := range []string{`"Shader":"fx/flash.kage"`, `"Params":[1,0,0,0.5]`} {
+	for _, want := range []string{`"Shader":"fx/flash.kage"`, `"Params":[1,0,0,0.5]`, `"Aux":"fx/noise.png"`} {
 		if !strings.Contains(out.String(), want) {
 			t.Errorf("serialized prefab lacks %s:\n%s", want, out.String())
 		}
@@ -129,12 +130,13 @@ func TestShaderRoundTrip(t *testing.T) {
 		t.Error("AssetKey accepted a sprite handle for the shader kind")
 	}
 
-	// Without Shader and Params (the plain prefab) the sprite is unshaded.
+	// Without Shader, Params and Aux (the plain prefab) the sprite is
+	// unshaded.
 	objs, err = god.Deserialize(s.world, strings.NewReader(prefab))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if sp := ecs.GetComp[gfx.Sprite](s.world, objs[0].Entity); !sp.Shader.IsZero() || sp.Params != [4]float32{} {
+	if sp := ecs.GetComp[gfx.Sprite](s.world, objs[0].Entity); !sp.Shader.IsZero() || sp.Params != [4]float32{} || !sp.Aux.IsZero() {
 		t.Fatalf("plain prefab sprite = %+v", sp)
 	}
 }

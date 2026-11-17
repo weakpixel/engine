@@ -124,12 +124,12 @@ func (r *Renderer) beginScratch(lo, size gfx.Vec2) (region *ebiten.Image, at tra
 // endScratch draws the scratch region, which now holds the item, onto dst
 // through sh: one shaded quad placed by t like a sprite whose top-left
 // corner is at lo minus the margin relative to its pivot, with the item's
-// tint, blend and Params.
+// tint, blend, Params and second image.
 func (r *Renderer) endScratch(dst, region *ebiten.Image, sh *ebiten.Shader, it *Item, t transform, lo gfx.Vec2) {
 	r.flush() // finish the item in the scratch image before it is read
 	geoM(&r.opts.GeoM, gfx.Vec2{X: lo.X - shadeMargin, Y: lo.Y - shadeMargin}, false, false, t)
 	r.setStyle(it.Color, it.Blend)
-	r.addShadedQuad(dst, region, &r.opts.GeoM, &r.opts.ColorScale, r.blend, sh, &it.Params)
+	r.addShadedQuad(dst, region, r.aux(it.Aux), &r.opts.GeoM, &r.opts.ColorScale, r.blend, sh, &it.Params)
 	// The next shaded item reuses the scratch image, so this quad cannot
 	// wait in the batch.
 	r.flush()

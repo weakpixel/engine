@@ -133,6 +133,13 @@ type Item struct {
 	// Params are per-item shader parameters (a flash amount, an outline
 	// color, a dissolve threshold): what they mean is up to the shader.
 	Params [4]float32
+	// Aux is a second image for Shader (a noise texture, a mask, a
+	// palette), which the shader reads as imageSrc1; without Shader it is
+	// ignored. It may have any size and may be an atlas frame. The zero
+	// handle, and a sprite that is loading or failed, give no image:
+	// imageSrc1At returns transparent pixels, never the placeholder. Items
+	// with different Aux images are different batches.
+	Aux gfx.SpriteHandle
 
 	// Canvas is the image of a KindCanvas item. Origin is the pivot as a
 	// fraction of the canvas size, the zero Origin being the top-left
