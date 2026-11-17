@@ -127,11 +127,11 @@ Sprites (shaded or not) and shapes reuse draw options (0 allocs). Shapes are sca
 
 ### Batching
 
-The renderer batches for you; there is nothing to enable. Unshaded sprites, tiles, particles, the nine pieces of a nine-slice panel and the edges of rects, lines and circles are quads, and consecutive quads with the same target, texture and blend mode are drawn with one `DrawTriangles` call instead of one `DrawImage` call each. Tint, position, rotation, scale and flips do not break a batch. To keep batches long:
+The renderer batches for you; there is nothing to enable. Unshaded sprites, tiles, particles, the nine pieces of a nine-slice panel and the edges of rects and lines are quads, and consecutive quads with the same target, texture and blend mode are drawn with one `DrawTriangles` call instead of one `DrawImage` call each. Tint, position, rotation, scale and flips do not break a batch. To keep batches long:
 
 - Put sprites that are drawn together into one atlas: all frames of one texture batch, all tiles of one tileset too.
 - Keep additive or multiply sprites (particles, lights; see [particles.md](particles.md)) on their own layer, so they do not alternate with normal ones.
-- Text and layer group boundaries end the current batch, and so does every shaded text, nine-slice or shape ([shaders guide](shaders.md#text-panels-and-shapes)). Shaded sprites batch among themselves: consecutive ones with the same shader, frame, blend mode, `Params` and `Aux` image are one draw call (particles of one effect, for example), and a different frame or `Params` starts a new one ([shaders guide](shaders.md#performance)). In a Y-sorted layer, sprites of different textures interleave by Y and batch less.
+- Text, circles and layer group boundaries end the current batch, and so does every shaded text, nine-slice or shape ([shaders guide](shaders.md#text-panels-and-shapes)). Shaded sprites batch among themselves: consecutive ones with the same shader, frame, blend mode, `Params` and `Aux` image are one draw call (particles of one effect, for example), and a different frame or `Params` starts a new one ([shaders guide](shaders.md#performance)). In a Y-sorted layer, sprites of different textures interleave by Y and batch less.
 
 `Stats.Quads` counts the batched unshaded quads, `Stats.ShadedQuads` the shaded ones, and `Stats.DrawCalls` the calls they took: 10,000 tiles of one tileset are one draw call.
 
@@ -164,7 +164,7 @@ canvases.Free(id)               // the ID and its copies go stale
 | --- | --- |
 | `Items` | Queue items drawn. |
 | `DrawCalls` | Ebiten draw calls issued; a batch of quads is one (Ebiten may merge consecutive calls into fewer GPU batches). |
-| `Quads` | Unshaded quads drawn through batches: one per unshaded sprite, one per edge or segment of a rect, line or circle. `Quads` much larger than `DrawCalls` means batching works. |
+| `Quads` | Unshaded quads drawn through batches: one per unshaded sprite, one per edge of a rect or line. `Quads` much larger than `DrawCalls` means batching works. |
 | `ShadedQuads` | Sprites and canvases drawn through their shader, one quad each. |
 | `ShaderDraws` | Draw calls that went through a shader: batches of shaded quads, shaded layer group composites and post passes. |
 | `Groups` | Layer groups composited. |

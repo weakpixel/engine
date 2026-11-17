@@ -22,8 +22,9 @@ type Stats struct {
 	// Quads) is one draw call.
 	DrawCalls int
 	// Quads is how many unshaded textured quads went into batched draw
-	// calls: one per unshaded sprite, and one per edge or segment of a rect,
-	// line or circle. Consecutive quads with the same target, source texture
+	// calls: one per unshaded sprite, and one per edge of a rect or line.
+	// (A circle is a mesh and a draw call of its own, not quads.)
+	// Consecutive quads with the same target, source texture
 	// and blend mode share one draw call.
 	Quads int
 	// ShadedQuads is how many items were drawn through their shader
@@ -54,9 +55,6 @@ type Stats struct {
 	PostPasses int
 }
 
-// circleSegments is how many line segments approximate a circle outline.
-const circleSegments = 32
-
 // Renderer turns a sorted Queue into Ebiten draw calls. Sprites and shapes
 // are batched: consecutive unshaded ones that share a target, a source
 // texture and a blend mode become one DrawTriangles call, consecutive shaded
@@ -81,6 +79,12 @@ type Renderer struct {
 	// blend is the Blend that setStyle last put into opts, for batching.
 	blend Blend
 	topts text.DrawOptions
+	// ring and ringIdx hold the vertices and indices of the circle outline
+	// being drawn, and ringOpts its options; reused for every circle (see
+	// circleOutline), so drawing one allocates nothing once they have grown.
+	ring     []ebiten.Vertex
+	ringIdx  []uint32
+	ringOpts ebiten.DrawTrianglesOptions
 	// sopts and its Uniforms map are reused for every shaded batch; params
 	// is the slice behind the map's Params entry (see newUniforms).
 	sopts  ebiten.DrawTrianglesShaderOptions
@@ -540,16 +544,57 @@ func (r *Renderer) drawCircle(dst *ebiten.Image, it *Item, t transform) {
 	r.circleOutline(dst, it, t)
 }
 
-// circleOutline draws the segments of drawCircle in the current style.
+// circleOutline draws the outline of drawCircle in the current style: an
+// antialiased ring, 1 pixel wide and centered on the radius, as one
+// triangle mesh. Each step around the circle has three vertices: the
+// radius itself at full color and one pixel inside and outside it at
+// alpha 0, so the GPU fades the edges out linearly (a feathered ring)
+// without Ebiten's stencil antialiasing, which allocates per call. The
+// number of steps grows with the radius (about one per 2 pixels of
+// circumference), so even a large circle shows no corners. It is a draw
+// call of its own, so the pending quad batch is flushed first to keep the
+// draw order.
 func (r *Renderer) circleOutline(dst *ebiten.Image, it *Item, t transform) {
 	radius := it.Size.X * t.scale.X
-	prev := gfx.Vec2{X: t.pos.X + radius, Y: t.pos.Y}
-	for i := 1; i <= circleSegments; i++ {
-		sin, cos := xmath.Sincos(2 * math.Pi * float32(i) / circleSegments)
-		next := gfx.Vec2{X: t.pos.X + radius*cos, Y: t.pos.Y + radius*sin}
-		r.segment(dst, prev, next.Sub(prev))
-		prev = next
+	if radius <= 0 {
+		return
 	}
+	r.flush()
+	steps := ringSteps(radius)
+	cs := r.opts.ColorScale
+	full := ebiten.Vertex{SrcX: 0.5, SrcY: 0.5, ColorR: cs.R(), ColorG: cs.G(), ColorB: cs.B(), ColorA: cs.A()}
+	edge := ebiten.Vertex{SrcX: 0.5, SrcY: 0.5} // premultiplied: alpha 0 is all zero
+	inner := max(radius-1, 0)
+	r.ring = r.ring[:0]
+	for i := range steps {
+		sin, cos := xmath.Sincos(2 * math.Pi * float32(i) / float32(steps))
+		for _, v := range [3]struct {
+			rad float32
+			col ebiten.Vertex
+		}{{inner, edge}, {radius, full}, {radius + 1, edge}} {
+			v.col.DstX, v.col.DstY = t.pos.X+v.rad*cos, t.pos.Y+v.rad*sin
+			r.ring = append(r.ring, v.col)
+		}
+	}
+	r.ringIdx = r.ringIdx[:0]
+	for i := range uint32(steps) {
+		a, b := 3*i, 3*((i+1)%uint32(steps)) // this step and the next
+		// Two quads per step: inner to radius, radius to outer.
+		r.ringIdx = append(r.ringIdx,
+			a, a+1, b, b, a+1, b+1,
+			a+1, a+2, b+1, b+1, a+2, b+2)
+	}
+	r.ringOpts.Blend = r.opts.Blend
+	dst.DrawTriangles32(r.ring, r.ringIdx, r.white, &r.ringOpts)
+	r.stats.DrawCalls++
+}
+
+// ringSteps is how many steps circleOutline takes around a circle of the
+// given radius in pixels: one per 2 pixels of circumference, at least 24
+// and at most 1024 (3 vertices each, well below Ebiten's vertex limit).
+func ringSteps(radius float32) int {
+	n := int(math.Ceil(math.Pi * float64(radius)))
+	return min(max(n, 24), 1024)
 }
 
 // drawText draws it.Text with its top-left corner at t. Through a shader
