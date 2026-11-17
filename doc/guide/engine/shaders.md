@@ -636,8 +636,18 @@ bloom.SetOff(e.Post(), true) // off
 | `Threshold` | Brightness (the largest of red, green and blue, 0..1) above which a pixel glows, and only the part above it. Default 0.7. |
 | `Strength` | Scales the glow added to the frame. Default 1. |
 | `Radius` | Distance between the taps of the blur, in pixels of the quarter-size image. Default 1. |
+| `Src` | What glows. Zero (`TargetChain`): the chain so far, the whole frame. `TargetGroup(id)`: only the layers of one [layer group](#layer-groups) (see below). |
 
 It declares three targets (half, quarter and a quarter-size scratch image) and five passes. Passes added later see the bloom; the ones before it are what glows. Do not remove or reorder passes before the bloom's, because `Bloom` finds its passes by index. The frame should be opaque; a glow over a transparent pixel is added with matching alpha.
+
+**Glow only for some layers.** Targets are 8 bits per channel, so a bloom over the whole frame cannot tell a white wall from a white-hot laser: both are 1.0. Put what should glow on layers of their own, make a group of them, and pass it as `Src`:
+
+```go
+glow := e.Groups().Add(render.GroupOptions{From: 20, To: 20}) // neon signs, lasers, magic
+e.Post().AddBloom(render.BloomOptions{Src: render.TargetGroup(glow), Threshold: 0.3})
+```
+
+The group still draws normally; the bloom only reads it, and adds the glow to the whole chain. Bright sprites on other layers stay crisp, and a lower `Threshold` lets the glowing layers glow at any brightness. Add `NoComposite` to the group for a glow without the sprites themselves (a halo map). Costs are a group's ([costs](#costs)) plus the bloom's.
 
 ### Layers as pass inputs
 
@@ -765,7 +775,7 @@ With [asset hot reload](assets.md#hot-reload) on (`Config.WatchInterval`, or a h
 - A sprite's shader paints only inside the sprite's rectangle: glows and outlines need transparent padding in the frame. Text and panels get a 4 pixel margin instead.
 - The per-sprite inputs are the `Params` vec4, the tint and one second image (`Aux`); for particles, the tint is the only per-particle input and there is no second image. `Time` is the same for all sprites.
 - Layer groups cannot nest or overlap.
-- Post targets are 8 bits per channel, so there is no HDR bloom; the final pass reads one image.
+- Post targets are 8 bits per channel (Ebiten has no floating-point images), so colors cannot go above 1.0 and a bloom cannot tell bright from very bright; choose what glows with a [layer group](#bloom) instead. The final pass reads one image.
 
 ## API reference
 
@@ -792,7 +802,7 @@ With [asset hot reload](assets.md#hot-reload) on (`Config.WatchInterval`, or a h
 | `render.Pass` | `render` | `Shader`, `Params`, `Off`, and the inputs and output: `Src`, `Extra`, `Out`. |
 | `render.Target`, `PostChain.AddTarget` | `render` | An offscreen image for passes (`Scale` divides the screen size) and its declaration; returns a `TargetID`. |
 | `render.TargetID` | `render` | `TargetChain`, `TargetFrame`, `TargetPrevious`, `TargetGroup(id)` or a declared target. |
-| `PostChain.AddBloom(BloomOptions) Bloom` | `render` | Appends a bloom (three targets, five passes). `Bloom.Set` retunes, `Bloom.SetOff` toggles it. |
+| `PostChain.AddBloom(BloomOptions) Bloom` | `render` | Appends a bloom (three targets, five passes); `BloomOptions` has `Threshold`, `Strength`, `Radius` and `Src` (what glows). `Bloom.Set` retunes, `Bloom.SetOff` toggles it. |
 | `Renderer.DrawFinal(screen, offscreen, geoM)` | `render` | The final pass, for `ebiten.FinalScreenDrawer`. `game.Engine` calls it. |
 | `Renderer.Stats().PostPasses` | `render` | Post passes that ran, the final pass included. |
 
