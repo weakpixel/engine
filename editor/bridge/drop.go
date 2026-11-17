@@ -49,8 +49,11 @@ func candidates(kind string) []candidate {
 	return out
 }
 
-// assetField finds the first property (depth first, sorted names) of s with
-// format "asset" and x-asset kind, and returns its path.
+// assetField finds the first property (depth first, sorted names, but a
+// property named ID before the others) of s with format "asset" and x-asset
+// kind, and returns its path. ID first because it is the main asset of a
+// component (gfx:Sprite's image), and other fields of the same kind
+// (Sprite.Aux, a shader's second image) sort before it.
 func assetField(s *god.TypeSchema, kind string) ([]string, bool) {
 	if s == nil {
 		return nil, false
@@ -62,7 +65,17 @@ func assetField(s *god.TypeSchema, kind string) ([]string, bool) {
 	for n := range s.Properties {
 		names = append(names, n)
 	}
-	slices.Sort(names)
+	slices.SortFunc(names, func(a, b string) int {
+		switch {
+		case a == b:
+			return 0
+		case a == "ID":
+			return -1
+		case b == "ID":
+			return 1
+		}
+		return strings.Compare(a, b)
+	})
 	for _, n := range names {
 		if p, ok := assetField(s.Properties[n], kind); ok {
 			return append([]string{n}, p...), true
