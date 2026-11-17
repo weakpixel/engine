@@ -74,7 +74,7 @@ type gameSession struct {
 	buildDur time.Duration
 	binary   string
 
-	exited chan struct{} // closed when the process has ended; exit is set before
+	exited chan struct{} // closed when the process has ended; exit and the manager's last are set before
 	exit   exitInfo
 	cancel context.CancelFunc // stops the watcher and the window-edit loop
 }
@@ -238,11 +238,13 @@ func (m *gameManager) launch(ctx context.Context, bin string, buildDur time.Dura
 		stderr.flush()
 		s.exit = exitInfo{PID: s.pid, Status: exitStatus(err), At: time.Now()}
 		m.logs.add("server", fmt.Sprintf("the game (pid %d) ended: %s", s.pid, s.exit.Status))
-		close(s.exited)
-		ln.Close()
+		// last is set before exited is closed: game_stop returns once exited
+		// is closed, and a game_status right after it must see last_exit.
 		m.mu.Lock()
 		m.last = &s.exit
 		m.mu.Unlock()
+		close(s.exited)
+		ln.Close()
 	}()
 
 	fail := func(err error) (*gameSession, error) {
