@@ -74,24 +74,54 @@ func Fragment(dst vec4, src vec2, color vec4) vec4 {
 }
 `
 
+// TestShaderOnLabelAndPanel checks that gfx:Label and gfx:NineSlice take
+// Shader and Params from a document like gfx:Sprite.
+func TestShaderOnLabelAndPanel(t *testing.T) {
+	s := newScene(t)
+	transform := `"gfx:Transform":{"Pos":{"X":1,"Y":2},"PrevPos":{"X":1,"Y":2},"Rot":0,"Scale":{"X":1,"Y":1}},`
+	doc := `{"objects":[` +
+		`{"group":"gfx","class":"Text","components":{` + transform +
+		`"gfx:Label":{"Text":"hi","Layer":0,"Color":0,"Shader":"fx/flash.kage","Params":[1,0,0,0]}}},` +
+		`{"group":"gfx","class":"Panel","components":{` + transform +
+		`"gfx:NineSlice":{"Insets":{"Left":0,"Top":0,"Right":0,"Bottom":0},"Size":{"X":0,"Y":0},"Layer":0,` +
+		`"Origin":{"X":0,"Y":0},"Tint":0,"Blend":0,"Tile":false,"Hidden":false,"Shader":"fx/flash.kage","Params":[0,1,0,0]}}}]}`
+	objs, err := god.Deserialize(s.world, strings.NewReader(doc))
+	if err != nil {
+		t.Fatal(err)
+	}
+	l := ecs.GetComp[gfx.Label](s.world, objs[0].Entity)
+	ns := ecs.GetComp[gfx.NineSlice](s.world, objs[1].Entity)
+	if l.Shader.IsZero() || l.Params != [4]float32{1} || ns.Shader != l.Shader || ns.Params != [4]float32{0, 1} {
+		t.Fatalf("label = %+v, panel = %+v", l, ns)
+	}
+	var out strings.Builder
+	if err := god.Serialize(s.world, &out, objs...); err != nil {
+		t.Fatal(err)
+	}
+	if n := strings.Count(out.String(), `"Shader":"fx/flash.kage"`); n != 2 {
+		t.Errorf("serialized document has %d shader keys, want 2:\n%s", n, out.String())
+	}
+}
+
 // TestShaderRoundTrip checks the "shader" kind: Sprite.Shader is an asset
-// key in GOD and Params an optional array that defaults to zeros.
+// key in GOD, Params an optional array that defaults to zeros and Aux an
+// optional sprite key.
 func TestShaderRoundTrip(t *testing.T) {
 	s := newScene(t)
-	doc := strings.Replace(prefab, `"Hidden":false`, `"Hidden":false,"Shader":"fx/flash.kage","Params":[1,0,0,0.5]`, 1)
+	doc := strings.Replace(prefab, `"Hidden":false`, `"Hidden":false,"Shader":"fx/flash.kage","Params":[1,0,0,0.5],"Aux":"fx/noise.png"`, 1)
 	objs, err := god.Deserialize(s.world, strings.NewReader(doc))
 	if err != nil {
 		t.Fatal(err)
 	}
 	sprite := ecs.GetComp[gfx.Sprite](s.world, objs[0].Entity)
-	if sprite.Shader.IsZero() || sprite.Params != [4]float32{1, 0, 0, 0.5} {
+	if sprite.Shader.IsZero() || sprite.Params != [4]float32{1, 0, 0, 0.5} || sprite.Aux.IsZero() || sprite.Aux == sprite.ID {
 		t.Fatalf("sprite = %+v", sprite)
 	}
 	var out strings.Builder
 	if err := god.Serialize(s.world, &out, objs...); err != nil {
 		t.Fatal(err)
 	}
-	for _, want := range []string{`"Shader":"fx/flash.kage"`, `"Params":[1,0,0,0.5]`} {
+	for _, want := range []string{`"Shader":"fx/flash.kage"`, `"Params":[1,0,0,0.5]`, `"Aux":"fx/noise.png"`} {
 		if !strings.Contains(out.String(), want) {
 			t.Errorf("serialized prefab lacks %s:\n%s", want, out.String())
 		}
@@ -100,12 +130,13 @@ func TestShaderRoundTrip(t *testing.T) {
 		t.Error("AssetKey accepted a sprite handle for the shader kind")
 	}
 
-	// Without Shader and Params (the plain prefab) the sprite is unshaded.
+	// Without Shader, Params and Aux (the plain prefab) the sprite is
+	// unshaded.
 	objs, err = god.Deserialize(s.world, strings.NewReader(prefab))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if sp := ecs.GetComp[gfx.Sprite](s.world, objs[0].Entity); !sp.Shader.IsZero() || sp.Params != [4]float32{} {
+	if sp := ecs.GetComp[gfx.Sprite](s.world, objs[0].Entity); !sp.Shader.IsZero() || sp.Params != [4]float32{} || !sp.Aux.IsZero() {
 		t.Fatalf("plain prefab sprite = %+v", sp)
 	}
 }

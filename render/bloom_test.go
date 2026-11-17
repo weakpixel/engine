@@ -44,6 +44,13 @@ func TestBloomSetAndOff(t *testing.T) {
 		p.Passes[3].Params != [4]float32{0, 3} || p.Passes[4].Params[0] != 2 {
 		t.Fatalf("Set: passes %+v", p.Passes)
 	}
+	if p.Passes[0].Src != TargetChain {
+		t.Fatalf("Set: bright pass reads %d, want the chain", p.Passes[0].Src)
+	}
+	b.Set(&p, BloomOptions{Src: TargetGroup(2)})
+	if p.Passes[0].Src != TargetGroup(2) || p.Passes[4].Src != TargetChain || p.Passes[4].Out != TargetChain {
+		t.Fatalf("Set with Src: passes %+v, want the bright pass to read group 2 and the glow added to the chain", p.Passes)
+	}
 	b.SetOff(&p, true)
 	for i, ps := range p.Passes {
 		if !ps.Off {

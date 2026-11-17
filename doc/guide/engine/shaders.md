@@ -4,7 +4,7 @@ A sprite can be drawn through a [Kage](https://ebitengine.org/en/documents/shade
 
 Shaders apply in four places: **per sprite**; **per layer group**, a range of layers drawn into an offscreen image that is composited through a shader (water, fog, desaturating the world) or with a blend mode (light maps); **post-processing**, a chain of passes over the whole finished frame (vignette, screen flash, color grading); and a **final pass** at window resolution (CRT scanlines).
 
-Contents: [Quick start](#quick-start) · [How a sprite shader works](#how-a-sprite-shader-works) · [Examples](#examples) · [Driving Params](#driving-params) · [Time](#time) · [Tile layers](#tile-layers) · [Particles](#particles) · [Layer groups](#layer-groups) · [Post-processing](#post-processing) · [Loading and errors](#loading-and-errors) · [Performance](#performance) · [Limits](#limits) · [API reference](#api-reference)
+Contents: [Quick start](#quick-start) · [How a sprite shader works](#how-a-sprite-shader-works) · [Examples](#examples) · [Driving Params](#driving-params) · [Time](#time) · [Tile layers](#tile-layers) · [Particles](#particles) · [Text, panels and shapes](#text-panels-and-shapes) · [A second image](#a-second-image) · [Layer groups](#layer-groups) · [Post-processing](#post-processing) · [Loading and errors](#loading-and-errors) · [Performance](#performance) · [Limits](#limits) · [API reference](#api-reference)
 
 ## Quick start
 
@@ -342,6 +342,70 @@ A particle effect has `shader` and `params` keys, like a sprite has `Shader` and
 
 A shaded particle is one draw call, so a shaded emitter costs CPU in proportion to its live particles instead of batching into a few quads. Keep shaded emitters small (`Max`) and put them on a layer of their own. A shader that is zero, loading or failed draws the particles normally.
 
+## Text, panels and shapes
+
+`gfx.Label` and `gfx.NineSlice` (and so `ScreenNineSlice`) have `Shader` and `Params` like a sprite. An outlined title, a glowing button frame or a dissolving dialog box use the same shaders as sprites:
+
+```go
+outline := render.LoadShader(sc, "fx/outline.kage")
+ecs.NewEntity2(w, gfx.Transform{Pos: gfx.Vec2{X: 8, Y: 8}}, gfx.Label{
+	Text: "GAME OVER", Font: font, Layer: 10,
+	Shader: outline, Params: [4]float32{0, 0, 0, 1}, // black outline
+})
+```
+
+In a level or prefab both fields are written like on `gfx:Sprite`: `"Shader": "fx/outline.kage"`, `"Params": [0, 0, 0, 1]`.
+
+What the shader sees:
+
+- **The whole item as one image.** The text (all its lines) or the panel at its `Size` is drawn first, white, at scale 1 and unrotated, into an offscreen image; the shader then runs over that image, which is placed, scaled, rotated and blended like a sprite. So `imageSrc0` is the whole text or panel, not one glyph or one panel piece: an outline runs around the outside of the text, a dissolve runs across the whole panel.
+- **A margin of 4 pixels.** The image has a transparent border of 4 pixels on every side, so the [outline](#outline) and glow shaders have room to paint outside the item. Unlike sprites, nothing needs padding in the art.
+- **The color argument** is `Label.Color` or `NineSlice.Tint` (premultiplied), applied once to the whole item, as for a sprite's tint.
+
+Custom extract systems get the same for `render.Item` of kind `KindText`, `KindNineSlice`, `KindRect`, `KindLine` and `KindCircle`: set `Item.Shader` and `Item.Params`. (`gfx.DebugShape` has no shader fields: debug drawing stays plain.)
+
+**Cost.** Each shaded text, panel or shape is drawn on its own: the pending batch is flushed, the item is drawn into the offscreen image, and one shaded quad draws it. It never batches with its neighbours, so it costs a few draw calls where an unshaded one might cost none extra. That is fine for titles, damage numbers and dialog panels; do not shade hundreds of labels. An item larger than 4096 pixels (with the margin) in either direction, or one without area, draws without its shader. A shader that is zero, loading or failed draws the item normally.
+
+## A second image
+
+`gfx.Sprite.Aux` hands the shader a second image as `imageSrc1`: a noise texture for a dissolve that looks hand-drawn, a mask, a palette strip, a normal map. It is a sprite handle, so any image or atlas frame works, of any size. In a level or prefab it is an asset key like `ID`: `"Aux": "fx/noise.png"`.
+
+```go
+noise := render.LoadSprite(sc, "fx/noise.png")
+ecs.NewEntity2(w, gfx.Transform{}, gfx.Sprite{
+	ID: hero, Shader: dissolve, Aux: noise,
+	Params: [4]float32{0.3}, // 30% gone
+})
+```
+
+`imageSrc1At` does not take a position in the second image. Like every `imageSrcN` after the first, it takes **`imageSrc0Origin()` plus the position inside the second image**, and returns transparent outside it. So map the position in the sprite's frame to the second image first. To stretch the second image over the frame, whatever the two sizes:
+
+```kage
+//kage:unit pixels
+
+package main
+
+// Params.x: 0 = whole sprite, 1 = gone. imageSrc1 is a grayscale noise
+// image; its red channel decides when each pixel goes.
+var Params vec4
+
+func Fragment(dst vec4, src vec2, color vec4) vec4 {
+	uv := (src - imageSrc0Origin()) / imageSrc0Size() // 0..1 inside the frame
+	noise := imageSrc1At(imageSrc0Origin() + uv*imageSrc1Size())
+	if noise.r < Params.x {
+		return vec4(0)
+	}
+	return imageSrc0At(src) * color
+}
+```
+
+To tile it at its own pixel size instead, use `mod(src - imageSrc0Origin(), imageSrc1Size())` as the position inside it.
+
+- **Ignored without a shader.** `Aux` is only read through `Shader`.
+- **No image is transparent.** The zero handle, and a sprite that is still loading or failed, give `imageSrc1At` transparent pixels, never the placeholder sprite.
+- **Text, panels and shapes** take it through `render.Item.Aux` (custom extract systems); `gfx.Label` and `gfx.NineSlice` have no `Aux` field.
+- **Batching.** `Aux` is part of the batch key: shaded sprites with the same shader, frame, `Params`, blend and `Aux` image still share a draw call.
+
 ## Layer groups
 
 A layer group draws a range of render layers into an offscreen image instead of the screen. When the last item of the group is drawn, the image is composited onto what is below it: through a shader, with a blend mode, or both. Use it when an effect belongs to a layer, not to a sprite: water that ripples the scene behind it, a light map that darkens everything except around torches, the world turning gray while the game is paused.
@@ -572,8 +636,18 @@ bloom.SetOff(e.Post(), true) // off
 | `Threshold` | Brightness (the largest of red, green and blue, 0..1) above which a pixel glows, and only the part above it. Default 0.7. |
 | `Strength` | Scales the glow added to the frame. Default 1. |
 | `Radius` | Distance between the taps of the blur, in pixels of the quarter-size image. Default 1. |
+| `Src` | What glows. Zero (`TargetChain`): the chain so far, the whole frame. `TargetGroup(id)`: only the layers of one [layer group](#layer-groups) (see below). |
 
 It declares three targets (half, quarter and a quarter-size scratch image) and five passes. Passes added later see the bloom; the ones before it are what glows. Do not remove or reorder passes before the bloom's, because `Bloom` finds its passes by index. The frame should be opaque; a glow over a transparent pixel is added with matching alpha.
+
+**Glow only for some layers.** Targets are 8 bits per channel, so a bloom over the whole frame cannot tell a white wall from a white-hot laser: both are 1.0. Put what should glow on layers of their own, make a group of them, and pass it as `Src`:
+
+```go
+glow := e.Groups().Add(render.GroupOptions{From: 20, To: 20}) // neon signs, lasers, magic
+e.Post().AddBloom(render.BloomOptions{Src: render.TargetGroup(glow), Threshold: 0.3})
+```
+
+The group still draws normally; the bloom only reads it, and adds the glow to the whole chain. Bright sprites on other layers stay crisp, and a lower `Threshold` lets the glowing layers glow at any brightness. Add `NoComposite` to the group for a glow without the sprites themselves (a halo map). Costs are a group's ([costs](#costs)) plus the bloom's.
 
 ### Layers as pass inputs
 
@@ -690,17 +764,18 @@ With [asset hot reload](assets.md#hot-reload) on (`Config.WatchInterval`, or a h
 ## Performance
 
 - **Drawing allocates nothing.** Shaded sprites, like unshaded ones, add no allocations per frame (`TestDrawShadedNoAllocs`).
-- **Batching.** Consecutive shaded sprites with the same shader, the same **frame**, the same blend mode and **the same `Params`** are one draw call ([rendering guide](rendering.md#batching)), so the particles of one effect cost about as much as unshaded ones. Each sprite with another frame or other `Params` is its own draw call and its own GPU batch: the shader sees its frame as `imageSrc0`, and Ebiten merges only draws with equal uniforms. The queue sorts sprites in a layer by shader, then by texture, so sprites that share both stay together. That is fine for the few sprites that are flashing or outlined at any moment. Avoid giving thousands of sprites individually different `Params` every frame, and make a shaded tile layer `Chunked` (every tile of a layer is another frame; a chunked layer runs the shader once per chunk).
+- **Batching.** Consecutive shaded sprites with the same shader, the same **frame**, the same blend mode, **the same `Params`** and the same `Aux` image are one draw call ([rendering guide](rendering.md#batching)), so the particles of one effect cost about as much as unshaded ones. Each sprite with another frame or other `Params` is its own draw call and its own GPU batch: the shader sees its frame as `imageSrc0`, and Ebiten merges only draws with equal uniforms. The queue sorts sprites in a layer by shader, then by texture, so sprites that share both stay together. That is fine for the few sprites that are flashing or outlined at any moment. Avoid giving thousands of sprites individually different `Params` every frame, and make a shaded tile layer `Chunked` (every tile of a layer is another frame; a chunked layer runs the shader once per chunk).
 - **Y-sorted layers** sort by Y first, so shaded and unshaded sprites interleave there and batch less.
-- `Renderer.Stats().ShaderDraws` counts the draw calls that went through a shader in the last frame, `ShadedQuads` the sprites drawn through one.
+- **Shaded text, panels and shapes** are a draw call of their own each, plus the draw into the offscreen image ([text, panels and shapes](#text-panels-and-shapes)). They allocate nothing of the engine's own (`TestDrawShadedKindsNoAllocs`).
+- `Renderer.Stats().ShaderDraws` counts the draw calls that went through a shader in the last frame, `ShadedQuads` the items drawn through one.
 
 ## Limits
 
-- Only sprites (`Sprite`, `ScreenSprite`, `Item` of kind `KindSprite` or `KindCanvas`), tile and image layers and particles use shaders. Text, nine-slices and debug shapes ignore `Item.Shader`; so does a Tiled object layer.
-- A shader paints only inside the sprite's rectangle: glows and outlines need transparent padding in the frame.
-- The only per-sprite input is the `Params` vec4 plus the tint (for particles, the tint is the only per-particle input); `Time` is the same for all sprites. There is no second texture.
+- Tiled object layers are map data and are not drawn, so they have no shader. `gfx.DebugShape` has no shader fields (`render.Item` shapes do).
+- A sprite's shader paints only inside the sprite's rectangle: glows and outlines need transparent padding in the frame. Text and panels get a 4 pixel margin instead.
+- The per-sprite inputs are the `Params` vec4, the tint and one second image (`Aux`); for particles, the tint is the only per-particle input and there is no second image. `Time` is the same for all sprites.
 - Layer groups cannot nest or overlap.
-- Post targets are 8 bits per channel, so there is no HDR bloom; the final pass reads one image.
+- Post targets are 8 bits per channel (Ebiten has no floating-point images), so colors cannot go above 1.0 and a bloom cannot tell bright from very bright; choose what glows with a [layer group](#bloom) instead. The final pass reads one image.
 
 ## API reference
 
@@ -708,15 +783,17 @@ With [asset hot reload](assets.md#hot-reload) on (`Config.WatchInterval`, or a h
 | --- | --- | --- |
 | `gfx.Sprite.Shader` | `gfx` | `gfx.ShaderHandle`: the shader, zero for none. GOD: asset key, kind `shader`. |
 | `gfx.Sprite.Params` | `gfx` | `[4]float32`: the shader's `Params` vec4. GOD: optional array of 4 numbers. |
+| `gfx.Sprite.Aux` | `gfx` | `gfx.SpriteHandle`: the shader's second image, `imageSrc1` ([a second image](#a-second-image)). GOD: asset key, kind `sprite`, optional. |
+| `gfx.Label.Shader`, `.Params`, `gfx.NineSlice.Shader`, `.Params` | `gfx` | The same two fields on text and panels ([text, panels and shapes](#text-panels-and-shapes)). |
 | `render.LoadShader(sc, key)` | `render` | Handle now, load in the background. `LoadShaderSync` blocks; `HoldShader` adds an owner. |
 | `render.ShaderStore` | `render` | `Get` (nil `Shader` field = no shader), `Ready`, `Err`, `Key`, `Lookup`, `Generic`. From `ShaderStoreOf(srv)` or `StoresOf(srv).Shaders`. |
 | `tilemap.TileLayer.Shader`, `.Params` | `tilemap` | The shader and `Params` of a tile or image layer; `Spawn` sets them from the Tiled properties `shader` and `shaderParams`. |
 | `shader`, `params` in `*.fx.json` | `particles` | The same two fields on a particle effect: asset key and optional array of 4 numbers. |
-| `render.Item.Shader`, `Item.Params` | `render` | The same two fields on queue items of kind `KindSprite` and `KindCanvas`, for your own extract systems. |
+| `render.Item.Shader`, `Item.Params`, `Item.Aux` | `render` | The same fields on queue items of every drawn kind (sprite, canvas, text, nine-slice, rect, line, circle), for your own extract systems. |
 | `render.ShaderUniformParams` | `render` | `"Params"`: the uniform's name. |
 | `render.ShaderUniformTime` | `render` | `"Time"`: the name of the time uniform, a `float` in seconds. |
 | `Renderer.SetTime(d)` | `render` | Sets `Time` for the following `Draw` and `DrawFinal`. `game.Engine` calls it every frame. |
-| `Renderer.Stats().ShaderDraws`, `.ShadedQuads` | `render` | Shader draw calls and shaded sprites in the last `Draw`. |
+| `Renderer.Stats().ShaderDraws`, `.ShadedQuads` | `render` | Shader draw calls and shaded items in the last `Draw`. |
 | `render.GroupConfig` | `render` | Layer groups: `Add(GroupOptions) GroupID`, `Set`, `Options`, `Len`. `Renderer.SetGroups`; `game.Engine.Groups()`. |
 | `render.GroupOptions` | `render` | `From`, `To`, `Shader`, `Params`, `Blend`, `Clear`, `SampleBelow`. |
 | `render.Blend` | `render` | Blend modes of items and groups, `BlendNormal` to `BlendErase`: [kinds](kinds.md#blend-modes-renderblend). `BlendMultiply` multiplies onto what is below (light maps), `BlendErase` cuts holes in a group. |
@@ -725,7 +802,7 @@ With [asset hot reload](assets.md#hot-reload) on (`Config.WatchInterval`, or a h
 | `render.Pass` | `render` | `Shader`, `Params`, `Off`, and the inputs and output: `Src`, `Extra`, `Out`. |
 | `render.Target`, `PostChain.AddTarget` | `render` | An offscreen image for passes (`Scale` divides the screen size) and its declaration; returns a `TargetID`. |
 | `render.TargetID` | `render` | `TargetChain`, `TargetFrame`, `TargetPrevious`, `TargetGroup(id)` or a declared target. |
-| `PostChain.AddBloom(BloomOptions) Bloom` | `render` | Appends a bloom (three targets, five passes). `Bloom.Set` retunes, `Bloom.SetOff` toggles it. |
+| `PostChain.AddBloom(BloomOptions) Bloom` | `render` | Appends a bloom (three targets, five passes); `BloomOptions` has `Threshold`, `Strength`, `Radius` and `Src` (what glows). `Bloom.Set` retunes, `Bloom.SetOff` toggles it. |
 | `Renderer.DrawFinal(screen, offscreen, geoM)` | `render` | The final pass, for `ebiten.FinalScreenDrawer`. `game.Engine` calls it. |
 | `Renderer.Stats().PostPasses` | `render` | Post passes that ran, the final pass included. |
 

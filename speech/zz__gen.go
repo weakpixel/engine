@@ -36,7 +36,7 @@ func init() {
 		Schema:    s1,
 		Decode:    god.DecodeFunc[Speaker](),
 	})
-	s2 := god.MustParseSchema(`{"type":"object","properties":{"Color":{"type":"integer","format":"int32","minimum":0,"maximum":4294967295},"Font":{"type":"string","format":"asset","x-asset":"font"},"Layer":{"type":"integer","format":"int32","minimum":-32768,"maximum":32767},"Text":{"type":"string"}},"required":["Text","Layer","Color"]}`)
+	s2 := god.MustParseSchema(`{"type":"object","properties":{"Color":{"type":"integer","format":"int32","minimum":0,"maximum":4294967295},"Font":{"type":"string","format":"asset","x-asset":"font"},"Layer":{"type":"integer","format":"int32","minimum":-32768,"maximum":32767},"Params":{"type":"array","items":{"type":"number","format":"float"},"minItems":4,"maxItems":4},"Shader":{"type":"string","format":"asset","x-asset":"shader"},"Text":{"type":"string"}},"required":["Text","Layer","Color"]}`)
 	god.RegisterComponent(god.ComponentSchema{
 		Group:     "gfx",
 		Name:      "Label",

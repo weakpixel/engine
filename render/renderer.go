@@ -26,10 +26,12 @@ type Stats struct {
 	// line or circle. Consecutive quads with the same target, source texture
 	// and blend mode share one draw call.
 	Quads int
-	// ShadedQuads is how many sprites and canvases were drawn through their
-	// shader (Item.Shader resolved to a loaded shader), one quad each.
-	// Consecutive ones with the same target, image (atlas frame), blend
-	// mode, shader and Params share one draw call.
+	// ShadedQuads is how many items were drawn through their shader
+	// (Item.Shader resolved to a loaded shader), one quad each. Consecutive
+	// sprites and canvases with the same target, image (atlas frame), blend
+	// mode, shader and Params share one draw call; a shaded text, nine-slice
+	// or shape is always a draw call of its own, plus the calls that draw
+	// it into the scratch image first (counted in DrawCalls and Quads).
 	ShadedQuads int
 	// ShaderDraws is how many of the draw calls went through a shader: the
 	// batches of shaded quads, plus shaded layer group composites and post
@@ -73,6 +75,9 @@ type Renderer struct {
 	// shaded quad); benchmarks use it to compare both paths.
 	batch   quadBatch
 	noBatch bool
+	// scratch is where shaded text, nine-slices and shapes are drawn before
+	// their shader runs (see shade-scratch.go).
+	scratch shadeScratch
 	// blend is the Blend that setStyle last put into opts, for batching.
 	blend Blend
 	topts text.DrawOptions
@@ -428,12 +433,29 @@ func (r *Renderer) shader(h gfx.ShaderHandle) *ebiten.Shader {
 	return r.stores.Shaders.Get(h).Shader
 }
 
+// aux returns the image of a shaded item's second image h, or nil: the
+// zero handle (checked first, so most items skip the store lookup), a
+// sprite that is loading or failed, or a Renderer without a sprite store.
+// It is never the placeholder sprite, so a shader that reads imageSrc1
+// sees transparent pixels until the image is ready instead of the
+// placeholder's checkerboard.
+func (r *Renderer) aux(h gfx.SpriteHandle) *ebiten.Image {
+	if h.IsZero() || r.stores.Sprites.s == nil {
+		return nil
+	}
+	sp := r.stores.Sprites.Get(h)
+	if sp == r.placeholder {
+		return nil
+	}
+	return sp.Image
+}
+
 // drawShaded draws img through sh with the placement and style that
 // drawSprite or drawCanvas already put into r.opts: into the pending batch,
 // or as its own draw call when batching is off. The quad has img's size, so
 // the same GeoM places it exactly like DrawImage.
 func (r *Renderer) drawShaded(dst, img *ebiten.Image, sh *ebiten.Shader, it *Item) {
-	r.addShadedQuad(dst, img, &r.opts.GeoM, &r.opts.ColorScale, r.blend, sh, &it.Params)
+	r.addShadedQuad(dst, img, r.aux(it.Aux), &r.opts.GeoM, &r.opts.ColorScale, r.blend, sh, &it.Params)
 	if r.noBatch {
 		r.flush()
 	}
@@ -447,9 +469,22 @@ func (r *Renderer) quad(dst *ebiten.Image, w, h float32, t transform) {
 }
 
 // drawRect draws a 1-pixel outline of an it.Size rectangle whose top-left
-// is at t, scaled and rotated with it.
+// is at t, scaled and rotated with it. Through a shader the outline is
+// drawn at scale 1 first, so its width scales with the item.
 func (r *Renderer) drawRect(dst *ebiten.Image, it *Item, t transform) {
+	if sh := r.shader(it.Shader); sh != nil {
+		if region, at, ok := r.beginScratch(gfx.Vec2{}, it.Size); ok {
+			r.rectOutline(region, it, at)
+			r.endScratch(dst, region, sh, it, t, gfx.Vec2{})
+			return
+		}
+	}
 	r.setStyle(it.Color, it.Blend)
+	r.rectOutline(dst, it, t)
+}
+
+// rectOutline draws the four edges of drawRect in the current style.
+func (r *Renderer) rectOutline(dst *ebiten.Image, it *Item, t transform) {
 	w, h := it.Size.X*t.scale.X, it.Size.Y*t.scale.Y
 	sin, cos := xmath.Sincos(t.rot)
 	edge := func(ox, oy, ew, eh float32) {
@@ -464,6 +499,17 @@ func (r *Renderer) drawRect(dst *ebiten.Image, it *Item, t transform) {
 
 // drawLine draws a 1-pixel line from t to t + it.Size (scaled, rotated).
 func (r *Renderer) drawLine(dst *ebiten.Image, it *Item, t transform) {
+	if sh := r.shader(it.Shader); sh != nil {
+		// The line may run in any direction from the pivot, and its one
+		// pixel of width lies beside it: one more pixel on every side.
+		lo := gfx.Vec2{X: min(it.Size.X, 0) - 1, Y: min(it.Size.Y, 0) - 1}
+		size := gfx.Vec2{X: xmath.Abs(it.Size.X) + 2, Y: xmath.Abs(it.Size.Y) + 2}
+		if region, at, ok := r.beginScratch(lo, size); ok {
+			r.segment(region, at.pos, it.Size)
+			r.endScratch(dst, region, sh, it, t, lo)
+			return
+		}
+	}
 	r.setStyle(it.Color, it.Blend)
 	r.segment(dst, t.pos, gfx.Vec2{X: it.Size.X * t.scale.X, Y: it.Size.Y * t.scale.Y}.Rotate(t.rot))
 }
@@ -480,7 +526,22 @@ func (r *Renderer) segment(dst *ebiten.Image, p, d gfx.Vec2) {
 
 // drawCircle draws a 1-pixel circle outline of radius it.Size.X around t.
 func (r *Renderer) drawCircle(dst *ebiten.Image, it *Item, t transform) {
+	if sh := r.shader(it.Shader); sh != nil {
+		// The pivot is the center; one more pixel for the outline's width.
+		reach := it.Size.X + 1
+		lo := gfx.Vec2{X: -reach, Y: -reach}
+		if region, at, ok := r.beginScratch(lo, gfx.Vec2{X: 2 * reach, Y: 2 * reach}); ok {
+			r.circleOutline(region, it, at)
+			r.endScratch(dst, region, sh, it, t, lo)
+			return
+		}
+	}
 	r.setStyle(it.Color, it.Blend)
+	r.circleOutline(dst, it, t)
+}
+
+// circleOutline draws the segments of drawCircle in the current style.
+func (r *Renderer) circleOutline(dst *ebiten.Image, it *Item, t transform) {
 	radius := it.Size.X * t.scale.X
 	prev := gfx.Vec2{X: t.pos.X + radius, Y: t.pos.Y}
 	for i := 1; i <= circleSegments; i++ {
@@ -491,13 +552,27 @@ func (r *Renderer) drawCircle(dst *ebiten.Image, it *Item, t transform) {
 	}
 }
 
+// drawText draws it.Text with its top-left corner at t. Through a shader
+// the text is drawn at scale 1 first and the shader sees all of it.
 func (r *Renderer) drawText(dst *ebiten.Image, it *Item, t transform) {
 	font := r.stores.Fonts.Get(it.Font)
-	face := font.Face
 	// Without a line spacing, Ebiten draws every line of a multi-line text
 	// on the same baseline.
 	r.topts.LineSpacing = font.LineHeight
+	if sh := r.shader(it.Shader); sh != nil {
+		w, h := text.Measure(it.Text, font.Face, font.LineHeight)
+		if region, at, ok := r.beginScratch(gfx.Vec2{}, gfx.Vec2{X: float32(w), Y: float32(h)}); ok {
+			r.textAt(region, it, font.Face, at)
+			r.endScratch(dst, region, sh, it, t, gfx.Vec2{})
+			return
+		}
+	}
 	r.setStyle(it.Color, it.Blend)
+	r.textAt(dst, it, font.Face, t)
+}
+
+// textAt draws it.Text at t in the current style.
+func (r *Renderer) textAt(dst *ebiten.Image, it *Item, face text.Face, t transform) {
 	geoM(&r.topts.GeoM, gfx.Vec2{}, false, false, t)
 	r.flush() // text is not batched; keep draw order
 	text.Draw(dst, it.Text, face, &r.topts)
