@@ -478,7 +478,7 @@ func (t *Tool) previewSection() toolshell.Section {
 		tm = em.Time
 	}
 	bg := toolshell.Asset(idBGImage, "Background image", toolshell.AssetImage, t.bgImage, withCurrent(slices.Clone(t.st.Images), t.bgImage))
-	return toolshell.Section{ID: "preview", Label: "Preview", Fields: []toolshell.Field{
+	return toolshell.Section{ID: "preview", Label: "Preview", Side: toolshell.SideLeft, Fields: []toolshell.Field{
 		toolshell.Button(idPlay, play).WithHint("Enter"),
 		toolshell.Button(idStep, "Step").WithHint("One tick (.)"),
 		toolshell.Dropdown(idSpeed, "Speed", t.speed, speedNames...),

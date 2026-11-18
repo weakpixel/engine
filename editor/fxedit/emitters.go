@@ -197,17 +197,27 @@ func (s *State) emittersSection() toolshell.Section {
 		labels[i] = s.emitterLabel(i)
 	}
 	fields := []toolshell.Field{
-		toolshell.Dropdown(IDEmitterSel, "Emitter", s.Sel, labels...),
+		toolshell.Dropdown(IDEmitterSel, "Emitter", s.Sel, labels...).AsList(emitterRows),
 		toolshell.Button(IDEmitterAdd, "Add").WithHint("Add an emitter to the effect"),
 		toolshell.Button(IDEmitterDup, "Duplicate"),
 		toolshell.Button(IDEmitterDel, "Delete"),
 		toolshell.Button(IDEmitterUp, "Move up").WithHint("Earlier emitters draw below later ones"),
 		toolshell.Button(IDEmitterDown, "Move down"),
-		toolshell.Text(IDEmitterName, "Name", s.Em.Name),
-		num(IDEmitterLayer, "Layer", float64(s.Em.Layer), 0).WithHint("Added to the component's Layer"),
 		toolshell.Checkbox(IDEmitterMute, "Mute", s.muted(s.Sel)).WithHint("Preview only, not saved"),
 		toolshell.Button(IDEmitterReset, "Reset").WithHint("Remove all emitters and start over with one default emitter"),
 		toolshell.Button(IDEmitterSolo, "Solo").WithHint("Mute every other emitter; click again to unmute"),
 	}
-	return toolshell.Section{ID: "emitters", Label: "Emitters", Fields: fields}
+	return toolshell.Section{ID: "emitters", Label: "Emitters", Side: toolshell.SideLeft, Fields: fields}
 }
+
+// emitterSection is the right section with the properties of the selected
+// emitter that no other section holds: its name and draw layer.
+func (s *State) emitterSection() toolshell.Section {
+	return toolshell.Section{ID: "emitter", Label: "Emitter", Fields: []toolshell.Field{
+		toolshell.Text(IDEmitterName, "Name", s.Em.Name),
+		num(IDEmitterLayer, "Layer", float64(s.Em.Layer), 0).WithHint("Added to the component's Layer"),
+	}}
+}
+
+// emitterRows is the rows the emitter list shows before it scrolls.
+const emitterRows = 8

@@ -86,7 +86,7 @@ func TestPanelOfANewSmokeEffect(t *testing.T) {
 	for _, s := range p.Sections {
 		secs = append(secs, s.ID)
 	}
-	if got := strings.Join(secs, ","); got != "emitters,effect,look,emission,shape,motion,advanced,save,view" {
+	if got := strings.Join(secs, ","); got != "emitters,effect,emitter,look,emission,shape,motion,advanced,save,view" {
 		t.Errorf("sections = %s", got)
 	}
 	ids := strings.Join(fieldIDs(p), " ")
@@ -116,7 +116,7 @@ func TestPanelOfANewSmokeEffect(t *testing.T) {
 	if f, _ := p.Find("fx.live"); !strings.HasPrefix(string(f.Value), `"0 / 128`) {
 		t.Errorf("live = %s", f.Value)
 	}
-	if sec := p.Sections[7]; sec.Label != "Save as" || sec.Collapsed {
+	if sec := p.Sections[8]; sec.Label != "Save as" || sec.Collapsed {
 		t.Errorf("save section = %+v", sec)
 	}
 	if r.SavePath != "global/fx/smoke.fx.json" {
@@ -316,7 +316,7 @@ func TestSaveAs(t *testing.T) {
 		t.Errorf("after saving: key=%q sprite=%q", r.Key, r.Em.Sprite)
 	}
 	// The next panel is a saved effect: "Save a copy".
-	if sec := panel(t, r).Sections[7]; sec.Label != "Save a copy" || !sec.Collapsed {
+	if sec := panel(t, r).Sections[8]; sec.Label != "Save a copy" || !sec.Collapsed {
 		t.Errorf("section after saving = %+v", sec)
 	}
 	if err := r.set(t, SavePathID, "  "); err != nil {
