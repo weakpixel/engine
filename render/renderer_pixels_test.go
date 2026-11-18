@@ -96,11 +96,19 @@ func TestDrawTintAndShapes(t *testing.T) {
 	if got := pixel(dst, 45, 40); got.A != 255 {
 		t.Fatalf("line = %v, want drawn", got)
 	}
-	if got := pixel(dst, 22, 45); got.A != 255 {
-		t.Fatalf("circle right extreme (inside the radius) = %v, want drawn", got)
+	// The circle is a 1 pixel ring centered on the radius (8 around 15,45),
+	// antialiased: the pixels it crosses are covered, its center is empty.
+	for _, p := range [][2]int{{23, 45}, {7, 45}, {15, 37}, {15, 53}} {
+		if got := pixel(dst, p[0], p[1]); got.A == 0 {
+			t.Fatalf("circle pixel %v = %v, want drawn", p, got)
+		}
 	}
-	// One batch for the sprite, one for all shape segments (white image).
-	if st := r.Stats(); st.Items != 4 || st.DrawCalls != 2 || st.Quads != 1+4+1+circleSegments {
+	if got := pixel(dst, 15, 45); got.A != 0 {
+		t.Fatalf("circle center = %v, want empty (outline only)", got)
+	}
+	// One batch for the sprite, one for the rect and line edges (white
+	// image), one for the circle's path.
+	if st := r.Stats(); st.Items != 4 || st.DrawCalls != 3 || st.Quads != 1+4+1 {
 		t.Fatalf("Stats = %+v", st)
 	}
 }

@@ -43,7 +43,7 @@ Every asset type, its key and its file formats: [asset-kinds.md](asset-kinds.md)
 | `KindSprite` | a sprite | `Sprite`, `Scale`, `Origin`, `FlipX/Y`, `Color` (tint), `Shader`, `Params`, `Aux` ([shaders](shaders.md)) |
 | `KindRect` | a 1-px rect outline (top-left at `Pos`) | `Size`, `Color` |
 | `KindLine` | a line from `Pos` | `Size` (end offset), `Color` |
-| `KindCircle` | a circle outline | `Size.X` (radius), `Color` |
+| `KindCircle` | a circle outline: an antialiased ring 1 pixel wide, centered on the radius, smooth at any size; a draw call of its own | `Size.X` (radius, times `Scale.X`), `Color` |
 | `KindCanvas` | a pre-rendered image ([canvases](rendering.md#canvases)) | `Canvas`, `Scale`, `Origin` (zero: top-left), `FlipX/Y`, `Color` (tint) |
 | `KindText` | text | `Text`, `Font`, `Color` |
 

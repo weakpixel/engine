@@ -54,7 +54,8 @@ func TestDrawBatches(t *testing.T) {
 			with(sprite(a[1]), func(it *Item) { it.Shader = flash }),
 			sprite(a[2]),
 		}, false, 3, 2},
-		{"shapes share the white image", []Item{shape(KindRect), shape(KindLine), shape(KindCircle)}, false, 1, 4 + 1 + circleSegments},
+		{"rect and line share the white image", []Item{shape(KindRect), shape(KindLine)}, false, 1, 4 + 1},
+		{"circle is a path of its own", []Item{shape(KindRect), shape(KindCircle), shape(KindLine)}, false, 3, 4 + 1},
 		{"sprite then shape", []Item{sprite(a[0]), shape(KindLine)}, false, 2, 2},
 		{"no batching", []Item{sprite(a[0]), sprite(a[1]), shape(KindRect)}, true, 2 + 4, 0},
 	}

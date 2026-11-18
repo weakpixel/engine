@@ -87,8 +87,9 @@ func TestDrawBatchedMatchesUnbatched(t *testing.T) {
 	}
 	batched, bst := draw(false)
 	plain, pst := draw(true)
-	if bst.DrawCalls >= pst.DrawCalls || bst.Quads != pst.DrawCalls {
-		t.Fatalf("batched %+v, unbatched %+v: want fewer draw calls, one quad per unbatched call", bst, pst)
+	// The circle is a mesh of its own in both: one draw call, no quad.
+	if bst.DrawCalls >= pst.DrawCalls || bst.Quads != pst.DrawCalls-1 {
+		t.Fatalf("batched %+v, unbatched %+v: want fewer draw calls, one quad per unbatched call besides the circle", bst, pst)
 	}
 	diffs := 0
 	for y := range 64 {
