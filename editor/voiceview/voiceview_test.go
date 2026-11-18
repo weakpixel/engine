@@ -151,3 +151,19 @@ func TestCloseAndReopen(t *testing.T) {
 		t.Error("a texture was opened")
 	}
 }
+
+// The View section is the only one on the left and comes first.
+func TestPanelSides(t *testing.T) {
+	for _, key := range []string{"talk/kip.voice.json", "talk/town.dialogue.json"} {
+		tool, _ := open(t, key)
+		p := tool.Panel()
+		if err := p.Check(); err != nil {
+			t.Fatalf("%s: %v", key, err)
+		}
+		for i, s := range p.Sections {
+			if left := s.Side == toolshell.SideLeft; left != (s.ID == "view") || (left && i != 0) {
+				t.Errorf("%s: section %q (index %d) side %q", key, s.ID, i, s.Side)
+			}
+		}
+	}
+}

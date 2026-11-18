@@ -32,6 +32,8 @@ type fakeContext struct {
 	// cells is how many grid cells were laid out; each gets its own
 	// 101x101 square further down, so picker areas do not overlap.
 	cells int
+	// click is the text of the button that reports a click.
+	click string
 }
 
 func (c *fakeContext) rec(format string, a ...any) {
@@ -74,7 +76,14 @@ func (c *fakeContext) TextField(s *string) debugui.EventHandler {
 }
 func (c *fakeContext) Button(t string) debugui.EventHandler {
 	c.rec("button %s", t)
+	if c.click != "" && t == c.click {
+		return handler{fire: true}
+	}
 	return c.handle("button", nil)
+}
+func (c *fakeContext) Panel(f func(debugui.ContainerLayout)) {
+	c.rec("panel")
+	f(debugui.ContainerLayout{})
 }
 
 func (c *fakeContext) GridCell(f func(bounds image.Rectangle)) {
@@ -276,5 +285,40 @@ func TestBuildSetKeepsBounds(t *testing.T) {
 	}
 	if got["r"] != "[-1,-1]" {
 		t.Errorf("range set = %s, want [-1,-1]", got["r"])
+	}
+}
+
+func listPanel(sel int) toolshell.Panel {
+	return toolshell.Panel{Sections: []toolshell.Section{{ID: "s", Label: "S", Fields: []toolshell.Field{
+		toolshell.Dropdown("l", "Frames", sel, "(none)", "a", "b").AsList(8),
+	}}}}
+}
+
+func TestBuildList(t *testing.T) {
+	c := &scopedContext{}
+	New().Build(c, listPanel(1), func(string, json.RawMessage) { t.Error("set called without a click") })
+	want := []string{"header S open=true", `text "Frames"`, "panel", "button   (none)", "button > a", "button   b"}
+	if got := strings.Join(c.calls, "\n"); got != strings.Join(want, "\n") {
+		t.Errorf("calls =\n%s\nwant\n%s", got, strings.Join(want, "\n"))
+	}
+}
+
+func TestBuildListClick(t *testing.T) {
+	tests := []struct {
+		name, click, want string
+	}{
+		{"other row", "  b", "l=2"},
+		{"selected row", "> a", ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &scopedContext{}
+			c.click = tt.click
+			var got []string
+			New().Build(c, listPanel(1), func(id string, v json.RawMessage) { got = append(got, id+"="+string(v)) })
+			if g := strings.Join(got, ","); g != tt.want {
+				t.Errorf("set calls = %q, want %q", g, tt.want)
+			}
+		})
 	}
 }

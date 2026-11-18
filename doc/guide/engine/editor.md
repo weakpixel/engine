@@ -184,7 +184,9 @@ The panels lie over the viewport, which fills the window: the left one holds the
 
 `view` previews with the engine's own loaders, so it needs no game code and works while the game does not compile.
 
-- **Atlas.** The texture with every frame outlined, labelled with its index and name (the Labels dropdown picks index, name, both or none; small frames are labelled only when hovered). The panel describes the frame under the mouse: its rect in the texture, untrimmed size, trim offset and pivot. A click selects a frame and keeps it described; a click on nothing clears it. Where frames overlap, the smaller one is picked. A grid sheet names its frames by index, so both labels are the same number.
+- **Atlas.** The texture with every frame outlined, labelled with its index and name (the Labels dropdown on the left picks index, name, both or none; small frames are labelled only when hovered). The left Frames list picks a frame like a click on it does (`(none)` clears the selection). The panel describes the frame under the mouse: its rect in the texture, untrimmed size, trim offset and pivot. A click selects a frame and keeps it described; a click on nothing clears it. Where frames overlap, the smaller one is picked. A grid sheet names its frames by index, so both labels are the same number.
+- **World.** The maps of a `.world` file with their bounds. The left Maps list selects a map like a click does (it does not open a level; a double click does).
+- **Map.** The left panel holds the layer toggles, the Names switch and the levels that use the map; the Object section on the right describes the selected object, else the one under the mouse.
 - **Font.** Sample text at the sizes the project uses: the view scans the `*.level.json` and `*.prefab.json` files of the asset root for `fonts/ui.ttf#16` style keys of the opened font (at most 300 files), or shows 12, 16, 24 and 32 px when there are none. The panel changes the sample text and adds one more size to compare, and lists each size's line height. The text is drawn with the face a `gfx.Label` uses, in black or white to suit the background.
 
 ### The fx tool
