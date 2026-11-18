@@ -122,6 +122,8 @@ func TestPanelCheck(t *testing.T) {
 		{"wrong value kind", one(Field{ID: "a", Label: "A", Widget: WidgetCheckbox, Value: json.RawMessage(`3`)}), []string{"boolean value"}},
 		{"inverted range", one(Field{ID: "a", Label: "A", Widget: WidgetNumber, Value: json.RawMessage(`1`), Min: &lo, Max: &hi}), []string{"Min 5 is above Max 1"}},
 		{"inverted pair range", one(NumberRange("a", "A", 1, 2).Range(lo, hi)), []string{"Min 5 is above Max 1"}},
+		{"list on a checkbox", one(Field{ID: "a", Label: "A", Widget: WidgetCheckbox, Value: json.RawMessage(`true`), List: 3}), []string{"list is only for a dropdown"}},
+		{"negative list", one(Field{ID: "a", Label: "A", Widget: WidgetDropdown, Value: json.RawMessage(`0`), Options: []string{"x"}, List: -1}), []string{"list rows -1 is negative"}},
 		{"unknown side", Panel{Sections: []Section{{ID: "s", Label: "S", Side: "top"}}}, []string{`section "s": unknown side "top"`}},
 		{"all errors are reported", Panel{Sections: []Section{{ID: "s", Label: "S", Fields: []Field{
 			Checkbox("a", "", true), Field{ID: "b", Label: "B", Widget: "x"}}}}}, []string{"no label", `unknown widget "x"`}},
@@ -139,4 +141,29 @@ func TestPanelCheck(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestAsList(t *testing.T) {
+	f := Dropdown("a", "A", 0, "x", "y").AsList(8)
+	p := Panel{Sections: []Section{{ID: "s", Label: "S", Fields: []Field{f}}}}
+	if err := p.Check(); err != nil {
+		t.Fatalf("Check = %v", err)
+	}
+	b, err := json.Marshal(f)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(b), `"list":8`) {
+		t.Errorf("JSON = %s, want list 8", b)
+	}
+	plain, _ := json.Marshal(Dropdown("a", "A", 0, "x"))
+	if strings.Contains(string(plain), "list") {
+		t.Errorf("plain dropdown JSON = %s, want no list", plain)
+	}
+	defer func() {
+		if r := recover(); r == nil || !strings.Contains(r.(string), "toolshell: AsList rows must be at least 1") {
+			t.Errorf("AsList(0) panic = %v", r)
+		}
+	}()
+	Dropdown("a", "A", 0, "x").AsList(0)
 }

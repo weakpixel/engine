@@ -272,7 +272,7 @@ func (v *tilesetView) Panel() toolshell.Panel {
 	}
 	p.Sections = []toolshell.Section{
 		{ID: "tileset", Label: "Tileset", Fields: info},
-		{ID: "show", Label: "Show", Fields: show},
+		{ID: "show", Label: "Show", Side: toolshell.SideLeft, Fields: show},
 		{ID: "tile", Label: "Tile", Fields: v.tileFields()},
 		v.shell.ViewSection(),
 	}

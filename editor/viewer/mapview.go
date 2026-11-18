@@ -391,8 +391,7 @@ func (v *mapView) Panel() toolshell.Panel {
 		}
 		layers[i] = toolshell.Checkbox("layer."+strconv.Itoa(i), strings.Repeat("  ", depth)+name, v.on(i)).WithHint(l.Kind.String() + " layer")
 	}
-	objects := []toolshell.Field{toolshell.Checkbox("objects.names", "Names", v.names)}
-	objects = append(objects, v.objectFields()...)
+	left := toolshell.SideLeft
 	levels := []toolshell.Field{toolshell.Label("levels.none", "Levels", "none (no level of the map's package uses it)")}
 	if len(v.levels) > 0 {
 		levels = levels[:0]
@@ -402,9 +401,10 @@ func (v *mapView) Panel() toolshell.Panel {
 	}
 	p.Sections = []toolshell.Section{
 		{ID: "map", Label: "Map", Fields: info},
-		{ID: "layers", Label: "Layers", Fields: layers},
-		{ID: "objects", Label: "Objects", Fields: objects},
-		{ID: "levels", Label: "Levels", Fields: levels},
+		{ID: "layers", Label: "Layers", Side: left, Fields: layers},
+		{ID: "objects", Label: "Objects", Side: left, Fields: []toolshell.Field{toolshell.Checkbox("objects.names", "Names", v.names)}},
+		{ID: "object", Label: "Object", Fields: v.objectFields()},
+		{ID: "levels", Label: "Levels", Side: left, Fields: levels},
 		v.shell.ViewSection(),
 	}
 	return p
