@@ -7,6 +7,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 
 	"github.com/weakpixel/engine/editor/toolshell"
+	"github.com/weakpixel/engine/editor/viewkit"
 	"github.com/weakpixel/engine/gfx"
 	"github.com/weakpixel/engine/tiled"
 	"github.com/weakpixel/engine/xmath"
@@ -128,7 +129,7 @@ func segmentDistance(a, b tiled.Point, p gfx.Vec2) float64 {
 func drawObject(s *toolshell.Shell, screen ebiten.FinalScreen, o *tiled.Object, anchor gfx.Vec2, c color.RGBA, width float32) {
 	if o.Shape == tiled.ShapePoint {
 		p := s.WindowPoint(anchor)
-		arm := pointArm * float32(deviceScale())
+		arm := pointArm * float32(viewkit.DeviceScale())
 		s.StrokeLine(screen, p.X-arm, p.Y, p.X+arm, p.Y, width, c)
 		s.StrokeLine(screen, p.X, p.Y-arm, p.X, p.Y+arm, width, c)
 		return

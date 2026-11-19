@@ -14,6 +14,7 @@ import (
 	"github.com/weakpixel/asset"
 	"github.com/weakpixel/ecs"
 	"github.com/weakpixel/engine/editor/toolshell"
+	"github.com/weakpixel/engine/editor/viewkit"
 	"github.com/weakpixel/engine/gfx"
 	"github.com/weakpixel/engine/tiled"
 	"github.com/weakpixel/engine/tilemap"
@@ -179,7 +180,7 @@ func (v *mapView) Update(s *toolshell.Shell) {
 	if v.mapVersion() != v.version {
 		v.reload()
 	}
-	v.hover = v.objectAt(s.MouseWorld(), hitPx*float32(deviceScale())/pxPerUnit(s))
+	v.hover = v.objectAt(s.MouseWorld(), hitPx*float32(viewkit.DeviceScale())/pxPerUnit(s))
 	if click, _ := v.ptr.update(s); click {
 		if v.hover == v.sel {
 			v.sel = noObject
@@ -316,7 +317,7 @@ func objectLabel(o *tiled.Object) string {
 
 // drawName writes the label of o at the top-left of its outline. Unless
 // forced (hover and selection), only when o is big enough on screen to carry
-// it: its width must exceed the label's and be at least minLabelPx. A point
+// it: its width must exceed the label's and be at least viewkit.MinLabelPx. A point
 // has no size and is labelled once the view is zoomed in to two pixels per
 // unit.
 func (v *mapView) drawName(s *toolshell.Shell, screen ebiten.FinalScreen, o *tiled.Object, at gfx.Vec2, scale float32, force bool) {
@@ -333,7 +334,7 @@ func (v *mapView) drawName(s *toolshell.Shell, screen ebiten.FinalScreen, o *til
 	}
 	w := (hi.X - lo.X) * scale
 	if !force {
-		fits := v.cache.fits(text, w)
+		fits := v.cache.Fits(text, w)
 		if o.Shape == tiled.ShapePoint {
 			fits = scale >= 2
 		}
@@ -346,7 +347,7 @@ func (v *mapView) drawName(s *toolshell.Shell, screen ebiten.FinalScreen, o *til
 	if p.X > float32(b.Dx()) || p.Y > float32(b.Dy()) || p.X < -400 || p.Y < -40 {
 		return
 	}
-	v.cache.draw(screen, text, p.X+1, p.Y+1)
+	v.cache.Draw(screen, text, p.X+1, p.Y+1)
 }
 
 // Panel implements [toolshell.Tool].
@@ -427,7 +428,7 @@ func (v *mapView) objectFields() []toolshell.Field {
 		toolshell.Label("obj.class", "Class", orDash(o.Class)),
 		toolshell.Label("obj.shape", "Shape", o.Shape.String()),
 		toolshell.Label("obj.layer", "Layer", l.Path),
-		toolshell.Label("obj.pos", "Position", pointText(pos)),
+		toolshell.Label("obj.pos", "Position", viewkit.PointText(pos)),
 	}
 	if o.Width != 0 || o.Height != 0 {
 		fields = append(fields, toolshell.Label("obj.size", "Size", fmt.Sprintf("%g × %g", o.Width, o.Height)))

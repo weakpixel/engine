@@ -12,6 +12,7 @@ import (
 
 	"github.com/weakpixel/asset"
 	"github.com/weakpixel/engine/editor/toolshell"
+	"github.com/weakpixel/engine/editor/viewkit"
 	"github.com/weakpixel/engine/gfx"
 	"github.com/weakpixel/engine/render"
 )
@@ -52,7 +53,7 @@ type fontView struct {
 	sample string
 	rows   []fontRow
 	tops   []float32
-	cache  labelCache
+	cache  viewkit.Labels
 }
 
 // Open implements [toolshell.Tool]: it finds the sizes the project uses and
@@ -169,7 +170,7 @@ func (v *fontView) Draw(s *toolshell.Shell, screen ebiten.FinalScreen) {
 	for i := range v.rows {
 		r := &v.rows[i]
 		top := s.WindowRect(gfx.Rect{Min: gfx.Vec2{Y: v.tops[i]}})
-		v.cache.draw(screen, fmt.Sprintf("%g px", r.size), top.Min.X, top.Min.Y)
+		v.cache.Draw(screen, fmt.Sprintf("%g px", r.size), top.Min.X, top.Min.Y)
 		at := s.WindowRect(gfx.Rect{Min: gfx.Vec2{Y: v.tops[i] + captionH}, Max: gfx.Vec2{X: 1, Y: v.tops[i] + captionH + 1}})
 		var op ebiten.DrawImageOptions
 		op.Filter = ebiten.FilterNearest

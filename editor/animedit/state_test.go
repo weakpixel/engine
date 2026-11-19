@@ -193,10 +193,10 @@ func TestSetRefusesNonsense(t *testing.T) {
 func TestStaleDocumentIsNeverWritten(t *testing.T) {
 	s, sent := newHero(t)
 	s.MarkStale(errors.New("unexpected end of JSON input"))
-	if err := s.Set("clip.fps", raw(12)); !errors.Is(err, ErrStale) {
+	if err := s.Set("clip.fps", raw(12)); !errors.Is(err, toolshell.ErrStale) {
 		t.Errorf("Set = %v, want ErrStale", err)
 	}
-	if err := s.PointerDown(gfx.Vec2{}, 1); !errors.Is(err, ErrStale) {
+	if err := s.PointerDown(gfx.Vec2{}, 1); !errors.Is(err, toolshell.ErrStale) {
 		t.Errorf("PointerDown = %v, want ErrStale", err)
 	}
 	if err := s.DeleteSelected(); err != nil || len(*sent) != 0 {

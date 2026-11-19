@@ -156,8 +156,8 @@ func TestViewerStaysVisibleWhenPartlyOffscreen(t *testing.T) {
 		t.Errorf("culled = %d, want the texture queued", q.Culled())
 	}
 	tv := v.inner.(*textureView)
-	tr := ecs.GetCompOrNil[gfx.Transform](e.World(), tv.entity)
-	sp := ecs.GetCompOrNil[gfx.Sprite](e.World(), tv.entity)
+	tr := ecs.GetCompOrNil[gfx.Transform](e.World(), tv.tex.Entity())
+	sp := ecs.GetCompOrNil[gfx.Sprite](e.World(), tv.tex.Entity())
 	// Whatever the pivot, the texture's corner stays at the origin.
 	if x, y := tr.Pos.X-sp.Origin.X*64, tr.Pos.Y-sp.Origin.Y*32; x < -0.01 || x > 0.01 || y < -0.01 || y > 0.01 {
 		t.Errorf("texture corner at (%v, %v), want (0, 0)", x, y)
