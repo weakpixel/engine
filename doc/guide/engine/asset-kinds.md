@@ -220,7 +220,7 @@ The loader is chosen by the asset type you load and, where one type reads severa
 
 ### Grid sheet
 
-`*.sheet.json`: fixed-size cells over one image. Frames are named `"0"`, `"1"`, ... left to right, top to bottom. `wpix-editor sheet` [edits the file](editor.md#the-sheet-tool).
+`*.sheet.json`: fixed-size cells over one image. Frames are named `"0"`, `"1"`, ... left to right, top to bottom. `wpix-editor <file>.sheet.json` [edits the file](editor.md#the-sheet-tool).
 
 ```json
 { "image": "player.png", "frameW": 16, "frameH": 16, "margin": 0, "spacing": 0,

@@ -135,7 +135,7 @@ make test     # the game's tests, without a window
 | `make web-dev` | The browser build for development: serves it on http://localhost:8080 and reloads the assets you save in the open page |
 | `make editor` | The level editor in a window, without VSCode |
 
-The engine's command-line tools run as `go tool wpix <command>` at the engine version in `go.mod` (`go tool wpix help` lists them). `go tool wpix-editor view assets/<file>.png` opens a texture in the engine's viewer, with a grid, pan and zoom.
+The engine's command-line tools run as `go tool wpix <command>` at the engine version in `go.mod` (`go tool wpix help` lists them). `go tool wpix-editor assets/<file>.png` opens a texture in the engine's preview, with a grid, pan and zoom; any asset file opens in the tool of its kind (`go tool wpix-editor help` lists them).
 
 ## Files
 

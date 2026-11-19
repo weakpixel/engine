@@ -75,6 +75,16 @@ func NewUntitled() []byte {
 	return text(Presets()[DefaultPreset].Emitters[0])
 }
 
+// NewEffect returns the starter of a new effect file at asset key key: the
+// untitled effect with its built-in sprite exported next to it, as Save as
+// would write it. The text names the copy; files holds it (asset keys).
+// The caller writes the files with the text, so the saved effect never
+// names a built-in file.
+func NewEffect(key string) (doc []byte, files []SaveFile) {
+	ems, files := ExportAll([]Emitter{Presets()[DefaultPreset].Emitters[0]}, key)
+	return textOf(ems), files
+}
+
 // Tool is the fx tool. It implements [toolshell.DocumentTool],
 // [toolshell.Syncer] and the shell's optional Check.
 type Tool struct {

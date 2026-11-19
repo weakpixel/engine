@@ -47,10 +47,29 @@ type Tool struct {
 	framed   bool
 	bar      *toolshell.Toolbar
 	onBar    bool // the press in progress started on the toolbar
+	// scope holds the clip set; nil is the global scope.
+	scope *asset.Scope
 }
 
 // New returns the anim tool.
 func New() toolshell.Tool { return &Tool{bar: newToolbar()} }
+
+// NewPreview returns the tool for the preview of an Aseprite export, which
+// switches files: it loads the clip set into scope, which the caller
+// releases, and [Tool.Close] removes its entity.
+func NewPreview(scope *asset.Scope) *Tool {
+	return &Tool{bar: newToolbar(), scope: scope}
+}
+
+// Close removes the entity Open spawned. The preview calls it before it
+// switches files; the editor never does, since its window or page shows one
+// document.
+func (t *Tool) Close(s *toolshell.Shell) {
+	if w := s.Engine().World(); t.entity != (ecs.Entity{}) && w.IsAlive(t.entity) {
+		w.DeleteEntity(t.entity)
+	}
+	t.entity, t.sheetKey, t.set, t.setVer = ecs.Entity{}, "", anim.ClipSetHandle{}, 0
+}
 
 // AsepriteSuffixes are the name suffixes of an Aseprite export that the
 // tool opens read-only to play its clips.
@@ -120,7 +139,11 @@ func (t *Tool) loadSheet(key string) {
 		sheet, err = animfile.DecodeSheet(data)
 	}
 	if err == nil {
-		t.set, err = anim.LoadClipSetSync(t.shell.Engine().Assets().Global(), key)
+		scope := t.scope
+		if scope == nil {
+			scope = t.shell.Engine().Assets().Global()
+		}
+		t.set, err = anim.LoadClipSetSync(scope, key)
 	}
 	t.st.SetSheet(sheet, err)
 	if t.set != (anim.ClipSetHandle{}) {

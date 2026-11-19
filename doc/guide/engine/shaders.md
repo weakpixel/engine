@@ -259,7 +259,7 @@ Patterns:
 
 ### Parameter markers
 
-The doc comment of a uniform tells editors what each part of it means. For `var Params vec4` that lets the [particle editor](editor.md), the shader preview (`wpix-editor view fx/flash.kage`) and later the inspector show a labelled slider instead of four bare numbers. The game ignores the comments.
+The doc comment of a uniform tells editors what each part of it means. For `var Params vec4` that lets the [particle editor](editor.md), the shader preview (`wpix-editor shaders/flash.kage`) and later the inspector show a labelled slider instead of four bare numbers. The game ignores the comments.
 
 ```text
 // +shader:param:slot=x,label=Amount,min=0,max=1,default=0.5
