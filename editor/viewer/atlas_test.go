@@ -73,12 +73,29 @@ func TestAtlasFramesInFileOrder(t *testing.T) {
 	}
 }
 
+// atlasOnly runs the atlas previewer on its own, for a grid sheet: the
+// preview router sends a *.sheet.json to the sheet editor, but the atlas
+// loader reads both formats.
+type atlasOnly struct{ *atlasView }
+
+func (a atlasOnly) Open(s *toolshell.Shell, key string) error {
+	a.scope = s.Engine().Assets().NewScope("test")
+	return a.atlasView.Open(s, key)
+}
+
 func TestAtlasGridSheetHoverAndSelect(t *testing.T) {
 	files := fstest.MapFS{
 		"tiles.sheet.json": {Data: []byte(`{"image":"tiles.png","frameW":16,"frameH":16}`)},
 		"tiles.png":        {Data: pngBytes(t, 64, 32)},
 	}
-	e, v, src := open(t, files, "tiles.sheet.json")
+	src := &input.ManualSource{}
+	v := atlasOnly{&atlasView{}}
+	sh := toolshell.New(toolshell.Config{Name: "view", Tool: v, Key: "tiles.sheet.json", FS: files})
+	e := game.New(game.Config{NoAudio: true, Width: 320, Height: 180, FS: files, Tool: sh, Input: game.InputConfig{Source: src}})
+	t.Cleanup(e.Close)
+	if err := e.Update(); err != nil {
+		t.Fatal(err)
+	}
 	if got := label(t, v, "atlas.count"); got != "8" {
 		t.Fatalf("count = %q, want 8 (4 x 2 cells)", got)
 	}
@@ -124,8 +141,8 @@ func TestAtlasLabelMode(t *testing.T) {
 func TestAtlasWithoutImageFails(t *testing.T) {
 	src := &input.ManualSource{}
 	v := New().(*Viewer)
-	files := fstest.MapFS{"x.sheet.json": {Data: []byte(`{"image":"missing.png","frameW":8,"frameH":8}`)}}
-	sh := toolshell.New(toolshell.Config{Name: "view", Tool: v, Key: "x.sheet.json", FS: files})
+	files := fstest.MapFS{"x.atlas.json": {Data: []byte(`{"frames": {"a": {"frame": {"x":0,"y":0,"w":8,"h":8}}}, "meta": {"image": "missing.png"}}`)}}
+	sh := toolshell.New(toolshell.Config{Name: "view", Tool: v, Key: "x.atlas.json", FS: files})
 	e := game.New(game.Config{NoAudio: true, Width: 320, Height: 180, FS: files, Tool: sh, Input: game.InputConfig{Source: src}})
 	defer e.Close()
 	if err := e.Update(); err != nil {

@@ -4,10 +4,12 @@ package cmd
 
 import (
 	"bytes"
+	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/weakpixel/engine/tools/internal/cli"
+	"github.com/weakpixel/engine/tools/wpix-editor/internal/editorapp"
 	"github.com/weakpixel/engine/tools/wpix-editor/internal/native"
 )
 
@@ -34,26 +36,23 @@ func TestExecute(t *testing.T) {
 		out    string // substring of stdout
 		err    string // substring of stderr
 	}{
-		{"no args lists the tools", nil, 2, nil, "", "anim"},
-		{"view", []string{"view", "a.png"}, 0, &native.Options{Tool: "view", File: "a.png"}, "", ""},
-		{"view without a file", []string{"view"}, 2, nil, "", "accepts 1 arg"},
-		{"voice", []string{"voice", "talk/kip.voice.json"}, 0, &native.Options{Tool: "voice", File: "talk/kip.voice.json"}, "", ""},
-		{"view with two files", []string{"view", "a", "b"}, 2, nil, "", "accepts 1 arg"},
-		{"anim with sheet", []string{"anim", "--sheet", "s.json", "a.anim.json"}, 0, &native.Options{Tool: "anim", File: "a.anim.json", Sheet: "s.json"}, "", ""},
-		{"sheet after the file", []string{"anim", "a.anim.json", "--sheet", "s.json"}, 0, &native.Options{Tool: "anim", File: "a.anim.json", Sheet: "s.json"}, "", ""},
-		{"sheet without value", []string{"anim", "a.anim.json", "--sheet"}, 2, nil, "", "needs an argument"},
-		{"sheet for view", []string{"view", "--sheet", "s.json", "a.png"}, 2, nil, "", "unknown flag"},
-		{"sheet for fx", []string{"fx", "--sheet", "s.json"}, 2, nil, "", "unknown flag"},
-		{"sheet with image", []string{"sheet", "--image", "a.png", "a.sheet.json"}, 0, &native.Options{Tool: "sheet", File: "a.sheet.json", Image: "a.png"}, "", ""},
-		{"sheet without image", []string{"sheet", "a.sheet.json"}, 0, &native.Options{Tool: "sheet", File: "a.sheet.json"}, "", ""},
-		{"image for anim", []string{"anim", "--image", "a.png", "a.anim.json"}, 2, nil, "", "unknown flag"},
-		{"fx without a file", []string{"fx"}, 0, &native.Options{Tool: "fx"}, "", ""},
-		{"fx with a file", []string{"fx", "a.fx.json"}, 0, &native.Options{Tool: "fx", File: "a.fx.json"}, "", ""},
-		{"fx with two files", []string{"fx", "a", "b"}, 2, nil, "", "between 0 and 1 arg"},
-		{"unknown tool", []string{"paint", "a.png"}, 2, nil, "", `unknown command "paint"`},
-		{"help view", []string{"help", "view"}, 0, nil, "Usage:", ""},
-		{"view help flag", []string{"view", "--help"}, 0, nil, "Usage:", ""},
-		{"help lists the tools", []string{"help"}, 0, nil, "fx", ""},
+		{"no file lists the kinds", nil, 2, nil, "", ".sheet.json"},
+		{"a texture", []string{"a.png"}, 0, &native.Options{File: "a.png"}, "", ""},
+		{"a sheet", []string{"a.sheet.json"}, 0, &native.Options{File: "a.sheet.json"}, "", ""},
+		{"a new sheet", []string{"--image", "a.png", "new.sheet.json"}, 0, &native.Options{File: "new.sheet.json", Image: "a.png"}, "", ""},
+		{"a new definition", []string{"--sheet", "a.json", "new.anim.json"}, 0, &native.Options{File: "new.anim.json", Sheet: "a.json"}, "", ""},
+		{"flag after the file", []string{"new.anim.json", "--sheet", "a.json"}, 0, &native.Options{File: "new.anim.json", Sheet: "a.json"}, "", ""},
+		{"an effect", []string{"new.fx.json"}, 0, &native.Options{File: "new.fx.json"}, "", ""},
+		{"a voice", []string{"talk/kip.voice.json"}, 0, &native.Options{File: "talk/kip.voice.json"}, "", ""},
+		{"an Aseprite export", []string{"hero.aseprite.json"}, 0, &native.Options{File: "hero.aseprite.json"}, "", ""},
+		{"two files", []string{"a.png", "b.png"}, 2, nil, "", "accepts 1 file, received 2"},
+		{"sheet for a texture", []string{"--sheet", "s.json", "a.png"}, 2, nil, "", "--sheet applies to .anim.json files only, not to a.png"},
+		{"image for a definition", []string{"--image", "a.png", "a.anim.json"}, 2, nil, "", "--image applies to .sheet.json files only"},
+		{"sheet without value", []string{"a.anim.json", "--sheet"}, 2, nil, "", "needs an argument"},
+		{"unknown suffix", []string{"notes.txt"}, 2, nil, "", "notes.txt is not a file wpix-editor opens (supported: .sheet.json"},
+		{"the old tool command", []string{"view", "a.png"}, 2, nil, "", "view is not a file wpix-editor opens"},
+		{"help", []string{"help"}, 0, nil, ".dialogue.json", ""},
+		{"help flag", []string{"--help"}, 0, nil, "--image", ""},
 		{"version", []string{"version"}, 0, nil, cli.Version(), ""},
 	}
 	for _, tt := range tests {
@@ -75,11 +74,33 @@ func TestExecute(t *testing.T) {
 	}
 }
 
-func TestNoArgsListsEveryTool(t *testing.T) {
-	_, _, _, errOut := execute()
-	for _, tool := range []string{"anim", "fx", "view", "voice"} {
-		if !strings.Contains(errOut, tool) {
-			t.Errorf("help lacks %q: %s", tool, errOut)
+// TestHelpListsEveryKind: the help names every suffix of the kind table.
+func TestHelpListsEveryKind(t *testing.T) {
+	_, _, out, _ := execute("--help")
+	for _, k := range editorapp.Kinds {
+		for _, s := range k.Suffixes {
+			if !strings.Contains(out, s) {
+				t.Errorf("help lacks %q", s)
+			}
 		}
+	}
+}
+
+// TestMissingFile runs the real native.Run up to the window: a missing
+// definition without --sheet fails before any window opens, naming the flag.
+func TestMissingFile(t *testing.T) {
+	dir := t.TempDir()
+	tests := []struct{ file, want string }{
+		{"new.anim.json", "new.anim.json does not exist: give --sheet <export> to start a new definition"},
+		{"new.sheet.json", "new.sheet.json does not exist: give --image <texture> to start a new sheet"},
+		{"missing.png", "no such file"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.file, func(t *testing.T) {
+			err := native.Run(native.Options{File: filepath.Join(dir, tt.file)})
+			if err == nil || !strings.Contains(err.Error(), tt.want) {
+				t.Errorf("Run = %v, want %q", err, tt.want)
+			}
+		})
 	}
 }

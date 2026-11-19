@@ -1,5 +1,5 @@
 // Package editorapp is what the native and the js/wasm wpix-editor share:
-// the tool table and the resolution of a file to its asset root and key. It
+// the kind table and the resolution of a file to its asset root and key. It
 // imports neither Cobra nor debugui, so the wasm build links neither.
 package editorapp
 
@@ -14,28 +14,11 @@ import (
 	"github.com/weakpixel/engine/internal/project"
 )
 
-// ResolveRoot returns the asset root for a tool that runs without a file:
-// assets.root of the settings file found from dir, or dir itself.
-func ResolveRoot(dir string) (string, error) {
-	dir, err := filepath.Abs(dir)
-	if err != nil {
-		return "", err
-	}
-	settings, _, err := project.Load(dir)
-	if err != nil {
-		return "", err
-	}
-	if settings != nil && settings.AssetsRoot != "" {
-		return settings.AssetsRoot, nil
-	}
-	return dir, nil
-}
-
 // Resolve finds the asset root of file and the file's asset key. The root is
 // assets.root of the settings file found from the file's folder, or the
 // file's folder without one. A file outside the root is an error naming both.
-// With allowMissing a file that does not exist is not an error (a new
-// definition); its folder must exist.
+// With allowMissing a file that does not exist is not an error (a new file
+// of a kind with a starter); its folder must exist.
 func Resolve(file string, allowMissing bool) (abs, root, key string, err error) {
 	abs, err = filepath.Abs(file)
 	if err != nil {

@@ -1,70 +1,54 @@
-// Package viewer is the "view" tool of wpix-editor: it previews an asset
-// with the engine's own loaders. A texture is shown on a grid with pan and
-// zoom; an atlas (*.sheet.json, *.atlas.json) shows its frames over the
-// texture, and a font (*.ttf, *.otf) shows sample text at the sizes the
+// Package viewer is the "view" tool of wpix-editor: it previews every file
+// kind of package filekind that is not edited, with the engine's own
+// loaders. A texture is shown on a grid with pan and zoom; an atlas
+// (*.atlas.json) shows its frames over the texture, and a font (*.ttf, *.otf) shows sample text at the sizes the
 // project uses. A Tiled map (*.tmj) shows its layers and objects, a tileset
 // (*.tsj) its tiles with ids, collision shapes and animations, and a world
 // (*.world) its maps with the levels that use them. A shader (*.kage) is drawn
-// on a texture with a control per +shader:param marker. The previewers for
-// other kinds come with later milestones.
+// on a texture with a control per +shader:param marker. An Aseprite export
+// (*.aseprite.json, *.ase.json) plays its clips in the anim tool's read-only
+// layout, and a voice or a dialogue is spoken by the voice tool, with sound.
 package viewer
 
 import (
 	"encoding/json"
 	"fmt"
 	"path"
-	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
 
 	"github.com/weakpixel/asset"
+	"github.com/weakpixel/engine/editor/animedit"
+	"github.com/weakpixel/engine/editor/filekind"
 	"github.com/weakpixel/engine/editor/toolshell"
+	"github.com/weakpixel/engine/editor/voiceview"
 )
 
-// kind is what a previewer shows.
-type kind int
-
-const (
-	kindTexture kind = iota
-	kindAtlas
-	kindFont
-	kindMap
-	kindTileset
-	kindWorld
-	kindShader
-)
-
-// supported is the list in the error of a file the viewer cannot show.
-const supported = ".png, .jpg, .sheet.json, .atlas.json, .ttf, .otf, .tmj, .tsj, .world, .kage"
-
-// kindOf picks the previewer of the file at asset key.
-func kindOf(key string) (kind, error) {
-	lower := strings.ToLower(key)
-	switch ext := path.Ext(lower); {
-	case ext == ".png", ext == ".jpg", ext == ".jpeg":
-		return kindTexture, nil
-	case strings.HasSuffix(lower, ".sheet.json"), strings.HasSuffix(lower, ".atlas.json"):
-		return kindAtlas, nil
-	case ext == ".ttf", ext == ".otf":
-		return kindFont, nil
-	case ext == ".tmj":
-		return kindMap, nil
-	case ext == ".tsj":
-		return kindTileset, nil
-	case ext == ".world":
-		return kindWorld, nil
-	case ext == ".kage":
-		return kindShader, nil
-	default:
-		return 0, fmt.Errorf("view: %s files are not supported (supported: %s)", ext, supported)
+// kindOf returns the kind of the file at asset key, which must be one the
+// viewer previews: a kind of [filekind.All] that is not edited.
+func kindOf(key string) (filekind.Kind, error) {
+	info, err := filekind.Of(key)
+	if err != nil {
+		return "", fmt.Errorf("view: %w", err)
 	}
+	if info.Edits {
+		return "", fmt.Errorf("view: %s opens in the %s editor, not in the preview", path.Base(key), info.Kind)
+	}
+	return info.Kind, nil
 }
 
-// Viewer is the "view" tool: it picks the previewer of its file when it
-// opens, and passes everything on to it. It is a [toolshell.Tool] without a
-// document and a [toolshell.Closer]: the host can switch it to another file.
+// Viewer is the "view" tool, the preview of every kind of [filekind.All]
+// that is not edited: it picks the previewer of its file when it opens, and
+// passes everything on to it. It is a [toolshell.Tool] without a document, a
+// [toolshell.Closer] (the host can switch it to another file) and a
+// [toolshell.Initializer]: when its first file has sound (a voice or a
+// dialogue) it installs package speech, and only then can it show those
+// kinds. A page or window that starts without sound reloads to show them.
 type Viewer struct {
 	inner toolshell.Tool
+	// voice is the voice and dialogue previewer, set by Init when the first
+	// file has sound. It is kept across files: speech is installed once.
+	voice *voiceview.Tool
 	// scope holds the assets of the file shown, so switching files unloads
 	// the previous ones instead of keeping them in the global scope.
 	scope *asset.Scope
@@ -94,6 +78,15 @@ func (*Viewer) Check(key string) error {
 	return err
 }
 
+// Init implements [toolshell.Initializer]: a first file with sound installs
+// the voice previewer, which installs package speech.
+func (v *Viewer) Init(s *toolshell.Shell) {
+	if info, err := filekind.Of(s.Key()); err == nil && info.Sound && v.voice == nil {
+		v.voice = voiceview.New().(*voiceview.Tool)
+		v.voice.Init(s)
+	}
+}
+
 // Open implements [toolshell.Tool].
 func (v *Viewer) Open(s *toolshell.Shell, key string) error {
 	k, err := kindOf(key)
@@ -104,17 +97,24 @@ func (v *Viewer) Open(s *toolshell.Shell, key string) error {
 		v.scope = s.Engine().Assets().NewScope("view")
 	}
 	switch k {
-	case kindAtlas:
+	case filekind.Voice, filekind.Dialogue:
+		if v.voice == nil {
+			return fmt.Errorf("view: %s has sound: it shows in a page or window that starts with it", path.Base(key))
+		}
+		v.inner = voicePreview{v.voice}
+	case filekind.Aseprite:
+		v.inner = &asepritePreview{Tool: animedit.NewPreview(v.scope)}
+	case filekind.Atlas:
 		v.inner = &atlasView{textureView: textureView{scope: v.scope}}
-	case kindFont:
+	case filekind.Font:
 		v.inner = &fontView{scope: v.scope}
-	case kindMap:
+	case filekind.Map:
 		v.inner = &mapView{tiledBase: tiledBase{scope: v.scope}}
-	case kindTileset:
+	case filekind.Tileset:
 		v.inner = &tilesetView{tiledBase: tiledBase{scope: v.scope}}
-	case kindWorld:
+	case filekind.World:
 		v.inner = &worldView{tiledBase: tiledBase{scope: v.scope}}
-	case kindShader:
+	case filekind.Shader:
 		v.inner = &shaderView{textureView: textureView{scope: v.scope}}
 	default:
 		v.inner = &textureView{scope: v.scope}
