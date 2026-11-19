@@ -82,3 +82,20 @@ func TestTable(t *testing.T) {
 		t.Errorf("Table() =\n%s\nwant\n%s", got, want)
 	}
 }
+
+// TestUntitled: only a particle effect can be untitled (VSCode's new
+// effect), and its text is the effect the fx tool starts from.
+func TestUntitled(t *testing.T) {
+	for _, k := range Kinds {
+		if got, want := k.Untitled != nil, k.Kind == filekind.Fx; got != want {
+			t.Errorf("%s: Untitled set = %v, want %v", k.Kind, got, want)
+		}
+	}
+	k, err := KindOf("untitled.fx.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(k.Untitled()) == 0 {
+		t.Error("the untitled effect is empty")
+	}
+}

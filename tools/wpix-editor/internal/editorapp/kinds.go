@@ -35,6 +35,11 @@ type Kind struct {
 	FlagValue string
 	// Noun names a new file of the kind in the error of a missing one.
 	Noun string
+	// Untitled makes the text of an untitled document of the kind (a page
+	// with weakpixelHost.untitled: a file without a name on disk yet); nil
+	// for a kind that cannot be untitled. Unlike Starter it knows no asset
+	// key, so it names no files of its own.
+	Untitled func() []byte
 }
 
 // Kinds are the file kinds in the order of [filekind.All]. There is no
@@ -51,7 +56,8 @@ var Kinds = []Kind{
 		Starter: func(_, _, key string) (Start, error) {
 			text, files := fxedit.NewEffect(key)
 			return Start{Text: text, Files: files}, nil
-		}},
+		},
+		Untitled: fxedit.NewUntitled},
 	preview(filekind.Texture, "preview a texture"),
 	preview(filekind.Atlas, "preview an atlas: its frames, names and indices over the texture"),
 	preview(filekind.Font, "preview a font: sample text per size"),
