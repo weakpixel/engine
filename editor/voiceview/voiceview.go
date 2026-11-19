@@ -235,6 +235,9 @@ func tick() time.Duration {
 // Panel implements [toolshell.Tool].
 func (t *Tool) Panel() toolshell.Panel {
 	p := toolshell.Panel{Title: "voice " + path.Base(t.key)}
+	if t.shell != nil {
+		p.Sections = append(p.Sections, t.shell.ViewSection())
+	}
 	switch t.kind {
 	case kindVoice:
 		p.Sections = append(p.Sections, toolshell.Section{ID: "voice", Label: "Voice", Fields: []toolshell.Field{
@@ -252,9 +255,6 @@ func (t *Tool) Panel() toolshell.Panel {
 			toolshell.Button(IDEnd, "Stop"),
 			toolshell.Label(IDStatus, "Status", t.dialogueStatus()),
 		}})
-	}
-	if t.shell != nil {
-		p.Sections = append(p.Sections, t.shell.ViewSection())
 	}
 	p.Sections = append(p.Sections, toolshell.Section{ID: "about", Label: "About", Collapsed: true, Fields: []toolshell.Field{
 		toolshell.Label("about.sound", "Sound", soundHint),

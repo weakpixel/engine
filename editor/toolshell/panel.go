@@ -116,6 +116,11 @@ type Field struct {
 	Readonly bool `json:"readonly,omitempty"`
 	// Hint is a tooltip.
 	Hint string `json:"hint,omitempty"`
+	// List, on a dropdown, asks a renderer to draw the options as a
+	// scrollable list of this many rows instead of a drop-down (see
+	// [Field.AsList]). The value and Set stay the dropdown's: the option
+	// index. A renderer that has no list shows a dropdown.
+	List int `json:"list,omitempty"`
 }
 
 // mustJSON marshals v, a number, bool or string, for a Field value.
@@ -167,6 +172,17 @@ func (f Field) WithHint(hint string) Field {
 // AsReadonly returns f with Readonly set.
 func (f Field) AsReadonly() Field {
 	f.Readonly = true
+	return f
+}
+
+// AsList returns the dropdown f presented as a list showing rows options at a
+// time. It panics when rows is below 1 (a programmer error); [Panel.Check]
+// rejects a list on any other widget.
+func (f Field) AsList(rows int) Field {
+	if rows < 1 {
+		panic("toolshell: AsList rows must be at least 1")
+	}
+	f.List = rows
 	return f
 }
 
@@ -263,6 +279,12 @@ func (f Field) check() []error {
 		if err := json.Unmarshal(f.Value, into); err != nil {
 			bad("%s value: %v", kind, err)
 		}
+	}
+	if f.List < 0 {
+		bad("list rows %d is negative", f.List)
+	}
+	if f.List > 0 && f.Widget != WidgetDropdown {
+		bad("list is only for a dropdown, not %s", f.Widget)
 	}
 	switch f.Widget {
 	case WidgetNumber:

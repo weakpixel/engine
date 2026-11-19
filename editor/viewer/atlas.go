@@ -163,7 +163,6 @@ func (v *atlasView) Panel() toolshell.Panel {
 	which := "none"
 	fields := []toolshell.Field{
 		toolshell.Label("atlas.count", "Frames", fmt.Sprint(len(v.frames))),
-		toolshell.Dropdown("atlas.labels", "Labels", int(v.labels), labelModeNames...),
 	}
 	f, ok := v.shown()
 	detail := func(id, label, text string) toolshell.Field { return toolshell.Label("frame."+id, label, text) }
@@ -188,21 +187,52 @@ func (v *atlasView) Panel() toolshell.Panel {
 		fields = append(fields, detail("which", "Frame", "click a frame to select it"))
 	}
 	return toolshell.Panel{Title: path.Base(v.key), Sections: []toolshell.Section{
+		v.framesSection(),
 		{ID: "atlas", Label: "Atlas", Fields: fields},
 		v.imageSection(),
 		v.shell.ViewSection(),
 	}}
 }
 
+// maxFrameRows is the rows the frame list shows before it scrolls.
+const maxFrameRows = 8
+
+// framesSection is the left section to pick content from: the label mode and
+// the list of frames, "(none)" first (index 0 clears the selection).
+func (v *atlasView) framesSection() toolshell.Section {
+	options := make([]string, 0, len(v.frames)+1)
+	options = append(options, "(none)")
+	for _, f := range v.frames {
+		if f.Name == "" {
+			options = append(options, fmt.Sprint(f.Index))
+		} else {
+			options = append(options, fmt.Sprintf("%d %s", f.Index, f.Name))
+		}
+	}
+	return toolshell.Section{ID: "frames", Label: "Frames", Side: toolshell.SideLeft, Fields: []toolshell.Field{
+		toolshell.Dropdown("atlas.labels", "Labels", int(v.labels), labelModeNames...),
+		toolshell.Dropdown("atlas.frame", "Frame", v.sel+1, options...).AsList(maxFrameRows),
+	}}
+}
+
 // Set implements [toolshell.Tool].
 func (v *atlasView) Set(id string, val json.RawMessage) error {
-	if id != "atlas.labels" {
+	var i int
+	switch id {
+	case "atlas.labels":
+		if err := json.Unmarshal(val, &i); err != nil || i < 0 || i >= len(labelModeNames) {
+			return fmt.Errorf("view: bad label mode %s", val)
+		}
+		v.labels = labelMode(i)
+	case "atlas.frame":
+		// The same selection as a click on the frame; 0 is "(none)". Unlike a
+		// click, choosing the selected frame again does not clear it.
+		if err := json.Unmarshal(val, &i); err != nil || i < 0 || i > len(v.frames) {
+			return fmt.Errorf("view: bad frame %s", val)
+		}
+		v.sel = i - 1
+	default:
 		return fmt.Errorf("view: unknown widget %q", id)
 	}
-	var i int
-	if err := json.Unmarshal(val, &i); err != nil || i < 0 || i >= len(labelModeNames) {
-		return fmt.Errorf("view: bad label mode %s", val)
-	}
-	v.labels = labelMode(i)
 	return nil
 }

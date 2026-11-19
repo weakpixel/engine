@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -26,7 +27,7 @@ func newHero(t *testing.T) (*State, *[]string) {
 func raw(v any) json.RawMessage { b, _ := json.Marshal(v); return b }
 
 func (s *State) panel() toolshell.Panel {
-	return s.Panel("hero.anim.json", toolshell.Section{ID: "view", Label: "View", Fields: []toolshell.Field{toolshell.Label("view.zoom", "Zoom", "1")}})
+	return s.Panel("hero.anim.json", toolshell.Section{ID: "view", Label: "View", Side: toolshell.SideLeft, Fields: []toolshell.Field{toolshell.Label("view.zoom", "Zoom", "1")}})
 }
 
 func TestPanelEveryState(t *testing.T) {
@@ -362,5 +363,41 @@ func TestNewDefinition(t *testing.T) {
 	}
 	if _, err := NewDefinition(filepath.Join(dir, "nope.json"), filepath.Join(dir, "x.anim.json")); err == nil {
 		t.Error("a missing sheet gave no error")
+	}
+}
+
+// sides returns the ids of the left and right sections of p, in order.
+func sides(p toolshell.Panel) (left, right []string) {
+	for _, sec := range p.Sections {
+		if sec.Side == toolshell.SideLeft {
+			left = append(left, sec.ID)
+		} else {
+			right = append(right, sec.ID)
+		}
+	}
+	return left, right
+}
+
+func TestPanelSides(t *testing.T) {
+	s, _ := newHero(t)
+	left, right := sides(s.panel())
+	if want := []string{"playback", "boxlist", "view"}; !slices.Equal(left, want) {
+		t.Errorf("left = %v, want %v", left, want)
+	}
+	if want := []string{"file", "clip", "problems"}; !slices.Equal(right, want) {
+		t.Errorf("right without a selection = %v, want %v (no box section)", right, want)
+	}
+	s.Sel = &BoxRef{Body: true}
+	p := s.panel()
+	if err := p.Check(); err != nil {
+		t.Fatal(err)
+	}
+	if _, right = sides(p); !slices.Equal(right, []string{"file", "clip", "box", "problems"}) {
+		t.Errorf("right with a box = %v", right)
+	}
+	for _, id := range []string{"clip.sel", "box.sel"} {
+		if f, _ := p.Find(id); f.List == 0 {
+			t.Errorf("%s is not a list", id)
+		}
 	}
 }

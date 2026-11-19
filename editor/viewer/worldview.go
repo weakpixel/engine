@@ -218,8 +218,24 @@ func (v *worldView) Panel() toolshell.Panel {
 		toolshell.Label("world.maps", "Maps", strconv.Itoa(len(v.maps))),
 		toolshell.Label("world.bounds", "Bounds", rectText(b)),
 	}
-	p.Sections = []toolshell.Section{{ID: "world", Label: "World", Fields: world}, v.mapSection(), v.shell.ViewSection()}
+	p.Sections = []toolshell.Section{v.mapsSection(), {ID: "world", Label: "World", Fields: world}, v.mapSection(), v.shell.ViewSection()}
 	return p
+}
+
+// maxMapRows is the rows the map list shows before it scrolls.
+const maxMapRows = 8
+
+// mapsSection is the left section with the list of maps, "(none)" first
+// (index 0 clears the selection), each entry the base name of the map file.
+func (v *worldView) mapsSection() toolshell.Section {
+	options := make([]string, 0, len(v.maps)+1)
+	options = append(options, "(none)")
+	for _, m := range v.maps {
+		options = append(options, path.Base(m.key))
+	}
+	return toolshell.Section{ID: "maps", Label: "Maps", Side: toolshell.SideLeft, Fields: []toolshell.Field{
+		toolshell.Dropdown("world.map", "Map", v.sel+1, options...).AsList(maxMapRows),
+	}}
 }
 
 // mapSection describes the selected map, else the one under the mouse.
@@ -261,7 +277,18 @@ func (v *worldView) shownMap() *worldMap {
 }
 
 // Set implements [toolshell.Tool].
-func (v *worldView) Set(id string, _ json.RawMessage) error {
+func (v *worldView) Set(id string, val json.RawMessage) error {
+	if id == "world.map" {
+		// The same selection as a click on the map; 0 is "(none)". Unlike a
+		// click, choosing the selected map again does not clear it, and it
+		// does not open a level.
+		var i int
+		if err := json.Unmarshal(val, &i); err != nil || i < 0 || i > len(v.maps) {
+			return fmt.Errorf("view: bad map %s", val)
+		}
+		v.sel = i - 1
+		return nil
+	}
 	m := v.shownMap()
 	switch {
 	case id == "map.preview" && m != nil:

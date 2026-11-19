@@ -8,6 +8,7 @@ import (
 	"image/png"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 	"testing/fstest"
@@ -128,6 +129,17 @@ func TestToolShowsTheGridAndWritesOneEditPerChange(t *testing.T) {
 	}
 	if err := r.tool.Panel().Check(); err != nil {
 		t.Fatal(err)
+	}
+	var left, right []string
+	for _, sec := range r.tool.Panel().Sections {
+		if sec.Side == toolshell.SideLeft {
+			left = append(left, sec.ID)
+		} else {
+			right = append(right, sec.ID)
+		}
+	}
+	if !slices.Equal(left, []string{"info", "view"}) || !slices.Equal(right, []string{"sheet"}) {
+		t.Errorf("sections: left %v right %v, want left [info view] right [sheet]", left, right)
 	}
 	if got := r.field("info.count").Value; string(got) != `"8"` {
 		t.Fatalf("frames = %s", got)

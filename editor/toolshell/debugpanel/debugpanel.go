@@ -10,6 +10,7 @@ import (
 	"image"
 	"math"
 	"slices"
+	"strconv"
 
 	"github.com/ebitengine/debugui"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -32,6 +33,12 @@ const (
 // panel's own title; debugui tells windows apart by their titles.
 const rightTitle = "Properties"
 
+// listRowHeight is the height of one row of a list field in UI pixels: the
+// height of a debugui button (18) plus the spacing between two rows (4).
+// debugui makes a Panel as high as the row height of the current grid layout,
+// so a list sets that height to its rows times this.
+const listRowHeight = 22
+
 // context is the part of *debugui.Context the panel uses; the test
 // implements it to check the mapping without a window.
 type context interface {
@@ -44,6 +51,7 @@ type context interface {
 	SliderF(value *float64, low, high float64, step float64, digits int) debugui.EventHandler
 	Checkbox(state *bool, label string) debugui.EventHandler
 	Dropdown(selectedIndex *int, options []string) debugui.EventHandler
+	Panel(f func(layout debugui.ContainerLayout))
 	TextField(buf *string) debugui.EventHandler
 	Button(text string) debugui.EventHandler
 	GridCell(f func(bounds image.Rectangle))
@@ -243,6 +251,10 @@ func (p *Panel) Build(ctx context, pn toolshell.Panel, set func(id string, v jso
 // field draws one field and calls set when the user changed it.
 func (p *Panel) field(ctx context, f toolshell.Field, set func(string, json.RawMessage)) {
 	st := p.stateOf(f)
+	if f.Widget == toolshell.WidgetDropdown && f.List > 0 {
+		p.listField(ctx, f, st, set)
+		return
+	}
 	ctx.SetGridLayout([]int{0, -1}, nil)
 	switch f.Widget {
 	case toolshell.WidgetLabel:
@@ -294,6 +306,35 @@ func (p *Panel) field(ctx context, f toolshell.Field, set func(string, json.RawM
 	case toolshell.WidgetText:
 		ctx.TextField(&st.text).On(func() { set(f.ID, mustMarshal(st.text)) })
 	}
+}
+
+// listField draws a dropdown with List rows as a full-width row: the label on
+// its own line, then a scrollable panel of f.List rows (fewer when there are
+// fewer options) with one button per option. The selected option is marked
+// with "> ". A click on another option selects it; a click on the selected
+// one changes nothing.
+func (p *Panel) listField(ctx context, f toolshell.Field, st *state, set func(string, json.RawMessage)) {
+	ctx.SetGridLayout([]int{-1}, nil)
+	ctx.Text(f.Label)
+	ctx.SetGridLayout([]int{-1}, []int{min(f.List, len(f.Options)) * listRowHeight})
+	ctx.Panel(func(debugui.ContainerLayout) {
+		ctx.SetGridLayout([]int{-1}, nil)
+		for i, opt := range f.Options {
+			mark := "  "
+			if i == st.idx {
+				mark = "> "
+			}
+			ctx.IDScope(strconv.Itoa(i), func() {
+				ctx.Button(mark + opt).On(func() {
+					if i == st.idx {
+						return
+					}
+					st.idx = i
+					set(f.ID, mustMarshal(i))
+				})
+			})
+		}
+	})
 }
 
 // rangeField draws the low and high of a range on one row. Dragging one end

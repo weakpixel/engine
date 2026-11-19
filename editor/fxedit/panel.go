@@ -21,7 +21,7 @@ func (s *State) Panel(title string, view toolshell.Section) toolshell.Panel {
 		p.Status = "document has errors: " + s.Stale
 	}
 	if s.Loaded {
-		p.Sections = append(p.Sections, s.emittersSection(), s.effectSection(), s.lookSection(), s.emissionSection(),
+		p.Sections = append(p.Sections, s.emittersSection(), s.effectSection(), s.emitterSection(), s.lookSection(), s.emissionSection(),
 			s.shapeSection(), s.motionSection(), s.advancedSection(), s.saveSection())
 	}
 	p.Sections = append(p.Sections, view)
