@@ -22,7 +22,10 @@ func (s *State) Panel(title string, view toolshell.Section) toolshell.Panel {
 		if s.ReadOnly {
 			p.Sections = append(p.Sections, s.playbackSection(), s.exportSection())
 		} else {
-			p.Sections = append(p.Sections, s.playbackSection(), s.fileSection(), s.clipSection(), s.boxesSection())
+			p.Sections = append(p.Sections, s.playbackSection(), s.fileSection(), s.clipSection(), s.boxListSection())
+			if sec, ok := s.boxSection(); ok {
+				p.Sections = append(p.Sections, sec)
+			}
 		}
 	}
 	p.Sections = append(p.Sections, view)
@@ -40,6 +43,12 @@ func (s *State) tagNames() []string {
 	return names
 }
 
+// The rows the clip list and the box list show before they scroll.
+const (
+	clipRows = 6
+	boxRows  = 8
+)
+
 func fnum(f toolshell.Field) toolshell.Field { return f.WithDigits(0) }
 
 func (s *State) playbackSection() toolshell.Section {
@@ -50,7 +59,7 @@ func (s *State) playbackSection() toolshell.Section {
 	}
 	frame := fnum(toolshell.Number("frame", "Frame", float64(s.Play.Frame))).Range(0, float64(max(n-1, 0)))
 	fields := []toolshell.Field{
-		toolshell.Dropdown("clip.sel", "Clip", s.Clip, s.tagNames()...),
+		toolshell.Dropdown("clip.sel", "Clip", s.Clip, s.tagNames()...).AsList(clipRows),
 		toolshell.Button("play", play),
 		frame,
 		toolshell.Label("time", "Time", fmt.Sprintf("%d ms of %d ms", s.Play.Time.Milliseconds(), s.timeline().Total.Milliseconds())),
@@ -59,7 +68,7 @@ func (s *State) playbackSection() toolshell.Section {
 	if !s.ReadOnly {
 		fields = append(fields, toolshell.Dropdown("tool", "Tool", int(s.Tool), toolNames...))
 	}
-	return toolshell.Section{ID: "playback", Label: "Playback", Fields: fields}
+	return toolshell.Section{ID: "playback", Label: "Playback", Side: toolshell.SideLeft, Fields: fields}
 }
 
 // exportSection describes the Aseprite export of a read-only view.
@@ -176,7 +185,9 @@ func (s *State) boxRefs() []BoxRef {
 	return refs
 }
 
-func (s *State) boxesSection() toolshell.Section {
+// boxListSection is the left section with the list of boxes of the shown
+// clip, "(none)" first.
+func (s *State) boxListSection() toolshell.Section {
 	refs := s.boxRefs()
 	opts := []string{"(none)"}
 	sel := 0
@@ -191,11 +202,22 @@ func (s *State) boxesSection() toolshell.Section {
 			sel = i + 1
 		}
 	}
-	fields := []toolshell.Field{toolshell.Dropdown("box.sel", "Box", sel, opts...)}
-	if s.Sel != nil {
-		fields = append(fields, s.boxFields(c)...)
+	return toolshell.Section{ID: "boxlist", Label: "Boxes", Side: toolshell.SideLeft, Fields: []toolshell.Field{
+		toolshell.Dropdown("box.sel", "Box", sel, opts...).AsList(boxRows),
+	}}
+}
+
+// boxSection is the right section with the fields of the selected box; ok is
+// false without a selection.
+func (s *State) boxSection() (toolshell.Section, bool) {
+	if s.Sel == nil {
+		return toolshell.Section{}, false
 	}
-	return toolshell.Section{ID: "boxes", Label: "Boxes", Fields: fields}
+	fields := s.boxFields(clipEntry(s.File, s.ClipName()))
+	if len(fields) == 0 {
+		return toolshell.Section{}, false
+	}
+	return toolshell.Section{ID: "box", Label: "Box", Fields: fields}, true
 }
 
 func (s *State) boxFields(c *animfile.Clip) []toolshell.Field {

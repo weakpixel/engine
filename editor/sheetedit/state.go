@@ -198,7 +198,7 @@ func (s *State) infoSection() toolshell.Section {
 		r := g.Rect(s.Hover)
 		hover = fmt.Sprintf("%d  (x %d, y %d, %d × %d)", s.Hover, r.Min.X, r.Min.Y, r.Dx(), r.Dy())
 	}
-	return toolshell.Section{ID: "info", Label: "Frames", Fields: []toolshell.Field{
+	return toolshell.Section{ID: "info", Label: "Frames", Side: toolshell.SideLeft, Fields: []toolshell.Field{
 		toolshell.Label("info.size", "Image", size),
 		toolshell.Label("info.grid", "Columns × rows", grid),
 		toolshell.Label("info.count", "Frames", frames),

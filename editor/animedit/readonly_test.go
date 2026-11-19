@@ -2,6 +2,7 @@ package animedit
 
 import (
 	"errors"
+	"slices"
 	"strings"
 	"testing"
 
@@ -24,6 +25,9 @@ func testExportOpensReadOnly(t *testing.T, key string) {
 	p := r.tool.Panel()
 	if err := p.Check(); err != nil {
 		t.Fatal(err)
+	}
+	if left, right := sides(p); !slices.Equal(left, []string{"playback", "view"}) || !slices.Equal(right, []string{"export", "problems"}) {
+		t.Errorf("sides: left %v right %v", left, right)
 	}
 	for _, id := range []string{"clip.sel", "play", "frame", "flip", "export.mode", "export.clips"} {
 		if _, ok := p.Find(id); !ok {

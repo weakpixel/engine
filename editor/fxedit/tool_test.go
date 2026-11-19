@@ -109,6 +109,23 @@ func TestUntitledEffectPlaysAtStart(t *testing.T) {
 	if err := p.Check(); err != nil {
 		t.Fatal(err)
 	}
+	var left, right []string
+	for _, sec := range p.Sections {
+		if sec.Side == toolshell.SideLeft {
+			left = append(left, sec.ID)
+		} else {
+			right = append(right, sec.ID)
+		}
+	}
+	if got, want := strings.Join(left, ","), "emitters,preview,view"; got != want {
+		t.Errorf("left sections = %s, want %s", got, want)
+	}
+	if got, want := strings.Join(right, ","), "effect,emitter,look,emission,shape,motion,advanced,save"; got != want {
+		t.Errorf("right sections = %s, want %s", got, want)
+	}
+	if f, _ := p.Find(IDEmitterSel); f.List != emitterRows {
+		t.Errorf("emitter list rows = %d", f.List)
+	}
 	if _, ok := p.Find(idPlay); !ok || p.Title != "Untitled effect" {
 		t.Errorf("panel title %q, play button %v", p.Title, ok)
 	}
