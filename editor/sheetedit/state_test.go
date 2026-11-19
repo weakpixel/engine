@@ -64,7 +64,7 @@ func TestSetRefusesBadValues(t *testing.T) {
 func TestStaleDocumentIsNotOverwritten(t *testing.T) {
 	s, sent := newState(t, image.Pt(64, 32))
 	s.MarkStale(json.Unmarshal([]byte("{"), new(any)))
-	if err := s.Set(IDFrameW, num(8)); err != ErrStale || len(*sent) != 0 {
+	if err := s.Set(IDFrameW, num(8)); err != toolshell.ErrStale || len(*sent) != 0 {
 		t.Errorf("err %v, %d edits", err, len(*sent))
 	}
 	if p := s.Panel("a", toolshell.Section{ID: "view", Label: "View"}); !strings.Contains(p.Status, "document has errors") {

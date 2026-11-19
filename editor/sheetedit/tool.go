@@ -11,8 +11,8 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 
-	"github.com/weakpixel/ecs"
 	"github.com/weakpixel/engine/editor/toolshell"
+	"github.com/weakpixel/engine/editor/viewkit"
 	"github.com/weakpixel/engine/gfx"
 	"github.com/weakpixel/engine/render"
 	"github.com/weakpixel/engine/sheetfile"
@@ -38,9 +38,8 @@ type Tool struct {
 	key   string
 	st    *State
 
-	entity   ecs.Entity
+	tex      viewkit.Texture
 	imageKey string
-	sprite   gfx.SpriteHandle
 	size     gfx.Vec2 // the image size the camera was last framed on
 }
 
@@ -62,9 +61,7 @@ func (t *Tool) Open(s *toolshell.Shell, key string) error {
 	}
 	t.shell, t.key = s, key
 	t.st = NewState(s.Edit)
-	// The zero Origin means the sprite's default pivot (the center); a tiny
-	// value puts the top-left corner at the entity's position.
-	t.entity = ecs.NewEntity2(s.Engine().World(), gfx.Transform{}, gfx.Sprite{Origin: gfx.Vec2{X: 0.0001, Y: 0.0001}})
+	t.tex.Spawn(s, gfx.SpriteHandle{}) // the image comes with the first document
 	return nil
 }
 
@@ -88,35 +85,19 @@ func (t *Tool) Load(text []byte) error {
 func (t *Tool) loadImage(key string) {
 	t.imageKey = key
 	h, err := render.LoadSpriteSync(t.shell.Engine().Assets().Global(), key)
-	t.sprite = h
 	t.size = gfx.Vec2{}
 	t.st.SetImage(image.Point{}, err)
-	if sp := ecs.GetCompOrNil[gfx.Sprite](t.shell.Engine().World(), t.entity); sp != nil {
-		sp.ID = h
-	}
+	t.tex.SetSprite(t.shell, h)
 }
 
-// imageSize reads the size from the asset store, which a hot reload can
-// change.
-func (t *Tool) imageSize() gfx.Vec2 {
-	if t.sprite == (gfx.SpriteHandle{}) {
-		return gfx.Vec2{}
-	}
-	return t.shell.Engine().Stores().Sprites().Get(t.sprite).Size
-}
-
-// Sync implements [toolshell.Syncer]: it follows a reloaded image and pins
-// the sprite as the texture view of the viewer does. The engine culls a
-// sprite by its position alone, so a texture whose top-left corner left the
-// screen would vanish while most of it is still visible; the sprite is
-// instead put at the center of the part of the image that is on screen, with
-// its pivot set so the image stays where it is.
+// Sync implements [toolshell.Syncer]: it follows a reloaded image and keeps
+// it on screen (see [viewkit.Texture.Sync]).
 func (t *Tool) Sync(s *toolshell.Shell) {
 	st := t.st
 	if st == nil || st.File == nil {
 		return
 	}
-	size := t.imageSize()
+	size := t.tex.Size(s)
 	if size != t.size {
 		t.size = size
 		if size.X > 0 && size.Y > 0 {
@@ -125,21 +106,7 @@ func (t *Tool) Sync(s *toolshell.Shell) {
 			s.Frame(gfx.Rect{Max: size})
 		}
 	}
-	e := s.Engine()
-	tr := ecs.GetCompOrNil[gfx.Transform](e.World(), t.entity)
-	sp := ecs.GetCompOrNil[gfx.Sprite](e.World(), t.entity)
-	if tr == nil || sp == nil || size.X <= 0 || size.Y <= 0 {
-		return
-	}
-	view := e.Camera().DrawBounds(s.ScreenSize())
-	lo := gfx.Vec2{X: max(view.Min.X, 0), Y: max(view.Min.Y, 0)}
-	hi := gfx.Vec2{X: min(view.Max.X, size.X), Y: min(view.Max.Y, size.Y)}
-	if lo.X > hi.X || lo.Y > hi.Y {
-		return // nothing of the image is on screen
-	}
-	p := lo.Add(hi).Mul(0.5)
-	tr.Pos, tr.PrevPos = p, p
-	sp.Origin = gfx.Vec2{X: max(p.X/size.X, 0.0001), Y: max(p.Y/size.Y, 0.0001)}
+	t.tex.Sync(s)
 }
 
 // Update implements [toolshell.Tool]: the frame under the mouse.

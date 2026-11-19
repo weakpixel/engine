@@ -8,8 +8,8 @@ import (
 	"testing/fstest"
 
 	"github.com/weakpixel/engine/editor/toolshell"
+	"github.com/weakpixel/engine/editor/viewkit"
 	"github.com/weakpixel/engine/game"
-	"github.com/weakpixel/engine/gfx"
 	"github.com/weakpixel/engine/input"
 )
 
@@ -53,16 +53,16 @@ func open(t *testing.T, files fstest.MapFS, key string) (*game.Engine, *Viewer, 
 func TestAtlasFramesInFileOrder(t *testing.T) {
 	_, v, _ := open(t, fstest.MapFS{"hero.atlas.json": {Data: []byte(hash)}, "hero.png": {Data: pngBytes(t, 32, 16)}}, "hero.atlas.json")
 	a := v.inner.(*atlasView)
-	if len(a.frames) != 2 {
-		t.Fatalf("frames = %d, want 2", len(a.frames))
+	if len(a.frames.List) != 2 {
+		t.Fatalf("frames = %d, want 2", len(a.frames.List))
 	}
-	b, f := a.frames[0], a.frames[1]
-	if b.Index != 0 || b.Name != "b_second" || rectText(b.Rect) != "16, 0, 16 × 16" {
+	b, f := a.frames.List[0], a.frames.List[1]
+	if b.Index != 0 || b.Name != "b_second" || viewkit.RectText(b.Rect) != "16, 0, 16 × 16" {
 		t.Errorf("frame 0 = %+v", b)
 	}
 	// The second frame is trimmed: 12x14 pixels of a 16x16 frame, pivot (0.25, 1).
-	if f.Name != "a_first" || rectText(f.Rect) != "0, 0, 12 × 14" || pointText(f.Size) != "16, 16" ||
-		pointText(f.Offset) != "2, 1" || pointText(f.Pivot) != "4, 16" {
+	if f.Name != "a_first" || viewkit.RectText(f.Rect) != "0, 0, 12 × 14" || viewkit.PointText(f.Size) != "16, 16" ||
+		viewkit.PointText(f.Offset) != "2, 1" || viewkit.PointText(f.Pivot) != "4, 16" {
 		t.Errorf("frame 1 = %+v", f)
 	}
 	if got := label(t, v, "atlas.count"); got != "2" {
@@ -112,43 +112,12 @@ func TestAtlasGridSheetHoverAndSelect(t *testing.T) {
 }
 
 func TestAtlasLabelMode(t *testing.T) {
-	f := Frame{Index: 3, Name: "run_3"}
-	grid := Frame{Index: 3, Name: "3"}
-	for _, c := range []struct {
-		mode labelMode
-		f    Frame
-		want string
-	}{
-		{labelBoth, f, "3 run_3"}, {labelBoth, grid, "3"}, {labelIndex, f, "3"},
-		{labelName, f, "run_3"}, {labelName, Frame{Index: 2}, "2"}, {labelNone, f, ""},
-	} {
-		if got := c.mode.text(c.f); got != c.want {
-			t.Errorf("mode %v text(%+v) = %q, want %q", c.mode, c.f, got, c.want)
-		}
-	}
 	_, v, _ := open(t, fstest.MapFS{"hero.atlas.json": {Data: []byte(hash)}, "hero.png": {Data: pngBytes(t, 32, 16)}}, "hero.atlas.json")
-	if err := v.Set("atlas.labels", []byte("2")); err != nil || v.inner.(*atlasView).labels != labelName {
+	if err := v.Set("atlas.labels", []byte("2")); err != nil || v.inner.(*atlasView).frames.Mode != viewkit.LabelName {
 		t.Errorf("Set labels = %v", err)
 	}
 	if err := v.Set("atlas.labels", []byte("9")); err == nil {
 		t.Error("a label mode out of range was accepted")
-	}
-}
-
-func TestFrameAtPrefersTheSmallerFrame(t *testing.T) {
-	r := func(x0, y0, x1, y1 float32) gfx.Rect {
-		return gfx.Rect{Min: gfx.Vec2{X: x0, Y: y0}, Max: gfx.Vec2{X: x1, Y: y1}}
-	}
-	frames := []Frame{{Rect: r(0, 0, 32, 32)}, {Rect: r(8, 8, 16, 16)}}
-	for _, c := range []struct {
-		p    gfx.Vec2
-		want int
-	}{
-		{gfx.Vec2{X: 10, Y: 10}, 1}, {gfx.Vec2{X: 1, Y: 1}, 0}, {gfx.Vec2{X: 32, Y: 1}, -1}, {gfx.Vec2{X: -1, Y: 0}, -1},
-	} {
-		if got := frameAt(frames, c.p); got != c.want {
-			t.Errorf("frameAt(%v) = %d, want %d", c.p, got, c.want)
-		}
 	}
 }
 

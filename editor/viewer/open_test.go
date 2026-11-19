@@ -72,7 +72,7 @@ func TestViewerOpenSwitchesFile(t *testing.T) {
 	}
 
 	update()
-	box := v.inner.(*textureView).sprite
+	box := v.inner.(*textureView).tex.Sprite
 	e.Camera().Zoom = 3 // the user zoomed; the next file is framed anyway
 
 	ready, errs := open("tiles.sheet.json")

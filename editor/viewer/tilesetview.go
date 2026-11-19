@@ -226,8 +226,8 @@ func (v *tilesetView) Draw(s *toolshell.Shell, screen ebiten.FinalScreen) {
 		if tile.AnimTotal > 0 {
 			s.FillRect(screen, r.Max.X-animMarkPx-1, r.Min.Y+1, animMarkPx, animMarkPx, colAnimMark)
 		}
-		if text := strconv.Itoa(t.id); v.ids && v.cache.fits(text, r.Max.X-r.Min.X) {
-			v.cache.draw(screen, text, r.Min.X+1, r.Min.Y+1)
+		if text := strconv.Itoa(t.id); v.ids && v.cache.Fits(text, r.Max.X-r.Min.X) {
+			v.cache.Draw(screen, text, r.Min.X+1, r.Min.Y+1)
 		}
 	}
 	for _, id := range []int{v.hover, v.sel} {
@@ -240,7 +240,7 @@ func (v *tilesetView) Draw(s *toolshell.Shell, screen ebiten.FinalScreen) {
 		}
 		r := s.WindowRect(gfx.Rect{Min: v.cellOrigin(id), Max: v.cellOrigin(id).Add(v.cell)})
 		s.StrokePolyline(screen, []gfx.Vec2{r.Min, {X: r.Max.X, Y: r.Min.Y}, r.Max, {X: r.Min.X, Y: r.Max.Y}}, true, 2, c)
-		v.cache.draw(screen, strconv.Itoa(id), r.Min.X+1, r.Min.Y+1)
+		v.cache.Draw(screen, strconv.Itoa(id), r.Min.X+1, r.Min.Y+1)
 	}
 }
 

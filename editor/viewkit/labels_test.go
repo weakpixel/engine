@@ -1,21 +1,21 @@
-package viewer
+package viewkit
 
 import "testing"
 
 // withScale sets the display scale factor for the test.
 func withScale(t *testing.T, f float64) {
 	t.Helper()
-	old := deviceScale
-	deviceScale = func() float64 { return f }
-	t.Cleanup(func() { deviceScale = old })
+	old := DeviceScale
+	DeviceScale = func() float64 { return f }
+	t.Cleanup(func() { DeviceScale = old })
 }
 
 func TestLabelFollowsDeviceScale(t *testing.T) {
-	var c labelCache
+	var c Labels
 	withScale(t, 1)
 	b1 := c.image("player").Bounds()
-	if b1.Dy() < labelSize {
-		t.Fatalf("label is %d px high at scale 1, want at least %d", b1.Dy(), labelSize)
+	if b1.Dy() < LabelSize {
+		t.Fatalf("label is %d px high at scale 1, want at least %d", b1.Dy(), LabelSize)
 	}
 	withScale(t, 2)
 	b2 := c.image("player").Bounds()
@@ -25,19 +25,19 @@ func TestLabelFollowsDeviceScale(t *testing.T) {
 }
 
 func TestLabelFits(t *testing.T) {
-	var c labelCache
+	var c Labels
 	withScale(t, 2)
-	w := c.width("a")
+	w := c.Width("a")
 	for _, tc := range []struct {
 		box  float32
 		want bool
 	}{
-		{minLabelPx, false},                // under the scaled minimum
-		{2 * minLabelPx, w < 2*minLabelPx}, // at it
+		{MinLabelPx, false},                // under the scaled minimum
+		{2 * MinLabelPx, w < 2*MinLabelPx}, // at it
 		{w, false},                         // as wide as the label
-		{max(w, 2*minLabelPx) + 1, true},
+		{max(w, 2*MinLabelPx) + 1, true},
 	} {
-		if got := c.fits("a", tc.box); got != tc.want {
+		if got := c.Fits("a", tc.box); got != tc.want {
 			t.Errorf("fits(%q, %g) = %v, want %v (label %g px)", "a", tc.box, got, tc.want, w)
 		}
 	}

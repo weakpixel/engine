@@ -7,6 +7,7 @@ import (
 
 	"github.com/weakpixel/engine/anim"
 	"github.com/weakpixel/engine/anim/animfile"
+	"github.com/weakpixel/engine/editor/toolshell"
 	"github.com/weakpixel/engine/gfx"
 )
 
@@ -25,23 +26,31 @@ const (
 // toolNames are the dropdown entries of the tools.
 var toolNames = []string{"Select (S)", "Pivot (P)", "Hit box (H)", "Hurt box (U)", "Body (B)"}
 
-// ErrStale is returned by every edit while the document cannot be parsed:
-// the tool keeps showing the last good version and never writes over the
-// user's broken text.
-var ErrStale = errors.New("the document has errors: fix it in the text editor first")
-
 // ErrReadOnly is returned by every edit of a read-only view, an Aseprite
 // export opened in the anim tool: it is somebody else's file, shown to play
-// its clips.
-var ErrReadOnly = errors.New("this is an Aseprite export, shown read-only: edit a .anim.json definition instead")
+// its clips. It matches [toolshell.ErrReadOnly] with errors.Is.
+var ErrReadOnly error = asepriteReadOnly{}
+
+// asepriteReadOnly is the type of [ErrReadOnly]: its own text, and errors.Is
+// matches the shell's generic error.
+type asepriteReadOnly struct{}
+
+func (asepriteReadOnly) Error() string {
+	return "this is an Aseprite export, shown read-only: edit a .anim.json definition instead"
+}
+
+func (asepriteReadOnly) Is(target error) bool { return target == toolshell.ErrReadOnly }
 
 // State is everything the tool knows: the definition (the model), its sheet,
 // what is selected and played. It has no Ebiten in it, so tests drive it
 // directly; the tool in tool.go feeds it the mouse and the keys.
 type State struct {
-	// File is the decoded definition; Sheet is what it refers to (nil when
-	// the sheet cannot be read, then SheetErr says why).
-	File     *animfile.File
+	// Model holds the decoded definition (File), its stale mark and the
+	// edit path. ReadOnly is set when the file is an Aseprite export (File
+	// is then an empty definition of it): clips play, nothing can be edited.
+	toolshell.Model[*animfile.File]
+	// Sheet is what File refers to (nil when the sheet cannot be read, then
+	// SheetErr says why).
 	Sheet    *animfile.Sheet
 	SheetErr string
 	// Res is File resolved against Sheet, nil when Resolve found errors;
@@ -54,9 +63,6 @@ type State struct {
 	Play Playback
 	Flip bool
 	Tool ToolKind
-	// ReadOnly is set when the file is an Aseprite export (File is then an
-	// empty definition of it): clips play, nothing can be edited.
-	ReadOnly bool
 	// Sel is the selected box of the clip, if any.
 	Sel *BoxRef
 	// Drag is the mouse gesture in progress.
@@ -64,11 +70,6 @@ type State struct {
 	// Geom is the sprite of the shown frame, set by the tool each tick; the
 	// pivot tool needs it to turn a point into trimmed-image pixels.
 	Geom Geom
-	// Stale is the parse error of a document that could not be loaded, "" if
-	// the shown file is the document.
-	Stale string
-
-	emit func(text []byte)
 }
 
 // Geom is what the tool needs to know of the shown sprite: its untrimmed
@@ -81,12 +82,16 @@ type Geom struct {
 
 // NewState returns a state that sends every edit to emit as the text of the
 // new document version.
-func NewState(emit func(text []byte)) *State { return &State{emit: emit} }
+func NewState(emit func(text []byte)) *State {
+	s := &State{}
+	s.Encode, s.Emit = animfile.Encode, emit
+	return s
+}
 
 // SetFile replaces the definition (a new document version) and clears a stale
 // mark. The selection and the clip survive when they are still valid.
 func (s *State) SetFile(f *animfile.File) {
-	s.File, s.Stale = f, ""
+	s.Model.SetFile(f)
 	s.Drag = nil
 	s.refresh()
 }
@@ -102,7 +107,7 @@ func (s *State) SetSheet(sh *animfile.Sheet, err error) {
 
 // MarkStale keeps the shown file and notes that the document does not parse.
 func (s *State) MarkStale(err error) {
-	s.Stale = err.Error()
+	s.Model.MarkStale(err)
 	s.Drag = nil
 }
 
@@ -217,25 +222,18 @@ func (s *State) Boxes() []Box {
 // resolves again. A refused edit leaves the file as it was.
 func (s *State) do(edit func(f *animfile.File) error) error {
 	if s.ReadOnly {
-		return ErrReadOnly
+		return ErrReadOnly // the Aseprite text, not the shell's generic one
 	}
-	if s.Stale != "" {
-		return ErrStale
+	if err := s.Editable(); err != nil {
+		return err
 	}
 	if !s.Ready() {
 		return errors.New("there is no sheet to edit against")
 	}
 	s.Play.Playing = false
-	if err := edit(s.File); err != nil {
-		return err
-	}
-	data, err := animfile.Encode(s.File)
-	if err != nil {
+	if err := s.Do(edit); err != nil {
 		return err
 	}
 	s.refresh()
-	if s.emit != nil {
-		s.emit(data)
-	}
 	return nil
 }

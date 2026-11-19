@@ -9,15 +9,11 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/weakpixel/engine/editor/toolshell"
 	"github.com/weakpixel/engine/internal/shaderparam"
 	"github.com/weakpixel/engine/particles/fxfile"
 	"github.com/weakpixel/engine/xmath"
 )
-
-// ErrStale is returned by every edit while the document cannot be parsed:
-// the tool keeps showing the last good version and never writes over the
-// user's broken text.
-var ErrStale = errors.New("the document has errors: fix it in the text editor first")
 
 // defaultDir is the folder Save as proposes.
 const defaultDir = "global/fx/"
@@ -26,21 +22,19 @@ const defaultDir = "global/fx/"
 // the panel and the save-as form. It has no Ebiten, so tests drive it
 // directly; the tool feeds it the shell and the preview.
 type State struct {
+	// DocStatus says whether a document was parsed (Loaded) and holds the
+	// parse error of the last text (Stale, the shown model stays).
+	toolshell.DocStatus
 	// Key is the asset key of the file, "" while the effect is untitled.
 	Key string
 	// Ems are the emitters of the document and Sel the one the panel edits;
-	// Em is a copy of Ems[Sel]. Loaded says that a document was parsed.
-	Ems    []Emitter
-	Sel    int
-	Em     Emitter
-	Loaded bool
+	// Em is a copy of Ems[Sel].
+	Ems []Emitter
+	Sel int
+	Em  Emitter
 	// Muted[i] silences emitter i in the preview only; it is not saved and
 	// may be shorter than Ems.
 	Muted []bool
-	// Stale is the parse error of a document that could not be loaded, ""
-	// if the shown model is the document.
-	Stale string
-
 	// Preset is the index of the preset dropdown; Keep keeps the picked
 	// image and shader when a preset is applied.
 	Preset int
@@ -110,7 +104,7 @@ func text(em Emitter) []byte {
 func (s *State) Load(doc []byte) error {
 	spec, err := fxfile.Decode(doc)
 	if err != nil {
-		s.Stale = err.Error()
+		s.MarkStale(err)
 		return err
 	}
 	s.Stale = ""
@@ -158,11 +152,8 @@ func (s *State) Set(id string, v []byte) error {
 		s.Restart = true
 		return nil
 	}
-	if !s.Loaded {
-		return errors.New("fx: no document yet")
-	}
-	if s.Stale != "" {
-		return ErrStale
+	if err := s.Editable(); err != nil {
+		return err
 	}
 	switch id {
 	case SaveGoID:

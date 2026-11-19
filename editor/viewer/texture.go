@@ -10,8 +10,8 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 
 	"github.com/weakpixel/asset"
-	"github.com/weakpixel/ecs"
 	"github.com/weakpixel/engine/editor/toolshell"
+	"github.com/weakpixel/engine/editor/viewkit"
 	"github.com/weakpixel/engine/gfx"
 	"github.com/weakpixel/engine/render"
 )
@@ -19,12 +19,11 @@ import (
 // textureView shows one texture on the grid. The atlas previewer builds on
 // it.
 type textureView struct {
-	key    string
-	scope  *asset.Scope // holds what the previewer loads
-	sprite gfx.SpriteHandle
-	size   gfx.Vec2
-	shell  *toolshell.Shell
-	entity ecs.Entity
+	key   string
+	scope *asset.Scope // holds what the previewer loads
+	tex   viewkit.Texture
+	size  gfx.Vec2
+	shell *toolshell.Shell
 	// ready is set once the texture is loaded; a viewer whose file failed to
 	// load does nothing, and its panel shows the error.
 	ready bool
@@ -37,16 +36,12 @@ var outline = color.RGBA{R: 90, G: 150, B: 255, A: 255}
 // top-left corner there, and frames it.
 func (v *textureView) openImage(s *toolshell.Shell, key string) error {
 	v.shell, v.key = s, key
-	e := s.Engine()
 	h, err := render.LoadSpriteSync(v.scope, key)
 	if err != nil {
 		return fmt.Errorf("view: %w", err)
 	}
-	v.sprite = h
-	// The zero Origin means the sprite's default pivot (the center); a tiny
-	// value puts the top-left corner at the entity's position.
-	v.entity = ecs.NewEntity2(e.World(), gfx.Transform{}, gfx.Sprite{ID: h, Origin: gfx.Vec2{X: 0.0001, Y: 0.0001}})
-	v.size = v.textureSize()
+	v.tex.Spawn(s, h)
+	v.size = v.tex.Size(s)
 	v.ready = true
 	s.Frame(gfx.Rect{Max: v.size})
 	return nil
@@ -54,46 +49,19 @@ func (v *textureView) openImage(s *toolshell.Shell, key string) error {
 
 // close removes the sprite entity.
 func (v *textureView) close(s *toolshell.Shell) {
-	if w := s.Engine().World(); v.ready && w.IsAlive(v.entity) {
-		w.DeleteEntity(v.entity)
-	}
+	v.tex.Close(s)
 	v.ready = false
 }
 
 // Open implements [toolshell.Tool].
 func (v *textureView) Open(s *toolshell.Shell, key string) error { return v.openImage(s, key) }
 
-// textureSize reads the size from the asset store, which a hot reload can
-// change.
-func (v *textureView) textureSize() gfx.Vec2 {
-	return v.shell.Engine().Stores().Sprites().Get(v.sprite).Size
-}
-
-// Sync implements [toolshell.Syncer]. The engine culls a sprite by its
-// position alone, so a texture whose top-left corner left the screen would
-// vanish while most of it is still visible. The sprite is instead pinned at
-// the center of the part of the texture that is on screen, with its pivot
-// set so the texture stays where it is.
+// Sync implements [toolshell.Syncer]: it keeps the texture on screen (see
+// [viewkit.Texture.Sync]).
 func (v *textureView) Sync(s *toolshell.Shell) {
-	e := s.Engine()
-	if !v.ready {
-		return
+	if v.ready {
+		v.tex.Sync(s)
 	}
-	t := ecs.GetCompOrNil[gfx.Transform](e.World(), v.entity)
-	sp := ecs.GetCompOrNil[gfx.Sprite](e.World(), v.entity)
-	if t == nil || sp == nil || v.size.X <= 0 || v.size.Y <= 0 {
-		return
-	}
-	view := e.Camera().DrawBounds(s.ScreenSize())
-	lo := gfx.Vec2{X: max(view.Min.X, 0), Y: max(view.Min.Y, 0)}
-	hi := gfx.Vec2{X: min(view.Max.X, v.size.X), Y: min(view.Max.Y, v.size.Y)}
-	if lo.X > hi.X || lo.Y > hi.Y {
-		return // nothing of the texture is on screen
-	}
-	p := lo.Add(hi).Mul(0.5)
-	t.Pos, t.PrevPos = p, p
-	// A zero Origin means the default pivot, so keep it just above zero.
-	sp.Origin = gfx.Vec2{X: max(p.X/v.size.X, 0.0001), Y: max(p.Y/v.size.Y, 0.0001)}
 }
 
 // Update implements [toolshell.Tool]: a reloaded texture of another size
@@ -102,7 +70,7 @@ func (v *textureView) Update(s *toolshell.Shell) {
 	if !v.ready {
 		return
 	}
-	if size := v.textureSize(); size != v.size {
+	if size := v.tex.Size(s); size != v.size {
 		v.size = size
 		s.SetContent(gfx.Rect{Max: size})
 	}
@@ -113,12 +81,7 @@ func (v *textureView) Draw(s *toolshell.Shell, screen ebiten.FinalScreen) {
 	if !v.ready {
 		return
 	}
-	r := s.WindowRect(gfx.Rect{Max: v.size}).Grow(1)
-	w, h := r.Max.X-r.Min.X, r.Max.Y-r.Min.Y
-	s.FillRect(screen, r.Min.X, r.Min.Y, w, 1, outline)
-	s.FillRect(screen, r.Min.X, r.Max.Y-1, w, 1, outline)
-	s.FillRect(screen, r.Min.X, r.Min.Y, 1, h, outline)
-	s.FillRect(screen, r.Max.X-1, r.Min.Y, 1, h, outline)
+	viewkit.DrawBorder(s, screen, gfx.Rect{Max: v.size}, outline)
 }
 
 // imageSection is the section with the texture's size and the pixel and

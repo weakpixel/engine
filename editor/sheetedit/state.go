@@ -2,18 +2,12 @@ package sheetedit
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"image"
 
 	"github.com/weakpixel/engine/editor/toolshell"
 	"github.com/weakpixel/engine/sheetfile"
 )
-
-// ErrStale is returned by every edit while the document cannot be parsed:
-// the tool keeps showing the last good version and never writes over the
-// user's broken text.
-var ErrStale = errors.New("the document has errors: fix it in the text editor first")
 
 // Ids of the panel's widgets.
 const (
@@ -27,34 +21,31 @@ const (
 // image and the frame under the mouse. It has no Ebiten in it, so tests drive
 // it directly; the tool in tool.go feeds it the texture and the mouse.
 type State struct {
-	// File is the decoded sheet, nil until the first valid document.
-	File *sheetfile.File
+	// Model holds the decoded sheet (File, nil until the first valid
+	// document), its stale mark and the edit path.
+	toolshell.Model[*sheetfile.File]
 	// Size is the size of the image in pixels, zero while it is unknown;
 	// ImageErr says why when it could not be loaded.
 	Size     image.Point
 	ImageErr string
-	// Stale is the parse error of a document that could not be loaded, ""
-	// if the shown file is the document.
-	Stale string
 	// Hover is the index of the frame under the mouse, -1 for none.
 	Hover int
-
-	emit func(text []byte)
 }
 
 // NewState returns a state that sends every edit to emit as the text of the
 // new document version.
-func NewState(emit func(text []byte)) *State { return &State{emit: emit, Hover: -1} }
+func NewState(emit func(text []byte)) *State {
+	s := &State{Hover: -1}
+	s.Encode, s.Emit = sheetfile.Encode, emit
+	return s
+}
 
 // SetFile replaces the sheet (a new document version) and clears a stale
 // mark.
 func (s *State) SetFile(f *sheetfile.File) {
-	s.File, s.Stale = f, ""
+	s.Model.SetFile(f)
 	s.Hover = -1
 }
-
-// MarkStale keeps the shown sheet and notes that the document does not parse.
-func (s *State) MarkStale(err error) { s.Stale = err.Error() }
 
 // SetImage records the image size, or why there is none.
 func (s *State) SetImage(size image.Point, err error) {
@@ -101,7 +92,7 @@ func (s *State) Findings() []string {
 // refuses; the file is not written then.
 func (s *State) Set(id string, v json.RawMessage) error {
 	if s.File == nil {
-		return errors.New("nothing to edit: no valid document yet")
+		return toolshell.ErrNoDocument
 	}
 	var f float64
 	if err := json.Unmarshal(v, &f); err != nil {
@@ -122,8 +113,8 @@ func (s *State) Set(id string, v json.RawMessage) error {
 	default:
 		return fmt.Errorf("sheet: no widget %q", id)
 	}
-	if s.Stale != "" {
-		return ErrStale
+	if err := s.Editable(); err != nil {
+		return err
 	}
 	if f != float64(n) || n < least {
 		return fmt.Errorf("sheet: %s must be a whole number of at least %d, got %v", id, least, f)
@@ -132,16 +123,11 @@ func (s *State) Set(id string, v json.RawMessage) error {
 		return nil
 	}
 	old := *field
-	*field = n
-	data, err := sheetfile.Encode(s.File)
+	err := s.Do(func(*sheetfile.File) error { *field = n; return nil })
 	if err != nil {
-		*field = old
-		return err
+		*field = old // the encoder refused it: nothing was written
 	}
-	if s.emit != nil {
-		s.emit(data)
-	}
-	return nil
+	return err
 }
 
 // Panel is the panel of the tool as it is now, without the view section the
