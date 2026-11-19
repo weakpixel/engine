@@ -131,23 +131,22 @@ The extension tells the page which stage to run (`globalThis.weakpixelHost.stage
 
 ## wpix-editor
 
-`wpix-editor` runs single-file tools in a window, without VSCode. It opens a file from the game's asset folder and shows the tool's panel in two columns over the viewport. The design is in [editor.md#tools](../../design/editor.md#tools).
+`wpix-editor` opens one file in a window, without VSCode, and shows its tool's panel in two columns over the viewport. The file name picks the kind, and every kind has one tool: a kind that can be edited opens its editor, any other kind opens its preview. There are no modes and no tool names on the command line. The design is in [editor.md#tools](../../design/editor.md#tools).
 
 ```sh
-go tool wpix-editor view assets/player/idle.png
-go tool wpix-editor view assets/player/player.atlas.json
-go tool wpix-editor view assets/global/fonts/ui.ttf
-go tool wpix-editor anim assets/player/player.anim.json
-go tool wpix-editor sheet assets/gfx/tiles.sheet.json
-go tool wpix-editor sheet --image assets/gfx/tiles.png assets/gfx/tiles.sheet.json
-go tool wpix-editor voice assets/talk/kip.voice.json
-go tool wpix-editor voice assets/talk/village.dialogue.json
-go tool wpix-editor fx
-go tool wpix-editor fx assets/global/fx/sparks.prefab.json
+go tool wpix-editor assets/player/idle.png
+go tool wpix-editor assets/player/player.atlas.json
+go tool wpix-editor assets/global/fonts/ui.ttf
+go tool wpix-editor assets/player/player.anim.json
+go tool wpix-editor --sheet assets/player/player.aseprite.json assets/player/new.anim.json
+go tool wpix-editor assets/gfx/tiles.sheet.json
+go tool wpix-editor --image assets/gfx/tiles.png assets/gfx/new.sheet.json
+go tool wpix-editor assets/global/fx/sparks.fx.json
+go tool wpix-editor assets/talk/kip.voice.json
 go tool wpix-editor help
 ```
 
-Flags go with `--` (`anim` takes `--sheet <export.json>`, `sheet` takes `--image <texture>`); `go tool wpix-editor <tool> --help` shows a tool's usage. Usage errors exit with 2, other failures with 1.
+`--sheet <export>` is only for a new `.anim.json` and `--image <texture>` only for a new `.sheet.json`; on any other file they are a usage error. `go tool wpix-editor --help` lists the kinds. Usage errors (no file, two files, a file of no kind, a flag for the wrong kind) exit with 2, other failures with 1.
 
 A project made by `wpix new` has the tool. For an existing project, add it once:
 
@@ -155,15 +154,24 @@ A project made by `wpix new` has the tool. For an existing project, add it once:
 go get -tool github.com/weakpixel/engine/tools/wpix-editor
 ```
 
-| Tool | File | Shows |
+| File | Opens | Shows |
 | --- | --- | --- |
-| `view` | `.png`, `.jpg`, `.jpeg` | The texture on a grid, with its size, the pixel under the mouse and the grid cell under the mouse |
-| `view` | `*.sheet.json`, `*.atlas.json` | The atlas's [frames](#the-view-tool) over its texture, with their indices and names |
-| `view` | `.ttf`, `.otf` | A [font](#the-view-tool) as the engine draws it, at the sizes the project uses |
-| `fx` | `.prefab.json`, optional | A [particle effect](particles.md#authoring): a smoke effect playing at once (with no file) or the prefab's emitter, with presets, image and shader pickers and the fields that matter |
-| `sheet` | `.sheet.json` | The [grid sheet](asset-kinds.md#grid-sheet) over its texture: edit the frame size, margin and spacing, see the frame count and the index of the frame under the mouse |
-| `voice` | `*.voice.json`, `*.dialogue.json` | A [voice](speech.md#previewing-voices-and-dialogues) says a line you type in the panel, with the piano roll of its notes; a dialogue plays in a box line by line. The only tool with sound. Read-only |
-| `anim` | `.anim.json`, `.aseprite.json`, `.ase.json` | The [animation definition](animation.md#animation-definition-animjson) on its sheet: play a clip, draw and edit the pivot, body and hit and hurt boxes, and edit the rest of the format in the panel |
+| `*.sheet.json` | [Editor](#the-sheet-tool) | The [grid sheet](asset-kinds.md#grid-sheet) over its texture: edit the frame size, margin and spacing, see the frame count and the index of the frame under the mouse |
+| `*.anim.json` | [Editor](#the-anim-tool) | The [animation definition](animation.md#animation-definition-animjson) on its sheet: play a clip, draw and edit the pivot, body and hit and hurt boxes, and edit the rest of the format in the panel |
+| `*.fx.json` | [Editor](#the-fx-tool) | A [particle effect](particles.md#authoring) with presets, image and shader pickers and the fields that matter |
+| `.png`, `.jpg`, `.jpeg` | [Preview](#the-view-tool) | The texture on a grid, with its size, the pixel under the mouse and the grid cell under the mouse |
+| `*.atlas.json` | [Preview](#the-view-tool) | The atlas's frames over its texture, with their indices and names |
+| `.ttf`, `.otf` | [Preview](#the-view-tool) | A font as the engine draws it, at the sizes the project uses |
+| `.kage` | Preview | A [shader](shaders.md) drawn on a texture, with a control per `+shader:param` marker |
+| `.tmj`, `.tsj`, `.world` | [Preview](#the-view-tool) | A Tiled [map](tilemaps.md), tileset or world |
+| `*.aseprite.json`, `*.ase.json` | Preview | An Aseprite export's clips with the sheet's own timing, in the [anim tool's](#the-anim-tool) layout, read-only (the format belongs to Aseprite) |
+| `*.voice.json`, `*.dialogue.json` | Preview, with sound | A [voice](speech.md#previewing-voices-and-dialogues) says a line you type in the panel, with the piano roll of its notes; a dialogue plays in a box line by line. Edit them in the Voice Editor |
+
+The suffixes of the engine's own formats (`.sheet.json`, `.anim.json`, `.fx.json`, and the Aseprite exports) match in lower case only; the others match in any case. The content of a file is never looked at.
+
+**New files.** A file of an edited kind that does not exist yet opens as an unsaved document, and Ctrl/Cmd+S creates it: a `.fx.json` starts from the default effect (its built-in sprite is copied next to it as `<name>.png` on the first save), a `.sheet.json` needs `--image <texture>` and a `.anim.json` needs `--sheet <export>`. Without the flag a missing sheet or definition is an error that names the flag, for example `new.sheet.json does not exist: give --image <texture> to start a new sheet`. A missing file of any other kind is an error.
+
+**Sound.** Only a window that opens a voice or a dialogue starts the sound.
 
 The asset root is `assets.root` of the [`.weakpixel.json`](../project-file.md) found from the file's folder, or the file's folder without one; a file outside the root is an error. The file's asset key is its path relative to the root. A PNG saved while the tool is open reloads.
 
@@ -182,16 +190,16 @@ The panels lie over the viewport, which fills the window: the left one holds the
 
 ### The view tool
 
-`view` previews with the engine's own loaders, so it needs no game code and works while the game does not compile.
+The preview (the `view` tool) shows every kind that is not edited, with the engine's own loaders, so it needs no game code and works while the game does not compile.
 
-- **Atlas.** The texture with every frame outlined, labelled with its index and name (the Labels dropdown on the left picks index, name, both or none; small frames are labelled only when hovered). The left Frames list picks a frame like a click on it does (`(none)` clears the selection). The panel describes the frame under the mouse: its rect in the texture, untrimmed size, trim offset and pivot. A click selects a frame and keeps it described; a click on nothing clears it. Where frames overlap, the smaller one is picked. A grid sheet names its frames by index, so both labels are the same number.
+- **Atlas.** The texture with every frame outlined, labelled with its index and name (the Labels dropdown on the left picks index, name, both or none; small frames are labelled only when hovered). The left Frames list picks a frame like a click on it does (`(none)` clears the selection). The panel describes the frame under the mouse: its rect in the texture, untrimmed size, trim offset and pivot. A click selects a frame and keeps it described; a click on nothing clears it. Where frames overlap, the smaller one is picked.
 - **World.** The maps of a `.world` file with their bounds. The left Maps list selects a map like a click does (it does not open a level; a double click does).
 - **Map.** The left panel holds the layer toggles, the Names switch and the levels that use the map; the Object section on the right describes the selected object, else the one under the mouse.
 - **Font.** Sample text at the sizes the project uses: the view scans the `*.level.json` and `*.prefab.json` files of the asset root for `fonts/ui.ttf#16` style keys of the opened font (at most 300 files), or shows 12, 16, 24 and 32 px when there are none. The panel changes the sample text and adds one more size to compare, and lists each size's line height. The text is drawn with the face a `gfx.Label` uses, in black or white to suit the background.
 
 ### The fx tool
 
-`go tool wpix-editor fx` with no file opens an untitled smoke effect that is already playing. Change the preset, image, shader and the fields that matter, watch the result, and **Save as** writes `global/fx/<name>.fx.json` (and the built-in sprite as a PNG next to it, so the saved effect never names a built-in image) and continues on the new file; Ctrl/Cmd+Z undoes edits before and after saving. With a `*.fx.json` file it edits that effect and writes the whole file in the canonical form ([effect file](particles.md#the-effect-file)). The effect is placed in a level with a `gfx:Particles` component; layer and seed belong to that component and are not edited here.
+`go tool wpix-editor <name>.fx.json` with a file that does not exist yet opens the default smoke effect, already playing; Ctrl/Cmd+S writes it and the built-in sprite as `<name>.png` next to it, so the saved effect never names a built-in image. In VSCode, New Particle Effect opens the same effect untitled, and **Save as** writes `global/fx/<name>.fx.json` (and the sprite) and continues on the new file; Ctrl/Cmd+Z undoes edits before and after saving. With an existing `*.fx.json` file it edits that effect and writes the whole file in the canonical form ([effect file](particles.md#the-effect-file)). The effect is placed in a level with a `gfx:Particles` component; layer and seed belong to that component and are not edited here.
 
 | Input | Does |
 | --- | --- |
@@ -203,7 +211,7 @@ The left panel has Emitters (the list of emitters, Add, Duplicate, Delete, Move 
 
 ### The anim tool
 
-`go tool wpix-editor anim <file>.anim.json` plays the clips of the definition's sheet. An Aseprite export named `<name>.aseprite.json` or `<name>.ase.json` opens the same way **read-only**: the clips play with the sheet's own timing, and the panel offers no editing; make a definition of it with `--sheet` (below) to add pivot and boxes. Boxes are drawn relative to the pivot, which is the origin of the view; coordinates are whole pixels. To start a definition from an Aseprite export, give a file that does not exist and the export: `wpix-editor anim --sheet player.json player.anim.json` (the same starter as `wpix anim create`; Ctrl/Cmd+S creates the file).
+`go tool wpix-editor <file>.anim.json` plays the clips of the definition's sheet. An Aseprite export named `<name>.aseprite.json` or `<name>.ase.json` opens in the preview in the same layout, **read-only**: the clips play with the sheet's own timing, and the panel offers no editing; make a definition of it with `--sheet` (below) to add pivot and boxes. Boxes are drawn relative to the pivot, which is the origin of the view; coordinates are whole pixels. To start a definition from an Aseprite export, give a file that does not exist and the export: `wpix-editor --sheet player.aseprite.json player.anim.json` (the same starter as `wpix anim create`; Ctrl/Cmd+S creates the file).
 
 | Key | Does |
 | --- | --- |
@@ -222,7 +230,7 @@ The left panel has Playback (the clip list, play, frame, flip, tool), the Boxes 
 
 ### The sheet tool
 
-`go tool wpix-editor sheet <file>.sheet.json` draws the grid of a [grid sheet](asset-kinds.md#grid-sheet) over its texture: every frame is outlined, the pixels no frame covers (right of and below the grid) are dimmed, and the frame under the mouse is highlighted. The left panel has Frames (image size, columns × rows, frame count, the unused pixels, and the index and rectangle of the frame under the mouse) and View; the right panel has Sheet (the image and number fields for frame width, frame height, margin and spacing) and Problems (a missing image, or a frame that does not fit the image). Each change writes the whole file in the canonical form and is one undo step. To start a sheet from a texture, give a file that does not exist and the image: `wpix-editor sheet --image tiles.png tiles.sheet.json` starts with 16 pixel cells (smaller if the image is smaller); Ctrl/Cmd+S creates the file. The pivot of an existing sheet is kept but not edited here.
+`go tool wpix-editor <file>.sheet.json` draws the grid of a [grid sheet](asset-kinds.md#grid-sheet) over its texture: every frame is outlined, the pixels no frame covers (right of and below the grid) are dimmed, and the frame under the mouse is highlighted. The left panel has Frames (image size, columns × rows, frame count, the unused pixels, and the index and rectangle of the frame under the mouse) and View; the right panel has Sheet (the image and number fields for frame width, frame height, margin and spacing) and Problems (a missing image, or a frame that does not fit the image). Each change writes the whole file in the canonical form and is one undo step. To start a sheet from a texture, give a file that does not exist and the image: `wpix-editor --image tiles.png tiles.sheet.json` starts with 16 pixel cells (smaller if the image is smaller); Ctrl/Cmd+S creates the file. The pivot of an existing sheet is kept but not edited here.
 
 ## Events
 

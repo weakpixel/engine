@@ -41,9 +41,9 @@ func AssetBase() (string, bool) {
 // none.
 func Stage() string { return hostString("stage") }
 
-// Tool returns the tool the host page asks for
-// (globalThis.weakpixelHost.tool, for wpix-editor), "" when it names
-// none.
+// Tool returns the tool the host page names (globalThis.weakpixelHost.tool),
+// "" when it names none. wpix-editor no longer reads it: it picks the tool
+// from [Path].
 func Tool() string { return hostString("tool") }
 
 // Path returns the asset key of the file the host page opens first

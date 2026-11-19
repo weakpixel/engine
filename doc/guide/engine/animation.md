@@ -199,7 +199,7 @@ Parsing and checking live in `anim/animfile` (standard library only: no Ebiten, 
 
 ### Tooling: `wpix anim`
 
-The `wpix-editor anim` tool edits these files visually ([editor guide](editor.md#the-anim-tool)). `anim.PivotOrigin(sprite, pivot)` is the pivot-to-`Sprite.Origin` conversion the loader and the editor share.
+`wpix-editor <file>.anim.json` edits these files visually ([editor guide](editor.md#the-anim-tool)). `anim.PivotOrigin(sprite, pivot)` is the pivot-to-`Sprite.Origin` conversion the loader and the editor share.
 
 ```bash
 go run ./tools/wpix anim validate chars/player.anim.json [more.anim.json ...]
