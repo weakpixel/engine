@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"path"
+	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
 
 	"github.com/weakpixel/asset"
+	"github.com/weakpixel/engine/editor/filekind"
 	"github.com/weakpixel/engine/editor/toolshell"
 	"github.com/weakpixel/engine/editor/viewkit"
 	"github.com/weakpixel/engine/render"
@@ -26,6 +28,11 @@ type atlasView struct {
 
 // Open implements [toolshell.Tool].
 func (v *atlasView) Open(s *toolshell.Shell, key string) error {
+	// The atlas loader also reads grid sheets, but a *.sheet.json opens in
+	// the sheet editor, which shows its frames itself.
+	if k, err := filekind.Of(key); err != nil || k.Kind != filekind.Atlas {
+		return fmt.Errorf("view: %s is not an atlas (%s)", path.Base(key), strings.Join(atlasSuffixes(), ", "))
+	}
 	v.shell, v.key = s, key
 	v.frames = viewkit.NewFrames("atlas")
 	srv := s.Engine().Assets()
@@ -117,4 +124,10 @@ func (v *atlasView) Set(id string, val json.RawMessage) error {
 		return err
 	}
 	return fmt.Errorf("view: unknown widget %q", id)
+}
+
+// atlasSuffixes are the suffixes of an atlas file.
+func atlasSuffixes() []string {
+	i, _ := filekind.Lookup(filekind.Atlas)
+	return i.Suffixes
 }

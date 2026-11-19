@@ -33,6 +33,10 @@ type Frames struct {
 	Hover, Sel int
 	// Mode is what each frame is labelled with.
 	Mode LabelMode
+	// MinPx is the narrowest frame, in window pixels, that Draw outlines
+	// (the hovered and the selected one always are); 0 means 3. Below it
+	// the outlines are only a smudge.
+	MinPx float32
 
 	prevDown bool
 	labels   Labels
@@ -83,12 +87,16 @@ func (f *Frames) Shown() (Frame, bool) {
 func (f *Frames) Draw(s *toolshell.Shell, screen ebiten.FinalScreen) {
 	b := screen.Bounds()
 	w, h := float32(b.Dx()), float32(b.Dy())
+	minPx := f.MinPx
+	if minPx == 0 {
+		minPx = 3
+	}
 	for i, fr := range f.List {
 		r := s.WindowRect(fr.Rect)
 		if r.Max.X < 0 || r.Max.Y < 0 || r.Min.X > w || r.Min.Y > h {
 			continue // off screen
 		}
-		if r.Max.X-r.Min.X < 3 && i != f.Hover && i != f.Sel {
+		if r.Max.X-r.Min.X < minPx && i != f.Hover && i != f.Sel {
 			continue // a frame this small is only a smudge of outlines
 		}
 		DrawOutline(s, screen, r, colFrame)
