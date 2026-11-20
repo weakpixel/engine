@@ -8,6 +8,7 @@ import (
 	"golang.org/x/image/font/gofont/goregular"
 
 	"github.com/weakpixel/engine/editor/toolshell"
+	"github.com/weakpixel/engine/editor/viewkit"
 	testassets "github.com/weakpixel/engine/testdata/assets"
 )
 
@@ -70,7 +71,7 @@ func assertSides(t *testing.T, p toolshell.Panel, left, right []string) {
 func TestAtlasFrameList(t *testing.T) {
 	_, v, _ := open(t, fstest.MapFS{"hero.atlas.json": {Data: []byte(hash)}, "hero.png": {Data: pngBytes(t, 32, 16)}}, "hero.atlas.json")
 	list, ok := v.Panel().Find("atlas.frame")
-	if !ok || list.List != maxFrameRows || len(list.Options) != 3 || list.Options[0] != "(none)" || list.Options[2] != "1 a_first" {
+	if !ok || list.List != viewkit.FrameRows || len(list.Options) != 3 || list.Options[0] != "(none)" || list.Options[2] != "1 a_first" {
 		t.Fatalf("frame list = %+v", list)
 	}
 	if err := v.Set("atlas.frame", []byte("2")); err != nil {

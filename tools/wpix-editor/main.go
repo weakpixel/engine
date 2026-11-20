@@ -3,10 +3,14 @@
 // Command wpix-editor runs the visual editors of the engine on a shared
 // shell:
 //
-//	wpix-editor anim <file>.anim.json  edit an animation definition
-//	wpix-editor fx [file.fx.json]      make a particle effect (untitled without a file)
-//	wpix-editor view <file>            preview a texture, an atlas, a font or a Tiled map, tileset or world
-//	wpix-editor help                   list the tools
+//	wpix-editor <file>                            open the file in the tool of its kind
+//	wpix-editor --image <texture> <new>.sheet.json  start a new sheet
+//	wpix-editor --sheet <export> <new>.anim.json    start a new animation definition
+//	wpix-editor help                              list the file kinds
+//
+// The file name picks the kind: a kind that can be edited (.sheet.json,
+// .anim.json, .fx.json) opens its editor, any other kind its preview; a new
+// .fx.json starts from the default effect.
 //
 // Natively it opens a window with the tool's panel drawn by debugui. Built for
 // js/wasm (GOOS=js GOARCH=wasm) it runs inside the VSCode extension's webview
@@ -15,7 +19,7 @@
 // links Cobra or debugui, so a game module that builds it needs no new go.sum
 // entries.
 //
-// Run it from a game module with go tool wpix-editor <tool> <file>; the
+// Run it from a game module with go tool wpix-editor <file>; the
 // module needs the tool directive (go get -tool
 // github.com/weakpixel/engine/tools/wpix-editor, which wpix new
 // adds). The asset root is assets.root of the .weakpixel.json found from the

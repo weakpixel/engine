@@ -1,8 +1,8 @@
 // Package hostlink is what a game or tool that runs under an editor host
 // shares with that host, whichever protocol it speaks: the protocol version,
 // the transport interface, the connection to the host page of a browser
-// build, and the settings the host passes (stage, tool, first file, asset
-// root, file index). In a browser the settings come from
+// build, and the settings the host passes (stage, first file, whether it is
+// untitled, asset root, file index). In a browser the settings come from
 // globalThis.weakpixelHost, which the VSCode webview defines before the game
 // starts; natively they come from WEAKPIXEL_* environment variables.
 //

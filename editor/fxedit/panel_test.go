@@ -354,7 +354,7 @@ func TestInvalidDocumentKeepsTheLastGoodModel(t *testing.T) {
 	if r.Em.Rate != rate || r.Stale == "" {
 		t.Errorf("model lost: %+v stale=%q", r.Em.Rate, r.Stale)
 	}
-	if err := r.set(t, IDRate, 3.0); !errors.Is(err, ErrStale) {
+	if err := r.set(t, IDRate, 3.0); !errors.Is(err, toolshell.ErrStale) {
 		t.Errorf("edit while stale: %v", err)
 	}
 	if p := panel(t, r); !strings.Contains(p.Status, "document has errors") {

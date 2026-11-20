@@ -14,6 +14,7 @@ import (
 	"github.com/weakpixel/asset"
 	"github.com/weakpixel/ecs"
 	"github.com/weakpixel/engine/editor/toolshell"
+	"github.com/weakpixel/engine/editor/viewkit"
 	"github.com/weakpixel/engine/gfx"
 	"github.com/weakpixel/engine/tilemap"
 )
@@ -189,8 +190,8 @@ func (v *worldView) Draw(s *toolshell.Shell, screen ebiten.FinalScreen) {
 		m := &v.maps[i]
 		rect(m.rect, colMapRect, 1)
 		w := s.WindowRect(m.rect)
-		if text := m.label(); v.cache.fits(text, w.Max.X-w.Min.X) {
-			v.cache.draw(screen, text, w.Min.X+2, w.Min.Y+2)
+		if text := m.label(); v.cache.Fits(text, w.Max.X-w.Min.X) {
+			v.cache.Draw(screen, text, w.Min.X+2, w.Min.Y+2)
 		}
 	}
 	for _, i := range []int{v.hover, v.sel} {
@@ -203,7 +204,7 @@ func (v *worldView) Draw(s *toolshell.Shell, screen ebiten.FinalScreen) {
 		}
 		rect(v.maps[i].rect, c, 2)
 		w := s.WindowRect(v.maps[i].rect)
-		v.cache.draw(screen, v.maps[i].label(), w.Min.X+2, w.Min.Y+2)
+		v.cache.Draw(screen, v.maps[i].label(), w.Min.X+2, w.Min.Y+2)
 	}
 }
 
@@ -216,7 +217,7 @@ func (v *worldView) Panel() toolshell.Panel {
 	b := v.bounds()
 	world := []toolshell.Field{
 		toolshell.Label("world.maps", "Maps", strconv.Itoa(len(v.maps))),
-		toolshell.Label("world.bounds", "Bounds", rectText(b)),
+		toolshell.Label("world.bounds", "Bounds", viewkit.RectText(b)),
 	}
 	p.Sections = []toolshell.Section{v.mapsSection(), {ID: "world", Label: "World", Fields: world}, v.mapSection(), v.shell.ViewSection()}
 	return p
@@ -253,7 +254,7 @@ func (v *worldView) mapSection() toolshell.Section {
 	fields := []toolshell.Field{
 		toolshell.Label("map.which", "Map", fmt.Sprintf("%d (%s)", i, which)),
 		toolshell.Label("map.file", "File", m.key),
-		toolshell.Label("map.pos", "Position", pointText(m.rect.Min)),
+		toolshell.Label("map.pos", "Position", viewkit.PointText(m.rect.Min)),
 		toolshell.Label("map.size", "Size", fmt.Sprintf("%g × %g px", m.rect.Max.X-m.rect.Min.X, m.rect.Max.Y-m.rect.Min.Y)),
 	}
 	if len(m.levels) == 0 {

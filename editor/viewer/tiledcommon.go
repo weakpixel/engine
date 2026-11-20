@@ -8,6 +8,7 @@ import (
 
 	"github.com/weakpixel/asset"
 	"github.com/weakpixel/engine/editor/toolshell"
+	"github.com/weakpixel/engine/editor/viewkit"
 	"github.com/weakpixel/engine/gfx"
 	"github.com/weakpixel/engine/tiled"
 )
@@ -112,7 +113,7 @@ type tiledBase struct {
 	shell *toolshell.Shell
 	key   string
 	scope *asset.Scope
-	cache labelCache
+	cache viewkit.Labels
 	ptr   pointer
 	// ready is set once the file is loaded and spawned; a previewer whose
 	// file failed to load does nothing, and its panel shows the error.

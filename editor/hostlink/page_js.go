@@ -41,13 +41,22 @@ func AssetBase() (string, bool) {
 // none.
 func Stage() string { return hostString("stage") }
 
-// Tool returns the tool the host page asks for
-// (globalThis.weakpixelHost.tool, for wpix-editor), "" when it names
-// none.
-func Tool() string { return hostString("tool") }
+// Untitled reports whether the host page opens [Path] as an untitled
+// document (globalThis.weakpixelHost.untitled is true): a file that has no
+// name on disk yet, such as VSCode's new particle effect. The page still
+// names a path, whose suffix picks the file's kind.
+func Untitled() bool {
+	host := js.Global().Get("weakpixelHost")
+	if host.Type() != js.TypeObject {
+		return false
+	}
+	v := host.Get("untitled")
+	return v.Type() == js.TypeBoolean && v.Bool()
+}
 
 // Path returns the asset key of the file the host page opens first
-// (globalThis.weakpixelHost.path), "" when it names none.
+// (globalThis.weakpixelHost.path), "" when it names none. Its file name
+// picks the tool of wpix-editor.
 func Path() string { return hostString("path") }
 
 // Files returns the asset keys of every file in the workspace's asset root

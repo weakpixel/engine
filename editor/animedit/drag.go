@@ -5,6 +5,7 @@ import (
 	"math"
 
 	"github.com/weakpixel/engine/anim/animfile"
+	"github.com/weakpixel/engine/editor/toolshell"
 	"github.com/weakpixel/engine/gfx"
 )
 
@@ -49,7 +50,7 @@ var errNoPivot = errors.New("set a pivot first (P)")
 // mirrored when the view is flipped). tol is the handle size in world units.
 func (s *State) PointerDown(p gfx.Vec2, tol float32) error {
 	if s.Stale != "" {
-		return ErrStale
+		return toolshell.ErrStale
 	}
 	if !s.Ready() {
 		return nil

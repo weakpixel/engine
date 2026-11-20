@@ -122,7 +122,7 @@ Both apply at spawn only. A live particle keeps its direction and size when the 
 
 ## Authoring
 
-`wpix-editor fx` makes and edits effect files with presets, pickers and a live preview ([the fx tool](editor.md#the-fx-tool)); in VSCode a `*.fx.json` opens it on a double click. A file is also easy to write by hand. Place an effect in a level by dropping the file on it or by adding a `gfx:ParticleSource` with a `gfx:Particles`; the example places `ambient-embers.fx.json` in `assets/world-1/level-1.level.json`. Effects of a game live in `global/fx/` (or the package of the level that uses them): an effect nothing references is an entry of its [asset library](asset-library.md) package, and its image and shader are loaded with it.
+`wpix-editor <file>.fx.json` makes and edits effect files (a file that does not exist yet starts from the default effect) with presets, pickers and a live preview ([the fx tool](editor.md#the-fx-tool)); in VSCode a `*.fx.json` opens it on a double click. A file is also easy to write by hand. Place an effect in a level by dropping the file on it or by adding a `gfx:ParticleSource` with a `gfx:Particles`; the example places `ambient-embers.fx.json` in `assets/world-1/level-1.level.json`. Effects of a game live in `global/fx/` (or the package of the level that uses them): an effect nothing references is an entry of its [asset library](asset-library.md) package, and its image and shader are loaded with it.
 
 ## Performance
 

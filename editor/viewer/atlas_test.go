@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"image"
 	"image/png"
+	"strings"
 	"testing"
 	"testing/fstest"
 
 	"github.com/weakpixel/engine/editor/toolshell"
+	"github.com/weakpixel/engine/editor/viewkit"
 	"github.com/weakpixel/engine/game"
-	"github.com/weakpixel/engine/gfx"
 	"github.com/weakpixel/engine/input"
 )
 
@@ -53,16 +54,16 @@ func open(t *testing.T, files fstest.MapFS, key string) (*game.Engine, *Viewer, 
 func TestAtlasFramesInFileOrder(t *testing.T) {
 	_, v, _ := open(t, fstest.MapFS{"hero.atlas.json": {Data: []byte(hash)}, "hero.png": {Data: pngBytes(t, 32, 16)}}, "hero.atlas.json")
 	a := v.inner.(*atlasView)
-	if len(a.frames) != 2 {
-		t.Fatalf("frames = %d, want 2", len(a.frames))
+	if len(a.frames.List) != 2 {
+		t.Fatalf("frames = %d, want 2", len(a.frames.List))
 	}
-	b, f := a.frames[0], a.frames[1]
-	if b.Index != 0 || b.Name != "b_second" || rectText(b.Rect) != "16, 0, 16 × 16" {
+	b, f := a.frames.List[0], a.frames.List[1]
+	if b.Index != 0 || b.Name != "b_second" || viewkit.RectText(b.Rect) != "16, 0, 16 × 16" {
 		t.Errorf("frame 0 = %+v", b)
 	}
 	// The second frame is trimmed: 12x14 pixels of a 16x16 frame, pivot (0.25, 1).
-	if f.Name != "a_first" || rectText(f.Rect) != "0, 0, 12 × 14" || pointText(f.Size) != "16, 16" ||
-		pointText(f.Offset) != "2, 1" || pointText(f.Pivot) != "4, 16" {
+	if f.Name != "a_first" || viewkit.RectText(f.Rect) != "0, 0, 12 × 14" || viewkit.PointText(f.Size) != "16, 16" ||
+		viewkit.PointText(f.Offset) != "2, 1" || viewkit.PointText(f.Pivot) != "4, 16" {
 		t.Errorf("frame 1 = %+v", f)
 	}
 	if got := label(t, v, "atlas.count"); got != "2" {
@@ -73,61 +74,34 @@ func TestAtlasFramesInFileOrder(t *testing.T) {
 	}
 }
 
-func TestAtlasGridSheetHoverAndSelect(t *testing.T) {
+// atlasOnly runs the atlas previewer on its own, as if the router sent it a
+// file.
+type atlasOnly struct{ *atlasView }
+
+func (a atlasOnly) Open(s *toolshell.Shell, key string) error {
+	a.scope = s.Engine().Assets().NewScope("test")
+	return a.atlasView.Open(s, key)
+}
+
+// TestAtlasRefusesAGridSheet: the atlas loader reads grid sheets too, but a
+// *.sheet.json is the sheet editor's, which lists and selects its frames.
+func TestAtlasRefusesAGridSheet(t *testing.T) {
 	files := fstest.MapFS{
 		"tiles.sheet.json": {Data: []byte(`{"image":"tiles.png","frameW":16,"frameH":16}`)},
 		"tiles.png":        {Data: pngBytes(t, 64, 32)},
 	}
-	e, v, src := open(t, files, "tiles.sheet.json")
-	if got := label(t, v, "atlas.count"); got != "8" {
-		t.Fatalf("count = %q, want 8 (4 x 2 cells)", got)
-	}
-	if got := label(t, v, "frame.which"); got != "click a frame to select it" {
-		t.Errorf("before the mouse is over a frame: %q", got)
-	}
-	// The screen center is the texture center, (32, 16): row 1, column 2.
-	src.Frame.Mouse.X, src.Frame.Mouse.Y = 160, 90
-	e.Update()
-	if got := label(t, v, "frame.which"); got != "6 (hover)" {
-		t.Errorf("hover = %q, want frame 6", got)
-	}
-	if got := label(t, v, "frame.name"); got != "6" {
-		t.Errorf("grid frames are named by index, got %q", got)
-	}
-	// A click selects; moving away keeps the selection; a click on nothing
-	// clears it.
-	src.Frame.Mouse.Buttons = 1
-	e.Update()
-	src.Frame.Mouse.Buttons = 0
-	src.Frame.Mouse.X, src.Frame.Mouse.Y = 2, 2
-	e.Update()
-	if got := label(t, v, "frame.which"); got != "6 (selected)" {
-		t.Errorf("after the click = %q", got)
-	}
-	src.Frame.Mouse.Buttons = 1
-	e.Update()
-	if got := label(t, v, "frame.which"); got != "click a frame to select it" {
-		t.Errorf("click on nothing = %q, want the selection cleared", got)
+	v := atlasOnly{&atlasView{}}
+	sh := toolshell.New(toolshell.Config{Name: "view", Tool: v, Key: "tiles.sheet.json", FS: files})
+	e := game.New(game.Config{NoAudio: true, Width: 320, Height: 180, FS: files, Tool: sh, Input: game.InputConfig{Source: &input.ManualSource{}}})
+	t.Cleanup(e.Close)
+	if err := v.Open(sh, "tiles.sheet.json"); err == nil || !strings.Contains(err.Error(), "is not an atlas") {
+		t.Errorf("Open(tiles.sheet.json) = %v, want a refusal", err)
 	}
 }
 
 func TestAtlasLabelMode(t *testing.T) {
-	f := Frame{Index: 3, Name: "run_3"}
-	grid := Frame{Index: 3, Name: "3"}
-	for _, c := range []struct {
-		mode labelMode
-		f    Frame
-		want string
-	}{
-		{labelBoth, f, "3 run_3"}, {labelBoth, grid, "3"}, {labelIndex, f, "3"},
-		{labelName, f, "run_3"}, {labelName, Frame{Index: 2}, "2"}, {labelNone, f, ""},
-	} {
-		if got := c.mode.text(c.f); got != c.want {
-			t.Errorf("mode %v text(%+v) = %q, want %q", c.mode, c.f, got, c.want)
-		}
-	}
 	_, v, _ := open(t, fstest.MapFS{"hero.atlas.json": {Data: []byte(hash)}, "hero.png": {Data: pngBytes(t, 32, 16)}}, "hero.atlas.json")
-	if err := v.Set("atlas.labels", []byte("2")); err != nil || v.inner.(*atlasView).labels != labelName {
+	if err := v.Set("atlas.labels", []byte("2")); err != nil || v.inner.(*atlasView).frames.Mode != viewkit.LabelName {
 		t.Errorf("Set labels = %v", err)
 	}
 	if err := v.Set("atlas.labels", []byte("9")); err == nil {
@@ -135,28 +109,11 @@ func TestAtlasLabelMode(t *testing.T) {
 	}
 }
 
-func TestFrameAtPrefersTheSmallerFrame(t *testing.T) {
-	r := func(x0, y0, x1, y1 float32) gfx.Rect {
-		return gfx.Rect{Min: gfx.Vec2{X: x0, Y: y0}, Max: gfx.Vec2{X: x1, Y: y1}}
-	}
-	frames := []Frame{{Rect: r(0, 0, 32, 32)}, {Rect: r(8, 8, 16, 16)}}
-	for _, c := range []struct {
-		p    gfx.Vec2
-		want int
-	}{
-		{gfx.Vec2{X: 10, Y: 10}, 1}, {gfx.Vec2{X: 1, Y: 1}, 0}, {gfx.Vec2{X: 32, Y: 1}, -1}, {gfx.Vec2{X: -1, Y: 0}, -1},
-	} {
-		if got := frameAt(frames, c.p); got != c.want {
-			t.Errorf("frameAt(%v) = %d, want %d", c.p, got, c.want)
-		}
-	}
-}
-
 func TestAtlasWithoutImageFails(t *testing.T) {
 	src := &input.ManualSource{}
 	v := New().(*Viewer)
-	files := fstest.MapFS{"x.sheet.json": {Data: []byte(`{"image":"missing.png","frameW":8,"frameH":8}`)}}
-	sh := toolshell.New(toolshell.Config{Name: "view", Tool: v, Key: "x.sheet.json", FS: files})
+	files := fstest.MapFS{"x.atlas.json": {Data: []byte(`{"frames": {"a": {"frame": {"x":0,"y":0,"w":8,"h":8}}}, "meta": {"image": "missing.png"}}`)}}
+	sh := toolshell.New(toolshell.Config{Name: "view", Tool: v, Key: "x.atlas.json", FS: files})
 	e := game.New(game.Config{NoAudio: true, Width: 320, Height: 180, FS: files, Tool: sh, Input: game.InputConfig{Source: src}})
 	defer e.Close()
 	if err := e.Update(); err != nil {

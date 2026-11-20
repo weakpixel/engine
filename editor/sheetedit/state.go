@@ -2,18 +2,14 @@ package sheetedit
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"image"
 
 	"github.com/weakpixel/engine/editor/toolshell"
+	"github.com/weakpixel/engine/editor/viewkit"
+	"github.com/weakpixel/engine/gfx"
 	"github.com/weakpixel/engine/sheetfile"
 )
-
-// ErrStale is returned by every edit while the document cannot be parsed:
-// the tool keeps showing the last good version and never writes over the
-// user's broken text.
-var ErrStale = errors.New("the document has errors: fix it in the text editor first")
 
 // Ids of the panel's widgets.
 const (
@@ -21,40 +17,72 @@ const (
 	IDFrameH  = "sheet.frameH"
 	IDMargin  = "sheet.margin"
 	IDSpacing = "sheet.spacing"
+	// IDLabels and IDFrame are the label mode and the frame list of the
+	// Frames section (viewkit.Frames with the prefix "sheet").
+	IDLabels = "sheet.labels"
+	IDFrame  = "sheet.frame"
 )
 
+// MaxListed is the most frames the Frames section lists and the overlay
+// outlines one by one. A frame size of a few pixels on a big image (while
+// typing a width, say) would make a list nobody can use; above it only the
+// grid is drawn.
+const MaxListed = 4096
+
 // State is everything the tool knows: the sheet (the model), the size of its
-// image and the frame under the mouse. It has no Ebiten in it, so tests drive
+// image, the frame under the mouse and the frames as listed and selected. It has no Ebiten in it, so tests drive
 // it directly; the tool in tool.go feeds it the texture and the mouse.
 type State struct {
-	// File is the decoded sheet, nil until the first valid document.
-	File *sheetfile.File
+	// Model holds the decoded sheet (File, nil until the first valid
+	// document), its stale mark and the edit path.
+	toolshell.Model[*sheetfile.File]
 	// Size is the size of the image in pixels, zero while it is unknown;
 	// ImageErr says why when it could not be loaded.
 	Size     image.Point
 	ImageErr string
-	// Stale is the parse error of a document that could not be loaded, ""
-	// if the shown file is the document.
-	Stale string
 	// Hover is the index of the frame under the mouse, -1 for none.
 	Hover int
-
-	emit func(text []byte)
+	// Frames is the grid's frames as the overlay and the Frames section
+	// show them: index labels, the label mode, the selected frame. Its list
+	// follows the grid and is empty above [MaxListed] frames.
+	Frames viewkit.Frames
 }
 
 // NewState returns a state that sends every edit to emit as the text of the
 // new document version.
-func NewState(emit func(text []byte)) *State { return &State{emit: emit, Hover: -1} }
+func NewState(emit func(text []byte)) *State {
+	s := &State{Hover: -1, Frames: viewkit.NewFrames("sheet")}
+	s.Frames.MinPx = minCellPx
+	s.Encode, s.Emit = sheetfile.Encode, emit
+	return s
+}
+
+// syncFrames lists the frames of the grid as it is now. The selection stays
+// while its index still exists.
+func (s *State) syncFrames() {
+	g := s.Grid()
+	n := g.Count()
+	if n > MaxListed {
+		n = 0
+	}
+	list := make([]viewkit.Frame, n)
+	for i := range n {
+		r := g.Rect(i)
+		list[i] = viewkit.Frame{
+			Index: i,
+			Rect:  gfx.Rect{Min: gfx.Vec2{X: float32(r.Min.X), Y: float32(r.Min.Y)}, Max: gfx.Vec2{X: float32(r.Max.X), Y: float32(r.Max.Y)}},
+		}
+	}
+	s.Frames.SetList(list)
+}
 
 // SetFile replaces the sheet (a new document version) and clears a stale
 // mark.
 func (s *State) SetFile(f *sheetfile.File) {
-	s.File, s.Stale = f, ""
+	s.Model.SetFile(f)
 	s.Hover = -1
+	s.syncFrames()
 }
-
-// MarkStale keeps the shown sheet and notes that the document does not parse.
-func (s *State) MarkStale(err error) { s.Stale = err.Error() }
 
 // SetImage records the image size, or why there is none.
 func (s *State) SetImage(size image.Point, err error) {
@@ -62,6 +90,7 @@ func (s *State) SetImage(size image.Point, err error) {
 	if err != nil {
 		s.Size, s.ImageErr = image.Point{}, err.Error()
 	}
+	s.syncFrames()
 }
 
 // Grid is the layout of the sheet over the image; it has no frames while the
@@ -101,7 +130,12 @@ func (s *State) Findings() []string {
 // refuses; the file is not written then.
 func (s *State) Set(id string, v json.RawMessage) error {
 	if s.File == nil {
-		return errors.New("nothing to edit: no valid document yet")
+		return toolshell.ErrNoDocument
+	}
+	// The label mode and the selection are views, not edits: they work on
+	// a stale or read-only document too.
+	if ok, err := s.Frames.Set(id, v); ok {
+		return err
 	}
 	var f float64
 	if err := json.Unmarshal(v, &f); err != nil {
@@ -122,8 +156,8 @@ func (s *State) Set(id string, v json.RawMessage) error {
 	default:
 		return fmt.Errorf("sheet: no widget %q", id)
 	}
-	if s.Stale != "" {
-		return ErrStale
+	if err := s.Editable(); err != nil {
+		return err
 	}
 	if f != float64(n) || n < least {
 		return fmt.Errorf("sheet: %s must be a whole number of at least %d, got %v", id, least, f)
@@ -132,16 +166,12 @@ func (s *State) Set(id string, v json.RawMessage) error {
 		return nil
 	}
 	old := *field
-	*field = n
-	data, err := sheetfile.Encode(s.File)
+	err := s.Do(func(*sheetfile.File) error { *field = n; return nil })
 	if err != nil {
-		*field = old
-		return err
+		*field = old // the encoder refused it: nothing was written
 	}
-	if s.emit != nil {
-		s.emit(data)
-	}
-	return nil
+	s.syncFrames()
+	return err
 }
 
 // Panel is the panel of the tool as it is now, without the view section the
@@ -153,7 +183,7 @@ func (s *State) Panel(title string, view toolshell.Section) toolshell.Panel {
 		p.Status = "document has errors: " + s.Stale
 	}
 	if s.File != nil {
-		p.Sections = append(p.Sections, s.sheetSection(), s.infoSection())
+		p.Sections = append(p.Sections, s.framesSection(), s.sheetSection(), s.infoSection())
 	}
 	p.Sections = append(p.Sections, view)
 	if s.File != nil {
@@ -166,6 +196,28 @@ func (s *State) Panel(title string, view toolshell.Section) toolshell.Panel {
 		}
 	}
 	return p
+}
+
+// framesSection is the left Frames section: label mode and frame list, and
+// a note instead of the list when the grid has too many frames for one.
+func (s *State) framesSection() toolshell.Section {
+	sec := s.Frames.Section()
+	if n := s.Grid().Count(); n > MaxListed {
+		sec.Fields = append(sec.Fields, toolshell.Label("sheet.unlisted", "Note", fmt.Sprintf("%d frames are too many to list (at most %d)", n, MaxListed)))
+	}
+	return sec
+}
+
+// shown is the frame the Grid section describes: the selected one, else the
+// one under the mouse, with which of the two it is; -1 for none.
+func (s *State) shown() (int, string) {
+	if s.Frames.Sel >= 0 {
+		return s.Frames.Sel, "selected"
+	}
+	if s.Hover >= 0 {
+		return s.Hover, "hover"
+	}
+	return -1, ""
 }
 
 func (s *State) sheetSection() toolshell.Section {
@@ -194,15 +246,17 @@ func (s *State) infoSection() toolshell.Section {
 			left = fmt.Sprintf("%d px right, %d px bottom", s.Size.X-u.Max.X-s.File.Margin, s.Size.Y-u.Max.Y-s.File.Margin)
 		}
 	}
-	if s.Hover >= 0 {
-		r := g.Rect(s.Hover)
-		hover = fmt.Sprintf("%d  (x %d, y %d, %d × %d)", s.Hover, r.Min.X, r.Min.Y, r.Dx(), r.Dy())
+	if i, which := s.shown(); i >= 0 && i < g.Count() {
+		r := g.Rect(i)
+		hover = fmt.Sprintf("%d (%s)  x %d, y %d, %d × %d", i, which, r.Min.X, r.Min.Y, r.Dx(), r.Dy())
+	} else if s.Size.X > 0 {
+		hover = "click a frame to select it"
 	}
-	return toolshell.Section{ID: "info", Label: "Frames", Side: toolshell.SideLeft, Fields: []toolshell.Field{
+	return toolshell.Section{ID: "info", Label: "Grid", Side: toolshell.SideLeft, Fields: []toolshell.Field{
 		toolshell.Label("info.size", "Image", size),
 		toolshell.Label("info.grid", "Columns × rows", grid),
 		toolshell.Label("info.count", "Frames", frames),
 		toolshell.Label("info.left", "Unused", left),
-		toolshell.Label("info.hover", "Under mouse", hover),
+		toolshell.Label("info.hover", "Frame", hover),
 	}}
 }

@@ -173,7 +173,7 @@ func (v *shaderView) setTexture(key string) error {
 func (v *shaderView) Sync(s *toolshell.Shell) {
 	v.textureView.Sync(s)
 	if v.ready {
-		if sp := ecs.GetCompOrNil[gfx.Sprite](s.Engine().World(), v.entity); sp != nil {
+		if sp := ecs.GetCompOrNil[gfx.Sprite](s.Engine().World(), v.tex.Entity()); sp != nil {
 			sp.Params = v.vals
 			sp.Shader = gfx.ShaderHandle{}
 			if v.on {

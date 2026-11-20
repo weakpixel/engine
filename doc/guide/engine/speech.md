@@ -114,7 +114,7 @@ Read `speech.Event{Entity, Kind, Line}` with a `system.EventReader` on `system.E
 
 ## Previewing voices and dialogues
 
-`go tool wpix-editor voice <file>` opens a `*.voice.json` or a `*.dialogue.json` with sound ([editor.md](editor.md#wpix-editor)): a voice says a line typed in the panel and draws its notes, a dialogue plays line by line with a Next button. In VSCode the sound starts after the first click inside the view. Edit voices and dialogues in the library's Voice Editor.
+`go tool wpix-editor <file>` opens a `*.voice.json` or a `*.dialogue.json` with sound ([editor.md](editor.md#wpix-editor)): a voice says a line typed in the panel and draws its notes, a dialogue plays line by line with a Next button. In VSCode the sound starts after the first click inside the view. Edit voices and dialogues in the library's Voice Editor.
 
 A tool that runs the engine paused (`game.TickPause` skips `StagePost`) calls `Step(dt)` once per tick instead of the system; a game never needs it.
 

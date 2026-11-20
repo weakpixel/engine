@@ -1,8 +1,9 @@
-// Package voiceview is the "voice" tool of wpix-editor: a read-only
-// preview with sound of the files of package speech. A voice
-// (*.voice.json) speaks a line typed in the panel and draws the line's notes
-// as a piano roll; a dialogue (*.dialogue.json) plays in a box, line by line,
-// with a Next button. It is the only tool that runs with audio on. Editing
+// Package voiceview is the voice and dialogue previewer of wpix-editor,
+// routed by package viewer: a read-only preview with sound of the files of
+// package speech. A voice (*.voice.json) speaks a line typed in the panel and
+// draws the line's notes as a piano roll; a dialogue (*.dialogue.json) plays
+// in a box, line by line, with a Next button. Its kinds are the only ones
+// that run with audio on. Editing
 // voices and dialogues stays in the library's Voice Editor.
 package voiceview
 

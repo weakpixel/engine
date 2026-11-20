@@ -3,27 +3,17 @@ package viewer
 import (
 	"encoding/json"
 	"fmt"
-	"image/color"
 	"path"
+	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
 
 	"github.com/weakpixel/asset"
+	"github.com/weakpixel/engine/editor/filekind"
 	"github.com/weakpixel/engine/editor/toolshell"
+	"github.com/weakpixel/engine/editor/viewkit"
 	"github.com/weakpixel/engine/render"
 )
-
-// Colors of the frame overlay.
-var (
-	colFrame    = color.RGBA{R: 60, G: 100, B: 170, A: 170}
-	colHover    = color.RGBA{R: 255, G: 255, B: 255, A: 255}
-	colSelected = color.RGBA{R: 255, G: 230, B: 60, A: 255}
-)
-
-// minLabelPx is the least width, in device-independent pixels, of a frame
-// that gets its label without being hovered or selected; smaller frames would
-// only be covered by their labels.
-const minLabelPx = 24
 
 // atlasView shows an atlas: the texture it is cut from, with every frame
 // outlined and labelled, and the frame under the mouse described in the
@@ -33,18 +23,18 @@ type atlasView struct {
 	textureView
 	atlas   render.AtlasHandle
 	version uint32
-	frames  []Frame
-	// hover and sel index frames, -1 for none.
-	hover, sel int
-	labels     labelMode
-	prevDown   bool
-	cache      labelCache
+	frames  viewkit.Frames
 }
 
 // Open implements [toolshell.Tool].
 func (v *atlasView) Open(s *toolshell.Shell, key string) error {
+	// The atlas loader also reads grid sheets, but a *.sheet.json opens in
+	// the sheet editor, which shows its frames itself.
+	if k, err := filekind.Of(key); err != nil || k.Kind != filekind.Atlas {
+		return fmt.Errorf("view: %s is not an atlas (%s)", path.Base(key), strings.Join(atlasSuffixes(), ", "))
+	}
 	v.shell, v.key = s, key
-	v.hover, v.sel = -1, -1
+	v.frames = viewkit.NewFrames("atlas")
 	srv := s.Engine().Assets()
 	h, err := render.LoadAtlasSync(v.scope, key)
 	if err != nil {
@@ -65,13 +55,9 @@ func (v *atlasView) Open(s *toolshell.Shell, key string) error {
 func (v *atlasView) reload() {
 	e := v.shell.Engine()
 	if a := e.Stores().Atlases().Get(v.atlas); a != nil {
-		v.frames = framesOf(a, e.Stores().Sprites())
+		v.frames.SetList(viewkit.FramesOf(a, e.Stores().Sprites()))
 	}
 	v.version = e.Stores().Atlases().Generic().Version(asset.HandleOf[render.Atlas](v.atlas.Ref))
-	v.hover = min(v.hover, len(v.frames)-1)
-	if v.sel >= len(v.frames) {
-		v.sel = -1
-	}
 }
 
 // Update implements [toolshell.Tool]: a reloaded atlas, the frame under the
@@ -84,17 +70,7 @@ func (v *atlasView) Update(s *toolshell.Shell) {
 	if ver := s.Engine().Stores().Atlases().Generic().Version(asset.HandleOf[render.Atlas](v.atlas.Ref)); ver != v.version {
 		v.reload()
 	}
-	v.hover = frameAt(v.frames, s.MouseWorld())
-	down := s.Mouse().Buttons&1 != 0
-	panning := s.PanHeld()
-	if down && !v.prevDown && !panning {
-		if v.hover == v.sel {
-			v.sel = -1
-		} else {
-			v.sel = v.hover
-		}
-	}
-	v.prevDown = down
+	v.frames.Update(s)
 }
 
 // Draw implements [toolshell.Tool]: the texture's border, then the frames.
@@ -103,72 +79,20 @@ func (v *atlasView) Draw(s *toolshell.Shell, screen ebiten.FinalScreen) {
 		return
 	}
 	v.textureView.Draw(s, screen)
-	b := screen.Bounds()
-	w, h := float32(b.Dx()), float32(b.Dy())
-	outline := func(f Frame, c color.RGBA) {
-		r := s.WindowRect(f.Rect)
-		fw, fh := r.Max.X-r.Min.X, r.Max.Y-r.Min.Y
-		s.FillRect(screen, r.Min.X, r.Min.Y, fw, 1, c)
-		s.FillRect(screen, r.Min.X, r.Max.Y-1, fw, 1, c)
-		s.FillRect(screen, r.Min.X, r.Min.Y, 1, fh, c)
-		s.FillRect(screen, r.Max.X-1, r.Min.Y, 1, fh, c)
-	}
-	label := func(f Frame, text string) {
-		if text == "" {
-			return
-		}
-		r := s.WindowRect(f.Rect)
-		v.cache.draw(screen, text, r.Min.X+1, r.Min.Y+1)
-	}
-	for i, f := range v.frames {
-		r := s.WindowRect(f.Rect)
-		if r.Max.X < 0 || r.Max.Y < 0 || r.Min.X > w || r.Min.Y > h {
-			continue // off screen
-		}
-		if r.Max.X-r.Min.X < 3 && i != v.hover && i != v.sel {
-			continue // a frame this small is only a smudge of outlines
-		}
-		outline(f, colFrame)
-		if text := v.labels.text(f); v.cache.fits(text, r.Max.X-r.Min.X) {
-			label(f, text)
-		}
-	}
-	for _, i := range []int{v.hover, v.sel} {
-		if i < 0 || i >= len(v.frames) {
-			continue
-		}
-		c := colHover
-		if i == v.sel {
-			c = colSelected
-		}
-		outline(v.frames[i], c)
-		outline(Frame{Rect: v.frames[i].Rect.Grow(1)}, c)
-		label(v.frames[i], labelBoth.text(v.frames[i]))
-	}
-}
-
-// shown is the frame the panel describes: the selected one, else the one
-// under the mouse.
-func (v *atlasView) shown() (Frame, bool) {
-	for _, i := range []int{v.sel, v.hover} {
-		if i >= 0 && i < len(v.frames) {
-			return v.frames[i], true
-		}
-	}
-	return Frame{}, false
+	v.frames.Draw(s, screen)
 }
 
 // Panel implements [toolshell.Tool].
 func (v *atlasView) Panel() toolshell.Panel {
 	which := "none"
 	fields := []toolshell.Field{
-		toolshell.Label("atlas.count", "Frames", fmt.Sprint(len(v.frames))),
+		toolshell.Label("atlas.count", "Frames", fmt.Sprint(len(v.frames.List))),
 	}
-	f, ok := v.shown()
+	f, ok := v.frames.Shown()
 	detail := func(id, label, text string) toolshell.Field { return toolshell.Label("frame."+id, label, text) }
 	if ok {
 		which = "hover"
-		if v.sel >= 0 {
+		if v.frames.Sel >= 0 {
 			which = "selected"
 		}
 		name := f.Name
@@ -178,61 +102,32 @@ func (v *atlasView) Panel() toolshell.Panel {
 		fields = append(fields,
 			detail("which", "Frame", fmt.Sprintf("%d (%s)", f.Index, which)),
 			detail("name", "Name", name),
-			detail("rect", "Rect", rectText(f.Rect)),
-			detail("size", "Untrimmed", pointText(f.Size)),
-			detail("offset", "Trim offset", pointText(f.Offset)),
-			detail("pivot", "Pivot", pointText(f.Pivot)),
+			detail("rect", "Rect", viewkit.RectText(f.Rect)),
+			detail("size", "Untrimmed", viewkit.PointText(f.Size)),
+			detail("offset", "Trim offset", viewkit.PointText(f.Offset)),
+			detail("pivot", "Pivot", viewkit.PointText(f.Pivot)),
 		)
 	} else {
 		fields = append(fields, detail("which", "Frame", "click a frame to select it"))
 	}
 	return toolshell.Panel{Title: path.Base(v.key), Sections: []toolshell.Section{
-		v.framesSection(),
+		v.frames.Section(),
 		{ID: "atlas", Label: "Atlas", Fields: fields},
 		v.imageSection(),
 		v.shell.ViewSection(),
 	}}
 }
 
-// maxFrameRows is the rows the frame list shows before it scrolls.
-const maxFrameRows = 8
-
-// framesSection is the left section to pick content from: the label mode and
-// the list of frames, "(none)" first (index 0 clears the selection).
-func (v *atlasView) framesSection() toolshell.Section {
-	options := make([]string, 0, len(v.frames)+1)
-	options = append(options, "(none)")
-	for _, f := range v.frames {
-		if f.Name == "" {
-			options = append(options, fmt.Sprint(f.Index))
-		} else {
-			options = append(options, fmt.Sprintf("%d %s", f.Index, f.Name))
-		}
-	}
-	return toolshell.Section{ID: "frames", Label: "Frames", Side: toolshell.SideLeft, Fields: []toolshell.Field{
-		toolshell.Dropdown("atlas.labels", "Labels", int(v.labels), labelModeNames...),
-		toolshell.Dropdown("atlas.frame", "Frame", v.sel+1, options...).AsList(maxFrameRows),
-	}}
-}
-
 // Set implements [toolshell.Tool].
 func (v *atlasView) Set(id string, val json.RawMessage) error {
-	var i int
-	switch id {
-	case "atlas.labels":
-		if err := json.Unmarshal(val, &i); err != nil || i < 0 || i >= len(labelModeNames) {
-			return fmt.Errorf("view: bad label mode %s", val)
-		}
-		v.labels = labelMode(i)
-	case "atlas.frame":
-		// The same selection as a click on the frame; 0 is "(none)". Unlike a
-		// click, choosing the selected frame again does not clear it.
-		if err := json.Unmarshal(val, &i); err != nil || i < 0 || i > len(v.frames) {
-			return fmt.Errorf("view: bad frame %s", val)
-		}
-		v.sel = i - 1
-	default:
-		return fmt.Errorf("view: unknown widget %q", id)
+	if ok, err := v.frames.Set(id, val); ok {
+		return err
 	}
-	return nil
+	return fmt.Errorf("view: unknown widget %q", id)
+}
+
+// atlasSuffixes are the suffixes of an atlas file.
+func atlasSuffixes() []string {
+	i, _ := filekind.Lookup(filekind.Atlas)
+	return i.Suffixes
 }

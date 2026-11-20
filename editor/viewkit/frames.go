@@ -1,4 +1,4 @@
-package viewer
+package viewkit
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	"github.com/weakpixel/engine/render"
 )
 
-// Frame is one frame of an atlas as the previewer shows it.
+// Frame is one frame of an atlas or a sheet as a tool shows it.
 type Frame struct {
 	// Index is the position in the atlas's file order.
 	Index int
@@ -20,9 +20,9 @@ type Frame struct {
 	Size, Offset, Pivot gfx.Vec2
 }
 
-// framesOf lists the frames of a loaded atlas in file order. A frame that is
+// FramesOf lists the frames of a loaded atlas in file order. A frame that is
 // not ready (it cannot happen after a successful load) is left out.
-func framesOf(a *render.Atlas, sprites render.SpriteStore) []Frame {
+func FramesOf(a *render.Atlas, sprites render.SpriteStore) []Frame {
 	names := make(map[gfx.SpriteHandle]string, len(a.Sprites))
 	for name, h := range a.Sprites {
 		names[h] = name
@@ -46,10 +46,10 @@ func framesOf(a *render.Atlas, sprites render.SpriteStore) []Frame {
 	return frames
 }
 
-// frameAt returns the index in frames of the frame under texture point p, or
+// FrameAt returns the index in frames of the frame under texture point p, or
 // -1. Where frames overlap (a packer may share pixels) the smallest wins, so
 // a small frame inside a big one can still be picked.
-func frameAt(frames []Frame, p gfx.Vec2) int {
+func FrameAt(frames []Frame, p gfx.Vec2) int {
 	best, bestArea := -1, float32(0)
 	for i, f := range frames {
 		if !f.Rect.Contains(p) {
@@ -63,32 +63,33 @@ func frameAt(frames []Frame, p gfx.Vec2) int {
 	return best
 }
 
-// labelMode says what the previewer writes on each frame.
-type labelMode int
+// LabelMode says what a tool writes on each frame.
+type LabelMode int
 
 // The label modes, in the order of the panel's dropdown.
 const (
-	labelBoth labelMode = iota
-	labelIndex
-	labelName
-	labelNone
+	LabelBoth LabelMode = iota
+	LabelIndex
+	LabelName
+	LabelNone
 )
 
-var labelModeNames = []string{"Index and name", "Index", "Name", "None"}
+// LabelModeNames are the entries of the Labels dropdown.
+var LabelModeNames = []string{"Index and name", "Index", "Name", "None"}
 
-// text is the label of f: its index, its name, or both (the name only once
+// Text is the label of f: its index, its name, or both (the name only once
 // when it is the index, as in a grid sheet).
-func (m labelMode) text(f Frame) string {
+func (m LabelMode) Text(f Frame) string {
 	idx := fmt.Sprint(f.Index)
 	switch m {
-	case labelIndex:
+	case LabelIndex:
 		return idx
-	case labelName:
+	case LabelName:
 		if f.Name == "" {
 			return idx
 		}
 		return f.Name
-	case labelBoth:
+	case LabelBoth:
 		if f.Name == "" || f.Name == idx {
 			return idx
 		}
@@ -97,10 +98,10 @@ func (m labelMode) text(f Frame) string {
 	return ""
 }
 
-// rectText is "x, y, w × h" of r.
-func rectText(r gfx.Rect) string {
+// RectText is "x, y, w × h" of r.
+func RectText(r gfx.Rect) string {
 	return fmt.Sprintf("%d, %d, %d × %d", int(r.Min.X), int(r.Min.Y), int(r.Max.X-r.Min.X), int(r.Max.Y-r.Min.Y))
 }
 
-// pointText is "x, y" of p.
-func pointText(p gfx.Vec2) string { return fmt.Sprintf("%g, %g", p.X, p.Y) }
+// PointText is "x, y" of p.
+func PointText(p gfx.Vec2) string { return fmt.Sprintf("%g, %g", p.X, p.Y) }

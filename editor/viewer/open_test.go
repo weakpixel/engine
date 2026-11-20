@@ -12,6 +12,9 @@ import (
 	"github.com/weakpixel/engine/gfx"
 )
 
+// tilesAtlas is a two-frame atlas of tiles.png (32x16).
+const tilesAtlas = `{"frames": {"a": {"frame": {"x":0,"y":0,"w":16,"h":16}}, "b": {"frame": {"x":16,"y":0,"w":16,"h":16}}}, "meta": {"image": "tiles.png"}}`
+
 // recorder keeps the messages the shell sends to the host.
 type recorder struct{ msgs []map[string]any }
 
@@ -30,7 +33,7 @@ func TestViewerOpenSwitchesFile(t *testing.T) {
 	files := fstest.MapFS{
 		"box.png":          {Data: pngBytes(t, 64, 32)},
 		"tiles.png":        {Data: pngBytes(t, 32, 16)},
-		"tiles.sheet.json": {Data: []byte(`{"image":"tiles.png","frameW":16,"frameH":16}`)},
+		"tiles.atlas.json": {Data: []byte(tilesAtlas)},
 	}
 	tr := &recorder{}
 	v := New().(*Viewer)
@@ -72,11 +75,11 @@ func TestViewerOpenSwitchesFile(t *testing.T) {
 	}
 
 	update()
-	box := v.inner.(*textureView).sprite
+	box := v.inner.(*textureView).tex.Sprite
 	e.Camera().Zoom = 3 // the user zoomed; the next file is framed anyway
 
-	ready, errs := open("tiles.sheet.json")
-	if ready["path"] != "tiles.sheet.json" || ready["tool"] != "view" || len(errs) != 0 {
+	ready, errs := open("tiles.atlas.json")
+	if ready["path"] != "tiles.atlas.json" || ready["tool"] != "view" || len(errs) != 0 {
 		t.Errorf("ready = %v, errors %v", ready, errs)
 	}
 	if _, ok := v.inner.(*atlasView); !ok {
@@ -100,7 +103,7 @@ func TestViewerOpenSwitchesFile(t *testing.T) {
 	if n := sprites(); n != 0 {
 		t.Errorf("sprite entities after a failed open = %d, want 0", n)
 	}
-	if _, errs = open("notes.txt"); len(errs) == 0 || !strings.Contains(errs[0], "not supported") {
+	if _, errs = open("notes.txt"); len(errs) == 0 || !strings.Contains(errs[0], "not a file wpix-editor opens") {
 		t.Errorf("open of an unsupported file: errors %v", errs)
 	}
 

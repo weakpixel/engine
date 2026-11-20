@@ -142,3 +142,27 @@ func TestNewFileDocument(t *testing.T) {
 		t.Error("saved document is dirty")
 	}
 }
+
+// The first Save writes the pending files (in their folders) before the
+// document; a later Save leaves them alone.
+func TestFileDocumentPending(t *testing.T) {
+	dir := t.TempDir()
+	path, sprite := filepath.Join(dir, "new.fx.json"), filepath.Join(dir, "img", "new.png")
+	d := NewFileDocument(path, []byte("doc"))
+	d.AddPending(sprite, []byte("png"))
+	if err := d.Save(); err != nil {
+		t.Fatal(err)
+	}
+	if data, err := os.ReadFile(sprite); err != nil || string(data) != "png" {
+		t.Fatalf("pending file = %q, %v", data, err)
+	}
+	if err := os.WriteFile(sprite, []byte("edited"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := d.Save(); err != nil {
+		t.Fatal(err)
+	}
+	if data, _ := os.ReadFile(sprite); string(data) != "edited" {
+		t.Errorf("a second Save wrote the pending file again: %q", data)
+	}
+}

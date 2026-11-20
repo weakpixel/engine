@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"path/filepath"
 	"slices"
 )
 
@@ -85,6 +86,8 @@ type FileDocument struct {
 	path string
 	// disk is the text last read from or written to the file.
 	disk []byte
+	// pending are the files the first Save writes (AddPending).
+	pending []pendingFile
 }
 
 // MemoryDocument is a document that exists only in memory: an untitled
@@ -122,11 +125,34 @@ func NewFileDocument(path string, text []byte) *FileDocument {
 	return &FileDocument{undoStack: undoStack{text: slices.Clone(text)}, path: path}
 }
 
+// AddPending adds a file the first Save writes before the document: a file
+// the new document names (the sprite a new effect uses). path is a file
+// path, as the document's. A later Save does not write it again.
+func (d *FileDocument) AddPending(path string, data []byte) {
+	d.pending = append(d.pending, pendingFile{path, slices.Clone(data)})
+}
+
+// pendingFile is a file of [FileDocument.AddPending].
+type pendingFile struct {
+	path string
+	data []byte
+}
+
 // Dirty reports whether the text differs from the file's.
 func (d *FileDocument) Dirty() bool { return !bytes.Equal(d.text, d.disk) }
 
-// Save writes the text to the file.
+// Save writes the pending files, then the text to the file.
 func (d *FileDocument) Save() error {
+	for len(d.pending) > 0 {
+		f := d.pending[0]
+		if err := os.MkdirAll(filepath.Dir(f.path), 0o755); err != nil {
+			return fmt.Errorf("toolshell: %w", err)
+		}
+		if err := os.WriteFile(f.path, f.data, 0o644); err != nil {
+			return fmt.Errorf("toolshell: %w", err)
+		}
+		d.pending = d.pending[1:]
+	}
 	if err := os.WriteFile(d.path, d.text, 0o644); err != nil {
 		return fmt.Errorf("toolshell: %w", err)
 	}

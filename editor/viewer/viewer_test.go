@@ -112,14 +112,20 @@ func TestViewerCheck(t *testing.T) {
 			t.Errorf("Check(%q) = %v", key, err)
 		}
 	}
-	for _, key := range []string{"a.sheet.json", "dir/B.ATLAS.JSON", "fonts/ui.ttf", "x.OTF"} {
+	for _, key := range []string{"dir/B.ATLAS.JSON", "fonts/ui.ttf", "x.OTF", "hero.aseprite.json", "kip.voice.json", "intro.dialogue.json"} {
 		if err := v.Check(key); err != nil {
 			t.Errorf("Check(%q) = %v", key, err)
 		}
 	}
 	err := v.Check("levels/a.level.json")
-	if err == nil || !strings.Contains(err.Error(), "view: .json files are not supported") || !strings.Contains(err.Error(), ".sheet.json") {
+	if err == nil || !strings.Contains(err.Error(), "view: a.level.json is not a file wpix-editor opens") || !strings.Contains(err.Error(), ".atlas.json") {
 		t.Errorf("Check(json) = %v", err)
+	}
+	// An edited kind opens in its editor, never in the preview.
+	for _, key := range []string{"tiles.sheet.json", "hero.anim.json", "spark.fx.json"} {
+		if err := v.Check(key); err == nil || !strings.Contains(err.Error(), "editor, not in the preview") {
+			t.Errorf("Check(%q) = %v, want it refused", key, err)
+		}
 	}
 }
 
@@ -156,8 +162,8 @@ func TestViewerStaysVisibleWhenPartlyOffscreen(t *testing.T) {
 		t.Errorf("culled = %d, want the texture queued", q.Culled())
 	}
 	tv := v.inner.(*textureView)
-	tr := ecs.GetCompOrNil[gfx.Transform](e.World(), tv.entity)
-	sp := ecs.GetCompOrNil[gfx.Sprite](e.World(), tv.entity)
+	tr := ecs.GetCompOrNil[gfx.Transform](e.World(), tv.tex.Entity())
+	sp := ecs.GetCompOrNil[gfx.Sprite](e.World(), tv.tex.Entity())
 	// Whatever the pivot, the texture's corner stays at the origin.
 	if x, y := tr.Pos.X-sp.Origin.X*64, tr.Pos.Y-sp.Origin.Y*32; x < -0.01 || x > 0.01 || y < -0.01 || y > 0.01 {
 		t.Errorf("texture corner at (%v, %v), want (0, 0)", x, y)
