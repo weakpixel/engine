@@ -14,6 +14,7 @@ import (
 	"testing/fstest"
 
 	"github.com/weakpixel/engine/editor/toolshell"
+	"github.com/weakpixel/engine/editor/viewkit"
 	"github.com/weakpixel/engine/game"
 	"github.com/weakpixel/engine/gfx"
 	"github.com/weakpixel/engine/input"
@@ -138,8 +139,8 @@ func TestToolShowsTheGridAndWritesOneEditPerChange(t *testing.T) {
 			right = append(right, sec.ID)
 		}
 	}
-	if !slices.Equal(left, []string{"info", "view"}) || !slices.Equal(right, []string{"sheet"}) {
-		t.Errorf("sections: left %v right %v, want left [info view] right [sheet]", left, right)
+	if !slices.Equal(left, []string{"frames", "info", "view"}) || !slices.Equal(right, []string{"sheet"}) {
+		t.Errorf("sections: left %v right %v, want left [frames info view] right [sheet]", left, right)
 	}
 	if got := r.field("info.count").Value; string(got) != `"8"` {
 		t.Fatalf("frames = %s", got)
@@ -170,12 +171,87 @@ func TestToolShowsTheGridAndWritesOneEditPerChange(t *testing.T) {
 func TestToolHoverShowsTheFrameIndex(t *testing.T) {
 	r := newRig(t, sheetText, heroFS(t))
 	r.hover(20, 20) // second column, second row of a 4 x 2 grid
-	if got := r.field("info.hover").Value; !strings.HasPrefix(string(got), `"5 `) {
+	if got := r.field("info.hover").Value; !strings.HasPrefix(string(got), `"5 (hover)`) {
 		t.Errorf("hover = %s", got)
 	}
 	r.hover(200, 20)
-	if got := r.field("info.hover").Value; string(got) != `"–"` {
+	if got := r.field("info.hover").Value; string(got) != `"click a frame to select it"` {
 		t.Errorf("hover off the image = %s", got)
+	}
+}
+
+// TestToolFrameListAndSelection: the Frames section lists the grid's frames
+// by index; a click selects like the list does, a click on nothing clears
+// it, the list's 0 clears it, and an edit that drops the frame drops the
+// selection. None of it edits the document.
+func TestToolFrameListAndSelection(t *testing.T) {
+	r := newRig(t, sheetText, heroFS(t))
+	list := r.field(IDFrame)
+	if len(list.Options) != 9 || list.Options[0] != "(none)" || list.Options[6] != "5" {
+		t.Fatalf("frame list = %v, want (none) and 8 frames", list.Options)
+	}
+	r.hover(20, 20)
+	r.src.Frame.Mouse.Buttons = 1
+	r.update()
+	r.src.Frame.Mouse.Buttons = 0
+	r.hover(200, 20) // off the image: the selection stays
+	if got := r.field("info.hover").Value; !strings.HasPrefix(string(got), `"5 (selected)`) {
+		t.Errorf("after the click = %s", got)
+	}
+	if got := r.field(IDFrame).Value; string(got) != "6" {
+		t.Errorf("list value = %s, want 6 (frame 5 after (none))", got)
+	}
+	r.src.Frame.Mouse.Buttons = 1
+	r.update()
+	r.src.Frame.Mouse.Buttons = 0
+	r.update()
+	if r.st().Frames.Sel != -1 {
+		t.Errorf("a click on nothing kept frame %d", r.st().Frames.Sel)
+	}
+	r.set(IDFrame, 8)
+	if r.st().Frames.Sel != 7 {
+		t.Errorf("list 8 selected %d, want 7", r.st().Frames.Sel)
+	}
+	r.set(IDLabels, 3)
+	if r.st().Frames.Mode != viewkit.LabelNone {
+		t.Errorf("label mode = %d", r.st().Frames.Mode)
+	}
+	if len(r.of("edit")) != 0 {
+		t.Error("selecting or the label mode edited the document")
+	}
+	r.set(IDFrameW, 32) // 2 x 2 frames: frame 7 is gone
+	if r.st().Frames.Sel != -1 || len(r.st().Frames.List) != 4 {
+		t.Errorf("after the edit: sel %d, %d frames", r.st().Frames.Sel, len(r.st().Frames.List))
+	}
+	r.set(IDFrame, 0)
+	if r.st().Frames.Sel != -1 {
+		t.Error("0 did not clear the selection")
+	}
+	r.set(IDFrame, 9)
+	if len(r.of("error")) == 0 {
+		t.Error("a frame out of range was accepted")
+	}
+}
+
+// TestToolTooManyFramesToList: above MaxListed the list is empty and a note
+// says why; the count and the hover still work.
+func TestToolTooManyFramesToList(t *testing.T) {
+	r := newRig(t, `{"image":"hero.png","frameW":1,"frameH":1}`, heroFS(t)) // 64 x 32 = 2048
+	if n := len(r.st().Frames.List); n != 2048 {
+		t.Fatalf("%d frames listed", n)
+	}
+	files := heroFS(t) // a 128 x 64 image: 8192 frames
+	files["gfx/hero.png"].Data = pngBytes(t, 128, 64)
+	r2 := newRig(t, `{"image":"hero.png","frameW":1,"frameH":1}`, files)
+	if n := len(r2.st().Frames.List); n != 0 {
+		t.Errorf("%d frames listed above MaxListed", n)
+	}
+	if _, ok := r2.tool.Panel().Find("sheet.unlisted"); !ok {
+		t.Error("no note for an unlisted grid")
+	}
+	r2.hover(3, 2)
+	if got := r2.field("info.hover").Value; !strings.HasPrefix(string(got), `"259 (hover)`) {
+		t.Errorf("hover = %s", got)
 	}
 }
 

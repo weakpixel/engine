@@ -109,7 +109,8 @@ func (t *Tool) Sync(s *toolshell.Shell) {
 	t.tex.Sync(s)
 }
 
-// Update implements [toolshell.Tool]: the frame under the mouse.
+// Update implements [toolshell.Tool]: the frame under the mouse, and a
+// click (not a pan) that selects it or clears the selection.
 func (t *Tool) Update(s *toolshell.Shell) {
 	if t.st == nil {
 		return
@@ -117,6 +118,7 @@ func (t *Tool) Update(s *toolshell.Shell) {
 	w := s.MouseWorld()
 	p := image.Pt(int(math.Floor(float64(w.X))), int(math.Floor(float64(w.Y))))
 	t.st.SetHover(p, p.In(image.Rectangle{Max: t.st.Size}))
+	t.st.Frames.Update(s)
 }
 
 // Panel implements [toolshell.Tool].
@@ -127,8 +129,9 @@ func (t *Tool) Panel() toolshell.Panel {
 // Set implements [toolshell.Tool].
 func (t *Tool) Set(id string, v json.RawMessage) error { return t.st.Set(id, v) }
 
-// Draw implements [toolshell.Tool]: the grid, the unused rest of the image
-// and the hovered frame, in window pixels.
+// Draw implements [toolshell.Tool]: the unused rest of the image dimmed,
+// the border of the grid, then the frames (see [viewkit.Frames.Draw]), in
+// window pixels.
 func (t *Tool) Draw(s *toolshell.Shell, screen ebiten.FinalScreen) {
 	st := t.st
 	if st == nil || st.File == nil || st.Size.X <= 0 {
@@ -155,6 +158,14 @@ func (t *Tool) Draw(s *toolshell.Shell, screen ebiten.FinalScreen) {
 	}
 	used := g.Used()
 	t.leftovers(s, screen, used, fade(colLeftover))
+	rect(used, colUsed, 1)
+	if len(st.Frames.List) > 0 {
+		// Outlines, index labels, hover and selection, as the atlas
+		// previewer draws them; cells under minCellPx are not outlined.
+		st.Frames.Draw(s, screen)
+		return
+	}
+	// Too many frames to list: the visible cells only, without labels.
 	cell := s.WindowRect(gfx.Rect{Max: gfx.Vec2{X: float32(st.File.FrameW), Y: float32(st.File.FrameH)}})
 	if cell.Max.X-cell.Min.X >= minCellPx && cell.Max.Y-cell.Min.Y >= minCellPx {
 		c0, c1, r0, r1 := t.visible(s, g)
@@ -164,7 +175,6 @@ func (t *Tool) Draw(s *toolshell.Shell, screen ebiten.FinalScreen) {
 			}
 		}
 	}
-	rect(used, colUsed, 1)
 	if st.Hover >= 0 && st.Hover < g.Count() {
 		r := g.Rect(st.Hover)
 		win := s.WindowRect(gfx.Rect{Min: gfx.Vec2{X: float32(r.Min.X), Y: float32(r.Min.Y)}, Max: gfx.Vec2{X: float32(r.Max.X), Y: float32(r.Max.Y)}})

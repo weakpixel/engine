@@ -32,7 +32,7 @@ func TestNativeSettings(t *testing.T) {
 	if base, ok := hostlink.AssetBase(); ok || base != "" {
 		t.Errorf("AssetBase = %q, %v", base, ok)
 	}
-	if hostlink.Tool() != "" || hostlink.Files() != nil {
-		t.Error("Tool or Files set outside a browser")
+	if hostlink.Untitled() || hostlink.Files() != nil {
+		t.Error("Untitled or Files set outside a browser")
 	}
 }

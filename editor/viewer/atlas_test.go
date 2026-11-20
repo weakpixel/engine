@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"image"
 	"image/png"
+	"strings"
 	"testing"
 	"testing/fstest"
 
@@ -73,9 +74,8 @@ func TestAtlasFramesInFileOrder(t *testing.T) {
 	}
 }
 
-// atlasOnly runs the atlas previewer on its own, for a grid sheet: the
-// preview router sends a *.sheet.json to the sheet editor, but the atlas
-// loader reads both formats.
+// atlasOnly runs the atlas previewer on its own, as if the router sent it a
+// file.
 type atlasOnly struct{ *atlasView }
 
 func (a atlasOnly) Open(s *toolshell.Shell, key string) error {
@@ -83,48 +83,19 @@ func (a atlasOnly) Open(s *toolshell.Shell, key string) error {
 	return a.atlasView.Open(s, key)
 }
 
-func TestAtlasGridSheetHoverAndSelect(t *testing.T) {
+// TestAtlasRefusesAGridSheet: the atlas loader reads grid sheets too, but a
+// *.sheet.json is the sheet editor's, which lists and selects its frames.
+func TestAtlasRefusesAGridSheet(t *testing.T) {
 	files := fstest.MapFS{
 		"tiles.sheet.json": {Data: []byte(`{"image":"tiles.png","frameW":16,"frameH":16}`)},
 		"tiles.png":        {Data: pngBytes(t, 64, 32)},
 	}
-	src := &input.ManualSource{}
 	v := atlasOnly{&atlasView{}}
 	sh := toolshell.New(toolshell.Config{Name: "view", Tool: v, Key: "tiles.sheet.json", FS: files})
-	e := game.New(game.Config{NoAudio: true, Width: 320, Height: 180, FS: files, Tool: sh, Input: game.InputConfig{Source: src}})
+	e := game.New(game.Config{NoAudio: true, Width: 320, Height: 180, FS: files, Tool: sh, Input: game.InputConfig{Source: &input.ManualSource{}}})
 	t.Cleanup(e.Close)
-	if err := e.Update(); err != nil {
-		t.Fatal(err)
-	}
-	if got := label(t, v, "atlas.count"); got != "8" {
-		t.Fatalf("count = %q, want 8 (4 x 2 cells)", got)
-	}
-	if got := label(t, v, "frame.which"); got != "click a frame to select it" {
-		t.Errorf("before the mouse is over a frame: %q", got)
-	}
-	// The screen center is the texture center, (32, 16): row 1, column 2.
-	src.Frame.Mouse.X, src.Frame.Mouse.Y = 160, 90
-	e.Update()
-	if got := label(t, v, "frame.which"); got != "6 (hover)" {
-		t.Errorf("hover = %q, want frame 6", got)
-	}
-	if got := label(t, v, "frame.name"); got != "6" {
-		t.Errorf("grid frames are named by index, got %q", got)
-	}
-	// A click selects; moving away keeps the selection; a click on nothing
-	// clears it.
-	src.Frame.Mouse.Buttons = 1
-	e.Update()
-	src.Frame.Mouse.Buttons = 0
-	src.Frame.Mouse.X, src.Frame.Mouse.Y = 2, 2
-	e.Update()
-	if got := label(t, v, "frame.which"); got != "6 (selected)" {
-		t.Errorf("after the click = %q", got)
-	}
-	src.Frame.Mouse.Buttons = 1
-	e.Update()
-	if got := label(t, v, "frame.which"); got != "click a frame to select it" {
-		t.Errorf("click on nothing = %q, want the selection cleared", got)
+	if err := v.Open(sh, "tiles.sheet.json"); err == nil || !strings.Contains(err.Error(), "is not an atlas") {
+		t.Errorf("Open(tiles.sheet.json) = %v, want a refusal", err)
 	}
 }
 

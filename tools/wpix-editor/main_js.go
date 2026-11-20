@@ -8,26 +8,30 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 
 	"github.com/weakpixel/asset/httpfs"
-	"github.com/weakpixel/engine/editor/fxedit"
 	"github.com/weakpixel/engine/editor/hostlink"
 	"github.com/weakpixel/engine/editor/toolshell"
 	"github.com/weakpixel/engine/game"
 	"github.com/weakpixel/engine/tools/wpix-editor/internal/editorapp"
 )
 
-// main runs the tool of the kind of the file weakpixelHost.path (an empty
-// path is the untitled particle effect), reading assets over HTTP from
-// weakpixelHost.assetBase. The extension draws the panel; there is no
+// main runs the tool of the kind of the file weakpixelHost.path (with
+// weakpixelHost.untitled an untitled document of that kind, such as
+// untitled.fx.json for a new particle effect), reading assets over HTTP
+// from weakpixelHost.assetBase. The extension draws the panel; there is no
 // renderer and no debugui.
 func main() {
-	untitled := hostlink.Path() == ""
-	name := hostlink.Path()
-	if untitled {
-		name = "untitled.fx.json"
-	}
-	t, err := editorapp.KindOf(name)
+	t, err := editorapp.KindOf(hostlink.Path())
 	if err != nil {
 		log.Fatalf("wpix-editor: %v", err)
+	}
+	untitled := hostlink.Untitled()
+	if untitled && t.Untitled == nil {
+		log.Fatalf("wpix-editor: a %s cannot be untitled", t.Kind)
+	}
+	// An untitled document has no asset key yet: ready names path "".
+	key := hostlink.Path()
+	if untitled {
+		key = ""
 	}
 	base, ok := hostlink.AssetBase()
 	if !ok {
@@ -45,12 +49,12 @@ func main() {
 	tool := t.New()
 	overlay := toolshell.NewOverlayFS(fsys)
 	cfg := toolshell.Config{
-		Name: t.Tool, Tool: tool, Key: hostlink.Path(), FS: overlay, Overlay: overlay,
+		Name: t.Tool, Tool: tool, Key: key, FS: overlay, Overlay: overlay,
 		Files: hostlink.Files(), Transport: tr, Inbox: inbox,
 	}
 	if _, ok := tool.(toolshell.DocumentTool); ok {
 		if untitled {
-			cfg.Document = toolshell.NewMemoryDocument(fxedit.NewUntitled()) // the untitled effect
+			cfg.Document = toolshell.NewMemoryDocument(t.Untitled())
 		} else {
 			cfg.Document = toolshell.NewHostDocument(tr)
 		}

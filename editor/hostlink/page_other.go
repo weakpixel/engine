@@ -15,8 +15,9 @@ func AssetBase() (string, bool) { return "", false }
 // "prefab"), "" when it is not set.
 func Stage() string { return os.Getenv(EnvStage) }
 
-// Tool returns "": outside a browser there is no host page that names one.
-func Tool() string { return "" }
+// Untitled returns false: a native editor opens files on disk; a missing
+// file starts from its kind's starter instead.
+func Untitled() bool { return false }
 
 // Path returns the WEAKPIXEL_PATH environment variable, the asset key of
 // the file to open first, "" when it is not set.
