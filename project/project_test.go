@@ -50,11 +50,11 @@ func TestLoad(t *testing.T) {
 		},
 		{
 			name:  "assets and editor sections",
-			file:  `{"assets": {"root": "assets", "prefabs": "global/prefabs"}, "editor": {"game": "cmd/game", "tags": ["editor", "dev"], "snap": 8, "prefab": {"background": "#14121a", "grid": 0}}}`,
+			file:  `{"assets": {"root": "assets", "prefabs": "global/prefabs"}, "editor": {"game": "cmd/game", "tags": ["editor", "dev"], "snap": 8, "screenshots": "shots", "prefab": {"background": "#14121a", "grid": 0}}}`,
 			start: "a",
 			want: Settings{
 				AssetsRoot: "assets", AssetsPrefabs: "global/prefabs",
-				EditorGame: "cmd/game", EditorTags: []string{"editor", "dev"}, EditorSnap: 8,
+				EditorGame: "cmd/game", EditorTags: []string{"editor", "dev"}, EditorSnap: 8, EditorScreenshots: "shots",
 				EditorPrefabBackground: "#14121a", EditorPrefabGrid: new(float64),
 			},
 		},
@@ -133,6 +133,7 @@ func TestLoad(t *testing.T) {
 			want.Dir = root
 			want.GODSpecs, want.GODOut, want.GODDocOut = abs(want.GODSpecs), abs(want.GODOut), abs(want.GODDocOut)
 			want.AssetsRoot, want.EditorGame = abs(want.AssetsRoot), abs(want.EditorGame)
+			want.EditorScreenshots = abs(want.EditorScreenshots)
 			if !reflect.DeepEqual(*s, want) {
 				t.Errorf("Load() = %+v, want %+v", *s, want)
 			}

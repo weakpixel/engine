@@ -38,7 +38,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/weakpixel/engine/internal/project"
+	"github.com/weakpixel/engine/project"
 	"github.com/weakpixel/engine/tools/internal/cli"
 )
 

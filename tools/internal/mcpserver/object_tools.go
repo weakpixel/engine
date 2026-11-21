@@ -13,7 +13,7 @@ import (
 
 	"github.com/weakpixel/engine/asset/library"
 	"github.com/weakpixel/engine/god"
-	"github.com/weakpixel/engine/internal/jsonedit"
+	"github.com/weakpixel/engine/jsonedit"
 	"github.com/weakpixel/engine/tools/internal/mcp"
 )
 

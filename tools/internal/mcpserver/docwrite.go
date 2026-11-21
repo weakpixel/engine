@@ -11,7 +11,7 @@ import (
 )
 
 // editFunc turns the text of a document into its new text, usually with
-// internal/jsonedit so that only the edited value changes. doc is the
+// jsonedit so that only the edited value changes. doc is the
 // parsed current text.
 type editFunc func(text []byte, doc *document, info docInfo) ([]byte, error)
 

@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/weakpixel/engine/asset/library"
-	"github.com/weakpixel/engine/internal/jsonedit"
+	"github.com/weakpixel/engine/jsonedit"
 )
 
 // writeDocument writes next as the text of the file abs (the asset key),

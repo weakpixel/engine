@@ -67,7 +67,7 @@ func kinds() []kind {
 		{name: "library", title: "weakpixel asset library config (library.json)", build: libraryShape,
 			desc: "Optional overrides at the library root (library.Config)."},
 		{name: "weakpixel", title: "weakpixel project settings (.weakpixel.json)", build: projectShape,
-			desc: "Where the tools and the editor find the project's files (internal/project)."},
+			desc: "Where the tools and the editor find the project's files (package project)."},
 	}
 }
 
@@ -176,9 +176,10 @@ func projectShape() (*god.TypeSchema, error) {
 			"prefabs": str("Folder of new prefabs under the root."),
 		}),
 		"editor": section("The VSCode level editor.", map[string]*god.TypeSchema{
-			"game": str("Directory of the package the editor builds to WebAssembly."),
-			"tags": list(str("Build tag.")),
-			"snap": {Type: "number", Description: "Drag grid in world units; 0 is off.", Minimum: min0},
+			"game":        str("Directory of the package the editor builds to WebAssembly."),
+			"tags":        list(str("Build tag.")),
+			"snap":        {Type: "number", Description: "Drag grid in world units; 0 is off.", Minimum: min0},
+			"screenshots": str("Folder screenshots are saved to, relative to this file."),
 			"prefab": section("The prefab stage.", map[string]*god.TypeSchema{
 				"background": str("Background colour as #rrggbb."),
 				"grid":       {Type: "number", Description: "Grid step in world units; 0 draws no grid.", Minimum: min0},

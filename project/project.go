@@ -1,6 +1,7 @@
 // Package project loads .weakpixel.json, the project settings file that gives
-// the tools (`wpix gen`, `wpix doc`, later the editor) their defaults. The
-// format is described in doc/guide/project-file.md.
+// the tools (`wpix gen`, `wpix doc`, `wpix mcp`, `wpix-editor`) and editor
+// hosts their defaults. The format is described in doc/guide/project-file.md.
+// It imports the standard library only.
 package project
 
 import (
@@ -56,6 +57,10 @@ type Settings struct {
 	EditorTags []string
 	// EditorSnap is the drag grid in world units ("editor.snap"), 0 for off.
 	EditorSnap float64
+	// EditorScreenshots is the folder a host saves screenshots to
+	// ("editor.screenshots"), "" for the host's default (screenshots next
+	// to the settings file).
+	EditorScreenshots string
 	// EditorPrefabBackground is the prefab stage's background colour as
 	// "#rrggbb" ("editor.prefab.background"), "" for the default.
 	EditorPrefabBackground string
@@ -84,6 +89,7 @@ type file struct {
 		Game   string   `json:"game"`
 		Tags   []string `json:"tags"`
 		Snap   float64  `json:"snap"`
+		Shots  string   `json:"screenshots"`
 		Prefab *struct {
 			Background string   `json:"background"`
 			Grid       *float64 `json:"grid"`
@@ -195,6 +201,7 @@ func parse(data []byte, dir string) (*Settings, error) {
 		s.EditorGame = abs(e.Game)
 		s.EditorTags = e.Tags
 		s.EditorSnap = e.Snap
+		s.EditorScreenshots = abs(e.Shots)
 		if e.Snap < 0 {
 			errs = append(errs, fmt.Errorf("editor.snap: %v is negative", e.Snap))
 		}
@@ -225,7 +232,7 @@ var known = map[string][]string{
 	"godDoc":        {"out"},
 	"schema":        {"out"},
 	"assets":        {"root", "prefabs"},
-	"editor":        {"game", "tags", "snap", "prefab"},
+	"editor":        {"game", "tags", "snap", "screenshots", "prefab"},
 	"editor.prefab": {"background", "grid"},
 }
 

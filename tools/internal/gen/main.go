@@ -18,7 +18,7 @@ import (
 
 	"golang.org/x/tools/imports"
 
-	"github.com/weakpixel/engine/internal/project"
+	"github.com/weakpixel/engine/project"
 )
 
 // output is the generated files of one target package. Content (zz__gen.go)

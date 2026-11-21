@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/weakpixel/engine/god"
-	"github.com/weakpixel/engine/internal/project"
+	"github.com/weakpixel/engine/project"
 	testassets "github.com/weakpixel/engine/testdata/assets"
 	"github.com/weakpixel/engine/tools/internal/goddoc"
 )
@@ -101,7 +101,7 @@ func TestKindsAcceptSamples(t *testing.T) {
 	for _, tc := range []struct{ kind, doc string }{
 		{"sheet", `{"image": "a.png", "frameW": 16, "frameH": 16, "margin": 1, "spacing": 2, "pivot": {"x": 0.5, "y": 1}}`},
 		{"library", `{"entries": {"global": ["global/fonts/ui.ttf#16"]}}`},
-		{"weakpixel", `{"god": {"specs": "god", "out": "o.json"}, "schema": {"out": "s"}, "assets": {"root": "assets"}, "editor": {"tags": ["editor"], "snap": 8, "prefab": {"grid": 16}}}`},
+		{"weakpixel", `{"god": {"specs": "god", "out": "o.json"}, "schema": {"out": "s"}, "assets": {"root": "assets"}, "editor": {"tags": ["editor"], "snap": 8, "screenshots": "shots", "prefab": {"grid": 16}}}`},
 	} {
 		if err := shape[tc.kind].Validate([]byte(tc.doc)); err != nil {
 			t.Errorf("%s: %v", tc.kind, err)
@@ -121,7 +121,7 @@ func TestKindsAcceptSamples(t *testing.T) {
 }
 
 // TestProjectShapeCoversKeys keeps the .weakpixel.json schema in step with
-// the keys internal/project accepts.
+// the keys package project accepts.
 func TestProjectShapeCoversKeys(t *testing.T) {
 	s, err := projectShape()
 	if err != nil {

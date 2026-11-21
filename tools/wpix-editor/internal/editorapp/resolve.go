@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/weakpixel/engine/internal/project"
+	"github.com/weakpixel/engine/project"
 )
 
 // Resolve finds the asset root of file and the file's asset key. The root is

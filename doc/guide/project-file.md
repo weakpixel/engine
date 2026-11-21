@@ -51,4 +51,6 @@ With `assets.root` set, `wpix assets` runs without its `<root>` argument (`wpix 
 - **Flags win.** A command-line input, root or `-o` overrides the file.
 - **Values are checked.** `editor.snap` and `editor.prefab.grid` must not be negative, `editor.prefab.background` is `#rrggbb`, and `assets.prefabs` stays inside the root. Every problem is reported at once.
 
+Go programs read the file with package `github.com/weakpixel/engine/project` (`project.Load`), which applies these rules; an editor host in another module uses it too, and `github.com/weakpixel/engine/jsonedit` for minimal edits of level and prefab text.
+
 The [GOD guide](ecs/game-object-definition.md) explains the files these keys point at; [Tools](tools.md) lists the commands.
