@@ -18,7 +18,7 @@ validate.go  numbered rules; every problem becomes a diagnostic; all are collect
 schema.go    group/class and component group/name resolution; Go type → TypeSchema following encoding/json rules
 doc.go       doc comments → descriptions (without +game:* lines)
 render.go    template data; generator.go.tpl → zz__gen.go; JSON → the package's GOD file
-main.go      settings (.weakpixel.json via internal/project); writes <specs>/<group>.god.json (specs: god.specs, default build/god)
+main.go      settings (.weakpixel.json via project); writes <specs>/<group>.god.json (specs: god.specs, default build/god)
 ```
 
 `generate(dir, patterns)` is pure (returns outputs, writes nothing), which is what the golden and diagnostic tests call. `write` skips unchanged files and removes stale files the generator wrote, recognized by their header and the `"generator": "wpix gen"` field. In the specs folder a file also carries `"package"`: `write` refuses to overwrite another package's file (two packages with one group) and removes only its own package's files under an old name. One folder of `<group>.god.json` instead of a file per package directory gives tools one place to look; naming by group keeps the names readable and stable across package moves.

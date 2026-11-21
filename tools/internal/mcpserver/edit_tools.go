@@ -9,7 +9,7 @@ import (
 	"slices"
 
 	"github.com/weakpixel/engine/god"
-	"github.com/weakpixel/engine/internal/jsonedit"
+	"github.com/weakpixel/engine/jsonedit"
 	"github.com/weakpixel/engine/tools/internal/mcp"
 )
 

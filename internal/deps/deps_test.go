@@ -94,10 +94,10 @@ func TestPackageDependencyRules(t *testing.T) {
 			reason:  "internal/shaderparam may import the standard library and internal/marker only (no Ebiten, no render, no ecs)",
 		},
 		{
-			name:    "the JSON splice helper uses the standard library only",
-			pkgs:    []string{"internal/jsonedit"},
+			name:    "the JSON splice helper and the project file reader use the standard library only",
+			pkgs:    []string{"jsonedit", "project"},
 			allowed: func(dep string) bool { return false },
-			reason:  "internal/jsonedit may depend on nothing but the standard library (it is shared by tools and the engine)",
+			reason:  "jsonedit and project may depend on nothing but the standard library (they are shared by the tools and by editor hosts in other modules)",
 		},
 		{
 			name:    "xmath uses the standard library only",
