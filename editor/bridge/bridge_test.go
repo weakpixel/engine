@@ -455,6 +455,40 @@ func TestSettingsKeepsParts(t *testing.T) {
 	}
 }
 
+// TestSettingsBackground: the background part replaces the level's
+// background in edit mode; Play shows the game's own, Stop the host's again,
+// and "" goes back to the game's own.
+func TestSettingsBackground(t *testing.T) {
+	f := newFixture(t)
+	f.recv(documentMsg(visual("a", 0, 0)))
+	own := f.e.Background()
+	host := color.RGBA{R: 0xf0, G: 0xf0, B: 0xf2, A: 0xff}
+	f.recv(`{"type":"settings","background":"#f0f0f2"}`)
+	if got := f.e.Background(); got != host {
+		t.Fatalf("background %v after settings, want %v", got, host)
+	}
+	f.recv(`{"type":"play"}`)
+	if got := f.e.Background(); got != own {
+		t.Errorf("background %v in Play, want the game's %v", got, own)
+	}
+	f.recv(`{"type":"stop"}`)
+	if got := f.e.Background(); got != host {
+		t.Errorf("background %v after Stop, want %v", got, host)
+	}
+	f.recv(`{"type":"settings","snap":4}`)
+	if got := f.e.Background(); got != host {
+		t.Errorf("a settings message without background changed it to %v", got)
+	}
+	f.recv(`{"type":"settings","background":""}`)
+	if got := f.e.Background(); got != own {
+		t.Errorf("background %v after \"\", want the game's %v", got, own)
+	}
+	f.recv(`{"type":"settings","background":"white"}`)
+	if got := f.host.take("error"); len(got) != 1 {
+		t.Errorf("a bad background reported %v", got)
+	}
+}
+
 func TestParseColor(t *testing.T) {
 	if c, err := parseColor("#102030"); err != nil || c != (color.RGBA{R: 0x10, G: 0x20, B: 0x30, A: 0xff}) {
 		t.Errorf("parseColor = %v, %v", c, err)
