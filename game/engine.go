@@ -408,6 +408,10 @@ func (e *Engine) SetBackground(c color.Color) {
 	e.cfg.Background = c
 }
 
+// Background returns the colour the screen is cleared with (Config.Background,
+// or what SetBackground set last).
+func (e *Engine) Background() color.Color { return e.cfg.Background }
+
 // SetDebug turns the debug-shape extract (gfx.DebugShape) on or off.
 func (e *Engine) SetDebug(on bool) { e.debug = on }
 

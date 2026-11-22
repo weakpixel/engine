@@ -146,7 +146,10 @@ func Run(g Game) error {
 	ebiten.SetWindowSize(1280, 720)
 	ebiten.SetWindowTitle("Weakpixel Engine editor")
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
-	runErr := ebiten.RunGame(e)
+	// In a web page the screen is transparent, so the bars around the
+	// game's letterboxed screen show the page's background (the host's
+	// light or dark look) instead of black.
+	runErr := ebiten.RunGameWithOptions(e, &ebiten.RunGameOptions{ScreenTransparent: transparentScreen})
 	e.Close()
 	return runErr
 }

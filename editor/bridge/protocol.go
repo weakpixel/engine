@@ -87,11 +87,15 @@ type inbound struct {
 	// window position) and Zoom.
 	Zoom float32 `json:"zoom"`
 	// settings: the drag snap grid in world units, 0 for off, the collider
-	// outlines of edit mode and the prefab stage's look. Each part is
+	// outlines of edit mode, the level's background in edit mode and the
+	// prefab stage's look. Each part is
 	// applied only when present.
 	Snap      *float32      `json:"snap"`
 	Colliders *bool         `json:"colliders"`
 	Stage     *stageSetting `json:"stage"`
+	// Background is the level stage's background in edit mode ("#rrggbb",
+	// "" for the game's own).
+	Background *string `json:"background"`
 	// pause: Paused.
 	Paused bool `json:"paused"`
 	// inspect: IDs (none: every object of the level), Components (keys;

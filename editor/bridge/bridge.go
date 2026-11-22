@@ -37,6 +37,12 @@ type Bridge struct {
 	// ticks counts the ticks since the bridge started, for "status".
 	ticks uint64
 
+	// editBg is the background the host set for edit mode in the level
+	// stage (settings "background"), nil for the game's own; gameBg is the
+	// game's own, kept while editBg replaces it.
+	editBg, gameBg color.Color
+	playing        bool
+
 	// gone is set when the host closed the connection (see DialHost): the
 	// next tick quits the engine, since nobody is left to edit.
 	gone atomic.Bool
@@ -153,6 +159,9 @@ func (b *Bridge) settings(m inbound) {
 	if m.Colliders != nil {
 		b.SetColliders(*m.Colliders)
 	}
+	if m.Background != nil && !b.InStage() {
+		b.setEditBackground(*m.Background)
+	}
 	p := m.Stage
 	if p == nil || !b.InStage() {
 		return
@@ -167,6 +176,44 @@ func (b *Bridge) settings(m inbound) {
 			return
 		}
 		b.Engine().SetBackground(c)
+	}
+}
+
+// setEditBackground sets the level's background in edit mode: "#rrggbb",
+// or "" for the game's own. Play shows the game's own.
+func (b *Bridge) setEditBackground(s string) {
+	if s == "" {
+		if b.editBg != nil {
+			b.editBg = nil
+			b.Engine().SetBackground(b.gameBg)
+		}
+		return
+	}
+	c, err := parseColor(s)
+	if err != nil {
+		b.sendError(err)
+		return
+	}
+	if b.editBg == nil {
+		b.gameBg = b.Engine().Background()
+	}
+	b.editBg = c
+	if !b.playing {
+		b.Engine().SetBackground(c)
+	}
+}
+
+// modeBackground gives the screen the background of the mode: the game's
+// own in Play, the host's (when it set one) in edit mode.
+func (b *Bridge) modeBackground(play bool) {
+	b.playing = play
+	if b.editBg == nil {
+		return
+	}
+	if play {
+		b.Engine().SetBackground(b.gameBg)
+	} else {
+		b.Engine().SetBackground(b.editBg)
 	}
 }
 
@@ -255,6 +302,7 @@ func (b *Bridge) event(ev editor.Event) {
 	case editor.Camera:
 		b.send(cameraMsg{Type: "camera", X: ev.X, Y: ev.Y, Zoom: ev.Zoom})
 	case editor.Mode:
+		b.modeBackground(ev.Play)
 		b.send(modeMsg{Type: "mode", Play: ev.Play, Paused: ev.Paused})
 	}
 }
