@@ -33,7 +33,7 @@ var (
 const handlePx = 6 // size of a resize handle in window pixels
 
 // Tool is the anim tool. It implements [toolshell.DocumentTool],
-// [toolshell.Syncer] and the shell's optional Check.
+// [toolshell.Syncer] and [toolshell.Checker].
 type Tool struct {
 	shell *toolshell.Shell
 	key   string
@@ -50,6 +50,13 @@ type Tool struct {
 	// scope holds the clip set; nil is the global scope.
 	scope *asset.Scope
 }
+
+// The shell finds these interfaces with type assertions.
+var (
+	_ toolshell.DocumentTool = (*Tool)(nil)
+	_ toolshell.Syncer       = (*Tool)(nil)
+	_ toolshell.Checker      = (*Tool)(nil)
+)
 
 // New returns the anim tool.
 func New() toolshell.Tool { return &Tool{bar: newToolbar()} }

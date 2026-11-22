@@ -54,6 +54,32 @@ type Viewer struct {
 	scope *asset.Scope
 }
 
+// The shell finds these interfaces of the viewer with type assertions, and
+// the viewer those of its previewers: each previewer that spawns entities is
+// a closer, and each that moves things every tick a Syncer.
+var (
+	_ toolshell.Initializer = (*Viewer)(nil)
+	_ toolshell.Closer      = (*Viewer)(nil)
+	_ toolshell.Syncer      = (*Viewer)(nil)
+	_ toolshell.Checker     = (*Viewer)(nil)
+
+	_ closer           = (*textureView)(nil)
+	_ toolshell.Syncer = (*textureView)(nil)
+	_ closer           = (*atlasView)(nil)
+	_ toolshell.Syncer = (*atlasView)(nil)
+	_ closer           = (*shaderView)(nil)
+	_ toolshell.Syncer = (*shaderView)(nil)
+	_ closer           = (*mapView)(nil)
+	_ closer           = (*tilesetView)(nil)
+	_ toolshell.Syncer = (*tilesetView)(nil)
+	_ closer           = (*worldView)(nil)
+	_ closer           = (*asepritePreview)(nil)
+	_ toolshell.Syncer = (*asepritePreview)(nil)
+	_ closer           = voicePreview{}
+	_ toolshell.Syncer = voicePreview{}
+	_ toolshell.Tool   = (*fontView)(nil)
+)
+
 // closer is a previewer that spawned entities.
 type closer interface {
 	close(s *toolshell.Shell)

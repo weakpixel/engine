@@ -32,7 +32,7 @@ var (
 const minCellPx = 4
 
 // Tool is the sheet tool. It implements [toolshell.DocumentTool],
-// [toolshell.Syncer] and the shell's optional Check.
+// [toolshell.Syncer] and [toolshell.Checker].
 type Tool struct {
 	shell *toolshell.Shell
 	key   string
@@ -42,6 +42,13 @@ type Tool struct {
 	imageKey string
 	size     gfx.Vec2 // the image size the camera was last framed on
 }
+
+// The shell finds these interfaces with type assertions.
+var (
+	_ toolshell.DocumentTool = (*Tool)(nil)
+	_ toolshell.Syncer       = (*Tool)(nil)
+	_ toolshell.Checker      = (*Tool)(nil)
+)
 
 // New returns the sheet tool.
 func New() toolshell.Tool { return &Tool{} }

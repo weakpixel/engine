@@ -57,7 +57,7 @@ func Run(opts Options) error {
 		return err
 	}
 	tool := kind.New()
-	if c, ok := tool.(interface{ Check(key string) error }); ok {
+	if c, ok := tool.(toolshell.Checker); ok {
 		if err := c.Check(key); err != nil {
 			return err
 		}
