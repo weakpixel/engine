@@ -86,7 +86,7 @@ func NewEffect(key string) (doc []byte, files []SaveFile) {
 }
 
 // Tool is the fx tool. It implements [toolshell.DocumentTool],
-// [toolshell.Syncer] and the shell's optional Check.
+// [toolshell.Syncer] and [toolshell.Checker].
 type Tool struct {
 	shell *toolshell.Shell
 	key   string
@@ -117,6 +117,13 @@ type Tool struct {
 	bar         *toolshell.Toolbar
 	imagesSig   string
 }
+
+// The shell finds these interfaces with type assertions.
+var (
+	_ toolshell.DocumentTool = (*Tool)(nil)
+	_ toolshell.Syncer       = (*Tool)(nil)
+	_ toolshell.Checker      = (*Tool)(nil)
+)
 
 // New returns the fx tool.
 func New() toolshell.Tool {

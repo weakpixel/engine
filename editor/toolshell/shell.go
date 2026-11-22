@@ -80,6 +80,20 @@ type Closer interface {
 	Close(s *Shell)
 }
 
+// Checker is an optional interface of a [Tool]: the native command calls
+// Check before it opens a window, so a file the tool cannot open is an error
+// on the command line instead of a window with a status line.
+type Checker interface {
+	// Check reports whether the tool can open the file at asset key key.
+	Check(key string) error
+}
+
+// The optional interfaces are found with type assertions, so a tool whose
+// method has a wrong signature silently loses the behavior. Every tool
+// asserts the interfaces it means to implement at compile time:
+//
+//	var _ toolshell.Syncer = (*Tool)(nil)
+
 // DocumentTool is a [Tool] whose file is a text document it edits.
 type DocumentTool interface {
 	Tool

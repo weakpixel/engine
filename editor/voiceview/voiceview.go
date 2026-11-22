@@ -99,6 +99,14 @@ type Tool struct {
 	view textView
 }
 
+// The shell and the viewer find these interfaces with type assertions.
+var (
+	_ toolshell.Initializer = (*Tool)(nil)
+	_ toolshell.Closer      = (*Tool)(nil)
+	_ toolshell.Syncer      = (*Tool)(nil)
+	_ toolshell.Checker     = (*Tool)(nil)
+)
+
 // New returns the tool.
 func New() toolshell.Tool { return &Tool{text: DefaultLine, speed: 1} }
 

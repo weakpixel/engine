@@ -138,13 +138,18 @@ func (s *State) clipSection() toolshell.Section {
 	if c == nil {
 		fields = append(fields, toolshell.Button("clip.add", "Add to file"))
 	}
+	// Without a pivot of its own the clip shows the definition's pivot, which
+	// Set refuses to change here: the fields are read-only until Own pivot.
+	pivotX, pivotY := fnum(toolshell.Number("clip.px", "Pivot X", px)), fnum(toolshell.Number("clip.py", "Pivot Y", py))
+	if clip.Pivot == nil {
+		pivotX, pivotY = pivotX.AsReadonly(), pivotY.AsReadonly()
+	}
 	fields = append(fields,
 		toolshell.Dropdown("clip.loop", "Loop", loop, "Sheet", "Loop", "Once"),
 		fnum(toolshell.Number("clip.fps", "FPS (0 = unset)", fps)),
 		toolshell.Number("clip.speed", "Speed (0 = unset)", speed).WithDigits(2).WithStep(0.1),
 		toolshell.Checkbox("clip.ownpivot", "Own pivot", clip.Pivot != nil),
-		fnum(toolshell.Number("clip.px", "Pivot X", px)),
-		fnum(toolshell.Number("clip.py", "Pivot Y", py)),
+		pivotX, pivotY,
 		fnum(toolshell.Number("clip.dur", "This frame (ms)", dur)),
 		toolshell.Button("clip.cleardur", "Clear durations"),
 	)
