@@ -33,7 +33,12 @@ func TestIntegration(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Cleanup(tl.game.shutdown)
-	if want := filepath.Join(dir, "assets"); p.AssetRoot != want {
+	// The project resolves symlinks (/var -> /private/var on macOS).
+	want, err := filepath.EvalSymlinks(filepath.Join(dir, "assets"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if p.AssetRoot != want {
 		t.Fatalf("asset root %q, want %q", p.AssetRoot, want)
 	}
 
