@@ -81,6 +81,21 @@ Picking measures sprites by the visible art of their loaded frame (the bounds of
 
 `Step()` runs the game for one tick, in edit mode or in a paused Play. **`Pause(true)`** holds Play still without resetting anything (the game keeps drawing, its systems and input stage do not run) and `Pause(false)` resumes it; both emit `Mode{Play, Paused}`, and edit mode ignores them. **`Inject`** adds input for agents and tests: the keys, mouse and pad of an `Injection` are merged into what the game polls for its next `Ticks` ticks (a paused Play polls nothing, so they wait for steps); a new injection replaces the rest of the last, edit mode ignores it and `Stop` drops it. The pad is announced to the router as connected the first time and stays connected. **`Play()`** restores the game's camera and runs the game with input. **`Stop()`** deletes the entities created during Play, restores the level's objects from the document (every component, and objects the game deleted), keeps the selection, clears every tween (`Engine.Tweens().Clear()`), calls `Config.OnReset` and returns to the editor camera. Entities the game owned before Play (for example a hero spawned by a system) keep their Play state unless `OnReset` resets them.
 
+## Pacing
+
+A session paces the game so an editor that sits still costs little CPU. It sets the tick rate (`ebiten.SetTPS`) by what is happening, and draws a frame only after a tick that changed the picture (it is a [`game.DrawGate`](engine.md#development-tools)):
+
+| State | Tick rate (`editor.DefaultRates`) | Frames drawn |
+| --- | --- | --- |
+| Edit mode, a paused Play or a stage, nothing happening | `Idle`, 10 | One after each tick that changed the picture |
+| The same while the user works in the view, and for `editor.ActiveFor` (500 ms) after | `Active`, 60 | One after each tick |
+| An unpaused Play | The game's own rate (`ebiten.TPS()` at the first tick, so `game.Config.TPS` holds) | Every frame |
+| Hidden (`SetVisible(false)`), in any mode | `Hidden`, 0: no ticks | None |
+
+Work in the view is a mouse move, a button or key held, the wheel, a drag, or a camera that moved in an edit tick. `Session.Wake()` (safe from any goroutine) raises the rate at once, so the next tick comes within a frame, and that tick sets the rate of its state again: a wake is not work, so a host that polls the game does not keep it at the active rate. The bridge calls it for every message it receives, and in a browser `editor/host` calls it on every pointer, wheel and key event of the page, so the first click after an idle stretch is not delayed. A frame between two ticks would show the same picture, since `Draw` never reads the World and the editor camera does not blend between ticks; only the shader `Time` and animations step at the tick rate, so at the idle rate they play at 10 frames a second. A tick that changed the picture is one with work in it, one after `Session.Invalidate()` (the bridge calls it for every message but `status`, `inspect` and `screenshot`, since the session draws the selection and outlines over the frame), or one that [`Engine.FrameChanged`](engine.md#development-tools) reports: a level that stands still draws nothing until something moves.
+
+`Session.SetRates(r)` sets the rates (`Rates.Check`: `Idle` and `Hidden` 0 or more, `Active` 1 or more; idle equal to active gives a fixed rate), `SetVisible` hides or shows the view (a session starts visible; showing it again counts as work), `TPS()` is the rate of the current state and `Draws()` counts the drawn frames. `Config.FixedRate` turns pacing off: the rate is never changed and every frame is drawn. A headless run (`editor/host.RunHeadless`) sets it, since it ticks on its own clock.
+
 ## Bridge
 
 `editor/bridge` puts the [JSON protocol](../../design/editor.md#protocol) in front of a session for a host such as the VSCode extension. `bridge.New(cfg, transport)` returns a `*Bridge` (it embeds the `*Session`; set it as `Config.Tool`); `Receive(msg)` queues a message from any goroutine. In a browser, `bridge.ConnectHost(cfg)` connects to the page's host script and returns false when there is none, so a game falls back to a plain session.

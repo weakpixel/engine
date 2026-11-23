@@ -135,6 +135,12 @@ type Engine struct {
 	finalGeoM ebiten.GeoM
 	// shots holds the screenshot requests and captures (screenshot-capture.go).
 	shots shots
+	// gate is cfg.Tool as a DrawGate, nil when it is none: the type
+	// assertion is made once in New, not per frame.
+	gate DrawGate
+	// drawn is what the last drawn frame showed, kept only with a gate
+	// (frame-change.go).
+	drawn drawnFrame
 }
 
 // New creates an Engine: the World, the asset server with the render,
@@ -231,6 +237,7 @@ func New(cfg Config) *Engine {
 		ebiten.SetTPS(cfg.TPS)
 	}
 	if cfg.Tool != nil {
+		e.gate, _ = cfg.Tool.(DrawGate)
 		cfg.Tool.Init(e)
 	}
 	return e
@@ -548,6 +555,9 @@ func (e *Engine) Update() error {
 	e.updateShots()
 	e.ticks++
 	e.elapsed += dt
+	if e.gate != nil {
+		e.noteAssetEvents()
+	}
 	e.lastUpdate = time.Now()
 	e.frameLog.tick(e.lastUpdate.Sub(began))
 	if e.quit {
@@ -583,8 +593,13 @@ func (e *Engine) tps() int {
 // Draw implements ebiten.Game: it clears the screen and draws the queue the
 // last Update extracted. It never reads the World. Entities are drawn
 // interpolated between their last two ticks, and the shader Time uniform is
-// the simulation time interpolated the same way (see [shaderTime]).
+// the simulation time interpolated the same way (see [shaderTime]). A
+// [Tool] that is a [DrawGate] can skip frames; Draw then leaves screen as
+// it is.
 func (e *Engine) Draw(screen *ebiten.Image) {
+	if e.skipDraw() {
+		return
+	}
 	now := time.Now()
 	alpha := 1.0
 	if !e.lastUpdate.IsZero() {
@@ -595,6 +610,9 @@ func (e *Engine) Draw(screen *ebiten.Image) {
 		// shows while it loads.
 		screen.Fill(color.Black)
 		return
+	}
+	if e.gate != nil {
+		e.rememberFrame()
 	}
 	screen.Fill(e.cfg.Background)
 	r := e.Renderer()
@@ -648,6 +666,7 @@ func (e *Engine) DrawFinalScreen(screen ebiten.FinalScreen, offscreen *ebiten.Im
 func (e *Engine) Layout(outW, outH int) (int, int) {
 	w, h := e.layout.Size(outW, outH)
 	e.screen.Size = image.Pt(w, h)
+	e.drawn.layout = image.Pt(outW, outH)
 	return w, h
 }
 

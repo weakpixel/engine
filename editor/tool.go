@@ -44,12 +44,17 @@ func (p *sharedSource) Poll(f *input.Frame, ch *input.DeviceChanges) {
 // [Session.Pause] paused it); in edit mode it handles the mouse and pauses
 // the game. A paused game runs one tick after [Session.Step].
 func (s *Session) Tick(e *game.Engine) game.TickMode {
+	if s.pace != nil {
+		s.pace.begin()
+	}
 	if s.play {
+		s.paceTick(false)
 		if !s.paused {
 			return game.TickRun
 		}
 		return s.stepOrPause()
 	}
+	prevMouse, prevCam := s.mouse, s.camState()
 	if !s.editCamSet {
 		// The first edit tick: keep the game's camera for Play.
 		s.gameCamera, s.editCamSet = *e.Camera(), true
@@ -75,6 +80,7 @@ func (s *Session) Tick(e *game.Engine) game.TickMode {
 	cam.PrevPos = cam.Pos // the editor camera jumps; no blending between ticks
 	s.reportCamera()
 	s.reportLayers()
+	s.paceTick(s.src != nil && s.editActivity(prevMouse, prevCam))
 	return s.stepOrPause()
 }
 

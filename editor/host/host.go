@@ -132,7 +132,7 @@ func Run(g Game) error {
 			return b, ok
 		}
 	}
-	e, _, err := Build(g, p)
+	e, sess, err := Build(g, p)
 	if err != nil {
 		return err
 	}
@@ -146,6 +146,11 @@ func Run(g Game) error {
 	ebiten.SetWindowSize(1280, 720)
 	ebiten.SetWindowTitle("Weakpixel Engine editor")
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
+	// The session skips frames when nothing changed (game.DrawGate): the
+	// screen must keep the last frame instead of being cleared. Every drawn
+	// frame fills the whole screen, so nothing else changes.
+	ebiten.SetScreenClearedEveryFrame(false)
+	wakeOnInput(sess.Wake)
 	// In a web page the screen is transparent, so the bars around the
 	// game's letterboxed screen show the page's background (the host's
 	// light or dark look) instead of black.
@@ -182,7 +187,8 @@ func Build(g Game, p Page) (*game.Engine, *editor.Session, error) {
 		path = g.Level
 	}
 	b := &backdrops{g: g, fsys: fsys}
-	ecfg := editor.Config{Path: path}
+	// A headless run ticks on its own clock (RunHeadless): no pacing.
+	ecfg := editor.Config{Path: path, FixedRate: p.Headless}
 	if stage == StagePrefab {
 		ecfg.Stage = &editor.Stage{Grid: prefabGrid}
 		cfg.Background = prefabBackground

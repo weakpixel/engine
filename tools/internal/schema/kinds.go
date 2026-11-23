@@ -184,6 +184,11 @@ func projectShape() (*god.TypeSchema, error) {
 				"background": str("Background colour as #rrggbb."),
 				"grid":       {Type: "number", Description: "Grid step in world units; 0 draws no grid.", Minimum: min0},
 			}),
+			"rate": section("Tick rates of the editor build, in ticks per second.", map[string]*god.TypeSchema{
+				"idle":   integer("Rate while nothing happens in edit mode (default 10).", 0),
+				"active": integer("Rate while the user works in the view (default 60).", 1),
+				"hidden": integer("Rate while the view is not on screen; 0 stops ticks (default 0).", 0),
+			}),
 		}),
 	}), nil
 }

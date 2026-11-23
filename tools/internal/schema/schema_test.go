@@ -101,7 +101,7 @@ func TestKindsAcceptSamples(t *testing.T) {
 	for _, tc := range []struct{ kind, doc string }{
 		{"sheet", `{"image": "a.png", "frameW": 16, "frameH": 16, "margin": 1, "spacing": 2, "pivot": {"x": 0.5, "y": 1}}`},
 		{"library", `{"entries": {"global": ["global/fonts/ui.ttf#16"]}}`},
-		{"weakpixel", `{"god": {"specs": "god", "out": "o.json"}, "schema": {"out": "s"}, "assets": {"root": "assets"}, "editor": {"tags": ["editor"], "snap": 8, "screenshots": "shots", "prefab": {"grid": 16}}}`},
+		{"weakpixel", `{"god": {"specs": "god", "out": "o.json"}, "schema": {"out": "s"}, "assets": {"root": "assets"}, "editor": {"tags": ["editor"], "snap": 8, "screenshots": "shots", "prefab": {"grid": 16}, "rate": {"idle": 5, "active": 60, "hidden": 0}}}`},
 	} {
 		if err := shape[tc.kind].Validate([]byte(tc.doc)); err != nil {
 			t.Errorf("%s: %v", tc.kind, err)

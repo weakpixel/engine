@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"image"
 	"slices"
+	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 
@@ -50,6 +51,10 @@ type Config struct {
 	// Stage makes the session a prefab stage: see [Stage]. Nil, the
 	// default, is the level editor.
 	Stage *Stage
+	// FixedRate turns pacing off: the session never changes the tick rate
+	// and every frame is drawn. A headless run sets it, since it ticks on
+	// its own clock. See [Session.SetRates].
+	FixedRate bool
 }
 
 // Stage configures a session as a prefab stage: an empty scene to edit one
@@ -220,13 +225,20 @@ type Session struct {
 	pixel *ebiten.Image
 	frame input.Frame
 	devs  input.DeviceChanges
+	// pace picks the tick rate and the drawn frames (pace.go); nil with
+	// Config.FixedRate.
+	pace *pacer
 }
 
 // New returns a session in edit mode with no level. It does nothing until
 // it is attached to an engine (game.Config.Tool) and [Session.Open] is
 // called.
 func New(cfg Config) *Session {
-	return &Session{cfg: cfg, objs: map[string]*object{}, alpha: newAlphaCache()}
+	s := &Session{cfg: cfg, objs: map[string]*object{}, alpha: newAlphaCache()}
+	if !cfg.FixedRate {
+		s.pace = newPacer(ebiten.TPS, ebiten.SetTPS, time.Now)
+	}
+	return s
 }
 
 // Name returns the top-level "name" of the last document [Session.Open]

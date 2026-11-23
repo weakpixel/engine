@@ -6,8 +6,8 @@
 // Game → host: ready, applied, objects, selection, edit, mode, create,
 // choose, camera, mapLayers, screenshot, entities, status, error. Host →
 // game: document, open, assetsChanged, select, drop, create, assetField,
-// play, stop, step, pause, frame, camera, settings, mapLayerHidden,
-// screenshot, inspect, status, input.
+// play, stop, step, pause, frame, camera, settings, visible,
+// mapLayerHidden, screenshot, inspect, status, input.
 package bridge
 
 import (
@@ -96,6 +96,11 @@ type inbound struct {
 	// Background is the level stage's background in edit mode ("#rrggbb",
 	// "" for the game's own).
 	Background *string `json:"background"`
+	// Rate is the tick rates of pacing (editor.Rates); missing parts keep
+	// their value.
+	Rate *rateSetting `json:"rate"`
+	// visible: whether the host shows the view.
+	Visible *bool `json:"visible"`
 	// pause: Paused.
 	Paused bool `json:"paused"`
 	// inspect: IDs (none: every object of the level), Components (keys;
@@ -109,6 +114,14 @@ type inbound struct {
 	Mouse *inputMouse `json:"mouse"`
 	Pad   *inputPad   `json:"pad"`
 	Ticks int         `json:"ticks"`
+}
+
+// rateSetting is the "rate" part of a settings message, in ticks per
+// second; nil keeps a rate.
+type rateSetting struct {
+	Idle   *int `json:"idle"`
+	Active *int `json:"active"`
+	Hidden *int `json:"hidden"`
 }
 
 // stageSetting is the "stage" part of a settings message: the prefab
