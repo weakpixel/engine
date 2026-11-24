@@ -19,7 +19,7 @@ Write the plan **directly** to `<project>/plan/<plan-slug>.plan.md` with the Wri
 
 ## Steps
 
-1. **Understand the request.** If `$ARGUMENTS` is empty, ask what to plan. If the request is about the overall build-out, load the `ecs-roadmap` skill and plan the next unfinished phase (or the phase the user names).
+1. **Understand the request.** If `$ARGUMENTS` is empty, ask what to plan. If the request is about what to build next, load the `engine-status` skill first.
 2. **Load context.** Read the relevant `doc/*.md` pages (they are the spec) and load the domain skills that apply (for example `game-object-gen`). Read the code the plan will touch, and check what already exists rather than trusting the status column of doc/design/README.md.
 3. **Check existing plans.** `ls plan/`. If a plan already covers this request, update that file instead of creating a duplicate, and tell the user.
 4. **Resolve decisions.** For anything the docs leave open, recommend an option. Ask the user (AskUserQuestion) only when the choice really is theirs and changes the plan. Record every decision in the plan, including the ones you made yourself.

@@ -63,7 +63,7 @@ The Engine Runtime is the 2D game layer of the Weakpixel engine, built on the [E
 | `resolver` | The `types.AssetResolver` that turns asset keys in GOD files into handles and back. |
 | `assetkind` | The registry of asset kinds the resolver looks up; each asset package registers its own. |
 
-Which package imports which, and why: [design/architecture.md](../../design/architecture.md#engine-runtime-packages).
+Which package imports which, and why: [design/architecture.md](../../design/packages.md#engine-runtime-packages).
 
 ## Ground rules
 

@@ -242,7 +242,7 @@ An object is selected by `id`, or by `index` for one without an id. A field is a
 
 ### The game
 
-The game tools run the project's editor build as a child process and drive it over the [editor protocol](../design/editor.md#protocol), the one the VSCode extension speaks. The build needs `editor.game` (or `--game`): `game_start` runs `go build -tags <tags> -o build/wpix-mcp/<name>` in that package, never next to the source, and starts the binary there. **`build/` must be in `.gitignore`** (the generated starter's is; `game_start` warns when it is not). Only one game runs at a time; it is stopped when the server ends. The tools run the project's own code only: nothing an agent writes is compiled or executed except through the files it edits.
+The game tools run the project's editor build as a child process and drive it over the [editor protocol](../design/editor-protocol.md#protocol), the one the VSCode extension speaks. The build needs `editor.game` (or `--game`): `game_start` runs `go build -tags <tags> -o build/wpix-mcp/<name>` in that package, never next to the source, and starts the binary there. **`build/` must be in `.gitignore`** (the generated starter's is; `game_start` warns when it is not). Only one game runs at a time; it is stopped when the server ends. The tools run the project's own code only: nothing an agent writes is compiled or executed except through the files it edits.
 
 By default the game opens a window, so the developer sees what the agent does. `headless: true` (or `WEAKPIXEL_HEADLESS=1` in the game's environment) runs the same build without a window or sound, ticking at the game's rate, for CI and machines without a display. A headless game draws nothing: `step`, `play` and the edit tools work, `screenshot` is refused.
 

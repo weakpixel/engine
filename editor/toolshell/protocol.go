@@ -8,7 +8,7 @@ import (
 
 // The tool protocol is JSON objects with a "type", over the same page
 // transport as the level editor (hostlink.Version is sent in ready). See
-// doc/design/editor.md#tools for the table.
+// doc/design/tool-shell.md#tools for the table.
 
 // Transport sends one message to the host. It is called on the game
 // goroutine. It is the same shape as hostlink.Transport,

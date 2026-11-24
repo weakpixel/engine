@@ -11,5 +11,5 @@
 // Everything but tool.go is plain Go without Ebiten: the presets and
 // built-in sprites, the edits, the visibility rules and the panel are tested
 // without a window. The package never imports debugui; the shell draws the
-// panel. See doc/design/editor.md#tools.
+// panel. See doc/design/tool-shell.md#tools.
 package fxedit

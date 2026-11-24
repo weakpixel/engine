@@ -12,5 +12,5 @@
 // disk with its own undo natively, the host's document in VSCode.
 //
 // The package imports neither debugui nor the editor host, so the wasm build
-// needs no go.sum entries beyond the engine's. See doc/design/editor.md#tools.
+// needs no go.sum entries beyond the engine's. See doc/design/tool-shell.md#tools.
 package toolshell

@@ -8,5 +8,5 @@
 // File, then sheetfile.Encode, then one Shell.Edit, so the file the tool
 // writes is one the atlas loader accepts. Everything but tool.go is plain Go
 // without Ebiten and is tested without a display. The package never imports
-// debugui; the shell draws the panel. See doc/design/editor.md#tools.
+// debugui; the shell draws the panel. See doc/design/tool-shell.md#tools.
 package sheetedit

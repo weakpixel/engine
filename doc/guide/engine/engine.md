@@ -169,7 +169,7 @@ Where the PNG goes (`Config.Screenshots`):
 | Native | A file. `Dir` (default `screenshots`, relative to the working directory, created on first use) and the name `screenshot-YYYYMMDD-HHMMSS-<tick>.png` in local time; an existing name gets `-2`, `-3` before `.png`. |
 | Browser | A download with the same name. `Dir` and `Path` are ignored and `ShotResult.Path` stays empty. |
 
-`Screenshots.Sink func(game.ShotResult) error` replaces both: it receives every successful capture (with `PNG`, without `Path`) on the game goroutine before `Done`, and a returned error becomes `Err`. `Engine.SetScreenshotSink` sets it later. Editors use it to send captures to their host: under the [level editor and the tools](../../design/editor.md#protocol) the game never writes a file.
+`Screenshots.Sink func(game.ShotResult) error` replaces both: it receives every successful capture (with `PNG`, without `Path`) on the game goroutine before `Done`, and a returned error becomes `Err`. `Engine.SetScreenshotSink` sets it later. Editors use it to send captures to their host: under the [level editor and the tools](../../design/editor-protocol.md#protocol) the game never writes a file.
 
 ### Hotkey and environment variables
 
@@ -192,7 +192,7 @@ A native program that drives an editor build (the [MCP server](../tools.md#the-g
 
 | Variable | Effect |
 | --- | --- |
-| `WEAKPIXEL_BRIDGE` | `host:port` of the host's TCP listener. The editor bridge connects to it, sends `WEAKPIXEL_BRIDGE_TOKEN` and a newline, then speaks the [editor protocol](../../design/editor.md#protocol) as JSON lines. When the host closes the connection the game quits. A host that cannot be reached is logged and the editor runs plain. |
+| `WEAKPIXEL_BRIDGE` | `host:port` of the host's TCP listener. The editor bridge connects to it, sends `WEAKPIXEL_BRIDGE_TOKEN` and a newline, then speaks the [editor protocol](../../design/editor-protocol.md#protocol) as JSON lines. When the host closes the connection the game quits. A host that cannot be reached is logged and the editor runs plain. |
 | `WEAKPIXEL_BRIDGE_TOKEN` | The secret the game sends first; the host refuses a connection that does not present it. |
 | `WEAKPIXEL_STAGE` | `level` or `prefab`: the editor stage. |
 | `WEAKPIXEL_PATH` | The asset key of the first file. |

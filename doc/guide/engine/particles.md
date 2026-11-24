@@ -131,4 +131,4 @@ Both apply at spawn only. A live particle keeps its direction and size when the 
 - Set `max` to what the effect needs. It sizes the pool and caps the work.
 - A simulation tick and the extract allocate nothing once the pools exist; the system looks the effect up once per entity per tick.
 - Measured numbers: [engine README](README.md#performance).
-- Not built: flipbook particles, curves and gradients, collisions, sub-emitters, trails. The design decisions are in [engine-renderer.md](../../design/engine-renderer.md#particles).
+- Not built: flipbook particles, curves and gradients, collisions, sub-emitters, trails. The design decisions are in [engine-renderer.md](../../design/simulation.md#particles).
