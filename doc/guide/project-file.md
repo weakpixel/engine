@@ -40,6 +40,7 @@
 | `editor.screenshots` | VSCode extension | Folder the extension saves [screenshots](engine/engine.md#screenshots) of the level editor and the tool panels into, relative to this file; the editor build never writes files itself (see the [protocol](../design/editor.md#protocol)) | `screenshots` |
 | `editor.prefab.background` | VSCode extension | Background of the [prefab stage](engine/editor.md#stages) as `#rrggbb` | `#24242a` |
 | `editor.prefab.grid` | VSCode extension | Grid step of the prefab stage in world units; 0 draws no grid | 16 |
+| `editor.rate.idle`, `editor.rate.active`, `editor.rate.hidden` | Editor hosts | Tick rates of the editor build's [pacing](engine/editor.md#pacing): while nothing happens in edit mode, while you work in the view, while the view is hidden (0 stops ticks) | 10, 60, 0 |
 
 With `assets.root` set, `wpix assets` runs without its `<root>` argument (`wpix assets check`, `wpix assets keys --pkg main -o zz__gen.assets.go`); a root on the command line wins.
 
@@ -49,7 +50,7 @@ With `assets.root` set, `wpix assets` runs without its `<root>` argument (`wpix 
 - **Paths** are relative to the directory holding the file.
 - **Unknown keys are errors.** All of them are reported at once (`unknown key "god.spec"`), as is a section that is not an object (`god: want an object`). A typo is never silently ignored.
 - **Flags win.** A command-line input, root or `-o` overrides the file.
-- **Values are checked.** `editor.snap` and `editor.prefab.grid` must not be negative, `editor.prefab.background` is `#rrggbb`, and `assets.prefabs` stays inside the root. Every problem is reported at once.
+- **Values are checked.** `editor.snap` and `editor.prefab.grid` must not be negative, `editor.prefab.background` is `#rrggbb`, `editor.rate.idle` and `editor.rate.hidden` are 0 or more and `editor.rate.active` 1 or more, and `assets.prefabs` stays inside the root. Every problem is reported at once.
 
 Go programs read the file with package `github.com/weakpixel/engine/project` (`project.Load`), which applies these rules; an editor host in another module uses it too, and `github.com/weakpixel/engine/jsonedit` for minimal edits of level and prefab text.
 

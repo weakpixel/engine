@@ -59,6 +59,12 @@ func TestLoad(t *testing.T) {
 			},
 		},
 		{
+			name:  "editor rates",
+			file:  `{"editor": {"rate": {"idle": 5, "hidden": 0}}}`,
+			start: ".",
+			want:  Settings{EditorRate: EditorRate{Idle: new(5), Hidden: new(0)}},
+		},
+		{
 			name:    "nested unknown keys are reported with their path",
 			file:    `{"editor": {"prefab": {"colour": "#fff", "grid": 16}, "gam": "x"}, "assets": {"roots": "a"}}`,
 			start:   ".",
@@ -72,9 +78,9 @@ func TestLoad(t *testing.T) {
 		},
 		{
 			name:    "bad values are all reported",
-			file:    `{"assets": {"prefabs": "../x"}, "editor": {"snap": -1, "prefab": {"background": "red", "grid": -2}}}`,
+			file:    `{"assets": {"prefabs": "../x"}, "editor": {"snap": -1, "prefab": {"background": "red", "grid": -2}, "rate": {"idle": -1, "active": 0, "hidden": -2}}}`,
 			start:   ".",
-			wantErr: []string{`assets.prefabs: "../x" must be a folder inside assets.root`, "editor.snap: -1 is negative", `editor.prefab.background: "red" is not a #rrggbb colour`, "editor.prefab.grid: -2 is negative"},
+			wantErr: []string{`assets.prefabs: "../x" must be a folder inside assets.root`, "editor.snap: -1 is negative", `editor.prefab.background: "red" is not a #rrggbb colour`, "editor.prefab.grid: -2 is negative", "editor.rate.idle: -1 is below 0", "editor.rate.active: 0 is below 1", "editor.rate.hidden: -2 is below 0"},
 		},
 		{
 			name:    "bad JSON",

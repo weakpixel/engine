@@ -59,11 +59,14 @@ func New(cfg editor.Config, t Transport) *Bridge {
 
 // Receive queues one message from the host. It is safe to call from any
 // goroutine (a JavaScript callback, a reader of stdin); the message is
-// handled at the start of the next tick.
+// handled at the start of the next tick, which comes within a frame:
+// Receive wakes the session (editor.Session.Wake).
 func (b *Bridge) Receive(msg []byte) {
 	b.mu.Lock()
 	b.inbox = append(b.inbox, slices.Clone(msg))
 	b.mu.Unlock()
+	// A slow-ticking (idle or hidden) game handles it within a frame.
+	b.Wake()
 }
 
 // Tick implements game.Tool: it handles the queued messages, then lets the
@@ -89,12 +92,20 @@ func (b *Bridge) Tick(e *game.Engine) game.TickMode {
 	return b.Session.Tick(e)
 }
 
+// readOnly are the messages that change nothing the game draws, so they
+// do not make a paced game draw its next frame (a host may poll them).
+var readOnly = map[string]bool{"status": true, "inspect": true, shotproto.Type: true}
+
 // handle applies one host message.
 func (b *Bridge) handle(raw []byte) {
 	var m inbound
 	if err := json.Unmarshal(raw, &m); err != nil {
 		b.sendError(fmt.Errorf("bridge: bad message: %w", err))
 		return
+	}
+	if !readOnly[m.Type] {
+		// It may change the level or what the session draws over it.
+		b.Invalidate()
 	}
 	switch m.Type {
 	case "document":
@@ -136,6 +147,12 @@ func (b *Bridge) handle(raw []byte) {
 		b.Frame()
 	case "settings":
 		b.settings(m)
+	case "visible":
+		if m.Visible == nil {
+			b.sendError(fmt.Errorf("bridge: visible: no visible field"))
+			return
+		}
+		b.SetVisible(*m.Visible)
 	case shotproto.Type:
 		var r shotproto.Request
 		if err := json.Unmarshal(raw, &r); err != nil {
@@ -162,6 +179,9 @@ func (b *Bridge) settings(m inbound) {
 	if m.Background != nil && !b.InStage() {
 		b.setEditBackground(*m.Background)
 	}
+	if m.Rate != nil {
+		b.setRate(*m.Rate)
+	}
 	p := m.Stage
 	if p == nil || !b.InStage() {
 		return
@@ -176,6 +196,23 @@ func (b *Bridge) settings(m inbound) {
 			return
 		}
 		b.Engine().SetBackground(c)
+	}
+}
+
+// setRate applies the parts of a settings "rate" over the session's
+// rates; bad rates answer an error and change nothing.
+func (b *Bridge) setRate(p rateSetting) {
+	r := b.Rates()
+	for _, f := range []struct {
+		v   *int
+		dst *int
+	}{{p.Idle, &r.Idle}, {p.Active, &r.Active}, {p.Hidden, &r.Hidden}} {
+		if f.v != nil {
+			*f.dst = *f.v
+		}
+	}
+	if err := b.SetRates(r); err != nil {
+		b.sendError(fmt.Errorf("bridge: settings: %w", err))
 	}
 }
 

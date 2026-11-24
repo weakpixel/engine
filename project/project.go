@@ -67,6 +67,21 @@ type Settings struct {
 	// EditorPrefabGrid is the prefab stage's grid step in world units
 	// ("editor.prefab.grid", 0: no grid); nil for the default.
 	EditorPrefabGrid *float64
+	// EditorRate holds the editor build's tick rates ("editor.rate"); a
+	// nil field keeps the host's default.
+	EditorRate EditorRate
+}
+
+// EditorRate is "editor.rate": the tick rates of the editor build in ticks
+// per second (see editor.Rates). Nil keeps the default.
+type EditorRate struct {
+	// Idle is the rate while nothing happens in edit mode (0 or more).
+	Idle *int `json:"idle,omitempty"`
+	// Active is the rate while the user works in the view (1 or more).
+	Active *int `json:"active,omitempty"`
+	// Hidden is the rate while the view is not on screen (0 or more; 0
+	// stops ticks).
+	Hidden *int `json:"hidden,omitempty"`
 }
 
 // file is the JSON layout of the settings file.
@@ -94,6 +109,7 @@ type file struct {
 			Background string   `json:"background"`
 			Grid       *float64 `json:"grid"`
 		} `json:"prefab"`
+		Rate *EditorRate `json:"rate"`
 	} `json:"editor"`
 }
 
@@ -214,6 +230,18 @@ func parse(data []byte, dir string) (*Settings, error) {
 				errs = append(errs, fmt.Errorf("editor.prefab.grid: %v is negative", *p.Grid))
 			}
 		}
+		if r := e.Rate; r != nil {
+			s.EditorRate = *r
+			for _, c := range []struct {
+				name string
+				v    *int
+				min  int
+			}{{"idle", r.Idle, 0}, {"active", r.Active, 1}, {"hidden", r.Hidden, 0}} {
+				if c.v != nil && *c.v < c.min {
+					errs = append(errs, fmt.Errorf("editor.rate.%s: %d is below %d", c.name, *c.v, c.min))
+				}
+			}
+		}
 	}
 	if err := errors.Join(errs...); err != nil {
 		return nil, err
@@ -232,8 +260,9 @@ var known = map[string][]string{
 	"godDoc":        {"out"},
 	"schema":        {"out"},
 	"assets":        {"root", "prefabs"},
-	"editor":        {"game", "tags", "snap", "screenshots", "prefab"},
+	"editor":        {"game", "tags", "snap", "screenshots", "prefab", "rate"},
 	"editor.prefab": {"background", "grid"},
+	"editor.rate":   {"idle", "active", "hidden"},
 }
 
 // checkKeys reports every unknown key of data at once, so a typo never

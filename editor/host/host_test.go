@@ -400,13 +400,31 @@ func TestHeadlessNeedsHost(t *testing.T) {
 func TestBuildHeadless(t *testing.T) {
 	g := newTestGame()
 	g.Config = func(fsys fs.FS) (game.Config, error) { return game.Config{FS: fsys}, nil }
-	e, _, err := Build(g.Game, Page{Headless: true})
+	e, s, err := Build(g.Game, Page{Headless: true})
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer e.Close()
 	if err := e.Update(); err != nil {
 		t.Fatal(err)
+	}
+	// RunHeadless ticks on its own clock: the session must not pace it.
+	if s.Rates() != (editor.Rates{}) || !s.DrawFrame(e) {
+		t.Errorf("a headless session paces the game: rates %+v", s.Rates())
+	}
+}
+
+// TestBuildPaces: a session in a window paces the game with the default
+// rates.
+func TestBuildPaces(t *testing.T) {
+	g := newTestGame()
+	e, s, err := Build(g.Game, Page{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer e.Close()
+	if s.Rates() != editor.DefaultRates {
+		t.Errorf("rates %+v, want the defaults", s.Rates())
 	}
 }
 
