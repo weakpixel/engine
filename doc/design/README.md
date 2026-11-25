@@ -19,7 +19,7 @@ Pages stay under 16 KB and hold one sentence per line (`TestDesignPageBudget` in
 | [simulation.md](simulation.md) | Particles, tweens, the attachment hierarchy | Built |
 | [physics.md](physics.md) | Collision detection and physics | Built |
 | [scenes.md](scenes.md) | The scene stack, room transitions, the startup screen | Built |
-| [editor.md](editor.md) | The level editor core (`editor.Session`): host and stages, applying documents, modes | Built |
+| [editor.md](editor.md) | The level editor core (`editor.Session`): host and stages, attached objects in the viewport, applying documents, modes | Built |
 | [editor-protocol.md](editor-protocol.md) | A message between the level editor and its host (`editor/bridge`, the extension's `controller.ts`) | Built, version 0 |
 | [editor-extension.md](editor-extension.md) | How the VSCode extension hosts the editor and the tools | Built |
 | [tool-shell.md](tool-shell.md) | The `wpix-editor` shell: kind table, tool contract, panels, documents, the tool protocol | Built |

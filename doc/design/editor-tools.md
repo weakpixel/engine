@@ -36,7 +36,6 @@ Everything but `tool.go` is plain Go without Ebiten.
   In VSCode, New Particle Effect starts the tool on a `MemoryDocument` holding the smoke preset (natively a missing file starts from the same effect, see the starters above).
   Save as writes the effect and sprite natively through `Shell.Create` and continues on a `FileDocument` with the undo history; in VSCode the wasm build cannot write, so `Create` sends the `create` message and the extension writes and reopens.
   The target is asked about before it is overwritten (the button becomes Overwrite?).
-  `bridge.Version` is unchanged.
 - **A document that does not parse** is handled as in the anim tool; a missing image or shader is a Problems finding and a placeholder, not a failure.
 - **Not built:** curves and gradients over life, sub-emitters, trails and flipbooks (not in the engine), A/B snapshots, atlas frames in the image picker (only files), a live level as background.
 
@@ -86,5 +85,5 @@ Everything but `tool.go` is plain Go without Ebiten.
   Above `sheetedit.MaxListed` (4096) frames the list stays empty and only the cells on screen are outlined, so a frame width of 1 typed on a big image does not send a list of thousands of entries to the panel.
 - **New sheets.**
   `--image` with a file that does not exist starts an unsaved document (`sheetedit.NewSheet`, `sheetfile.Starter`).
-  In VSCode the extension writes the starter text itself, so the protocol and `bridge.Version` are unchanged.
+  In VSCode the extension writes the starter text itself.
 - **Not built:** pivot editing, frame names, trimming empty cells.

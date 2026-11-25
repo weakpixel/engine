@@ -32,7 +32,6 @@ Decisions:
   A cap of eight bounds the pool memory (each lane has its own `max`).
   Editing a file restarts a pool only when a key that shapes the cycle changed (duration, loop, burst, max, shape, shapeSize); other keys apply in place so live particles survive a drag in the tool.
   The file is not a prefab, so it has no variants.
-  `bridge.Version` is unchanged: the protocol only learned the `.fx.json` suffix as an asset kind.
 - **The file format is its own package.**
   `particles/fxfile` holds `Emitter`, `Spec`, `Decode` and `Encode` and imports only `gfx` and `xmath`, so the `fx` tool and `wpix mcp` check effects exactly as the loader does without linking Ebiten (as `anim/animfile` does for animations).
   It sits under `particles` because the format belongs to that runtime package.
@@ -114,4 +113,4 @@ Decisions:
   Mirroring `Local` from the `Transform` each tick was declined: `Local` would have two meanings, and `SetPlace(..., keepWorld)` gives the no-jump switch back to relative on demand.
 - **Orphans are deleted by the system**, from the chain walk, after the loop, so a whole subtree goes in one pass without child lists.
 
-Not built: running the propagation inside physics substeps, a physics warning for bodies on children, inheriting `FlipX`, ordered children, named paths, relationship pairs, editor support, Lua bindings.
+Not built: running the propagation inside physics substeps, a physics warning for bodies on children, inheriting `FlipX`, ordered children, named paths, relationship pairs, re-parenting in the editor, Lua bindings.
