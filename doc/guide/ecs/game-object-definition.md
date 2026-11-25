@@ -585,6 +585,8 @@ The object type sets the **minimum** of an object, not its limit. An object, in 
 }}
 ```
 
+A tool that runs without the game's code (the editor's prefab stage) does not register the game's component types. `god.RegisterDataOnly(r)` reads a GOD file and records the components and object classes no package registered as **data only**: `CheckComponents` accepts such a key and checks its value against the schema of the GOD file, `DataOnlyComponent(key)` returns the schema, and nothing is decoded or put into a world. A registered type always wins over a GOD entry. A game never calls it.
+
 An entity without its optional component:
 
 ```json

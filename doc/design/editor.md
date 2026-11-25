@@ -39,7 +39,7 @@ VSCode extension (weakpixel-engine-vscode)    webview (Chromium)
 **The engine owns the entry.**
 Running the game's own `main` in the editor was brittle: it ran whatever `main` did (flags, window calls, `log.Fatal` on a missing file), every game copied the same bridge, `httpfs` and FS layering code, and the game hard-coded which level the editor owned.
 `editor/host` is the entry of an editor build instead.
-The game describes itself (`host.Game`: config, systems, prefab rendering) and the host connects the bridge, builds the FS, creates the engine and opens the file.
+The game describes itself (`host.Game`: config, systems) and the host connects the bridge, builds the FS, creates the engine and opens the file.
 A second `main` behind the `editor` build tag keeps the game's own `main` out of the wasm; both share the game's config and setup functions, so no package split is needed.
 Rejected: generating a main with `go build -overlay` (hides what runs), and a generic player shipped by the engine (it would not know the game's components, systems or Lua bindings).
 
@@ -48,12 +48,26 @@ A level is edited among the game: its systems run in edit mode if they opt in ([
 A prefab used to open the same way, so it sat at (0, 0) in the middle of a world, with the hero, the camera rig's bounds and a Play that ran the whole game around it.
 The prefab stage starts none of the game's systems and no levels, resets the camera rig, paints a neutral background and draws a grid and the origin over the picture (`editor.Stage`, drawn in `DrawFinal` in window pixels).
 Play and Step are no-ops.
-Rendering the prefab like the game does (layers, post effects) is the game's `Game.Prefab` hook.
+The `Game.Prefab` hook is gone: the stage runs no game code, so it needs nothing from the game.
 
 **The page names the stage.**
 The extension sets `weakpixelHost.stage` (`level` or `prefab`, by file suffix) and `weakpixelHost.path` (the first file's asset key) beside `assetBase`.
 Ebiten runs one game per process, so a change of stage reloads the page; switching between two files of the same stage uses `open`.
 These page fields are not protocol messages.
+
+**The prefab stage needs no game build.**
+Everything the stage does is generic: no `Game.Setup` runs, so there are no custom extract systems, the host owns the file text and edits it with splices, and the game only sends per-component `edit`s.
+A `*.prefab.json` therefore opens in `wpix-editor`'s wasm, the binary every host already builds for the tools (`filekind` kind `prefab` with `Stage` set: it runs `editor/host` with the built-in `host.PrefabGame()`, not a tool of the shell).
+The binary depends on the engine version only, so a host caches it and a change in the game's Go code never rebuilds it.
+Native `wpix-editor x.prefab.json` refuses, because a native window has no inspector.
+Levels keep the game's `-tags editor` build, which runs its systems.
+
+**Components the build does not know are data only.**
+The wasm does not link the game's packages, so a prefab may hold components only a GOD file names.
+The page lists every GOD file of the project in `weakpixelHost.god` (an array of file texts) and `host.Build` passes them to `god.RegisterDataOnly` ([game-objects.md](game-objects.md)).
+Such a component passes validation against its GOD schema, stays in the text untouched, shows and edits in the inspector from its schema and is not put into the world; `assetField` is answered from the same schema.
+A key that no registered package and no GOD file names is still "not registered", so typos stay errors.
+There is no fallback to the game's build: a game gets editor features through its own engine pin.
 
 **Listing.**
 HTTP cannot list directories, so the page also sets `weakpixelHost.files`: the asset keys of every file under the asset root, read when the page is made.

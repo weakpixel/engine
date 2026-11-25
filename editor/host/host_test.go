@@ -30,7 +30,7 @@ const emptyLevel = `{"objects":[]}`
 // testGame is a Game over an in-memory FS that records what the host calls.
 type testGame struct {
 	Game
-	setup, prefab int
+	setup int
 }
 
 func newTestGame() *testGame {
@@ -42,8 +42,7 @@ func newTestGame() *testGame {
 		Config: func(fsys fs.FS) (game.Config, error) {
 			return game.Config{NoAudio: true, FS: fsys, Width: 320, Height: 180, Input: game.InputConfig{Source: &input.ManualSource{}}}, nil
 		},
-		Setup:  func(*game.Engine) { g.setup++ },
-		Prefab: func(*game.Engine) { g.prefab++ },
+		Setup: func(*game.Engine) { g.setup++ },
 	}
 	return g
 }
@@ -68,8 +67,8 @@ func TestLevelStage(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer e.Close()
-	if g.setup != 1 || g.prefab != 0 {
-		t.Errorf("setup %d, prefab %d calls, want 1, 0", g.setup, g.prefab)
+	if g.setup != 1 {
+		t.Errorf("setup %d calls, want 1", g.setup)
 	}
 	if s.Level() == nil {
 		t.Error("the level is not open without a host page")
@@ -87,8 +86,8 @@ func TestPrefabStage(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer e.Close()
-	if g.setup != 0 || g.prefab != 1 {
-		t.Errorf("setup %d, prefab %d calls, want 0, 1", g.setup, g.prefab)
+	if g.setup != 0 {
+		t.Errorf("setup %d calls, want 0", g.setup)
 	}
 	s.Play()
 	s.Step()
@@ -432,4 +431,58 @@ func TestBuildPaces(t *testing.T) {
 func readLine(r *bufio.Reader) ([]byte, error) {
 	line, err := r.ReadBytes('\n')
 	return bytes.TrimRight(line, "\r\n"), err
+}
+
+// hostGOD names the component host:Armor and the class host:Knight (a
+// transform and a sprite plus the armor), which no package registers.
+const hostGOD = `{"version":0,"components":[{"group":"host","name":"Armor","schema":{"type":"object",
+"properties":{"Value":{"type":"integer"}},"required":["Value"]}}],
+"objects":[{"group":"host","class":"Knight","components":[
+{"component":"gfx:Transform"},{"component":"gfx:Sprite"},{"component":"host:Armor"}]}]}`
+
+const knightDoc = `{"objects":[{"id":"k","group":"host","class":"Knight","components":{
+"gfx:Transform":{"Pos":{"X":0,"Y":0},"PrevPos":{"X":0,"Y":0},"Rot":0,"Scale":{"X":1,"Y":1}},
+"gfx:Sprite":{"Layer":0,"Origin":{"X":0,"Y":0},"FlipX":false,"FlipY":false,"Tint":0,"Blend":0,"Hidden":false},
+"host:Armor":{"Value":3}}}]}`
+
+// TestPrefabGameDataOnly: the built-in game opens a prefab that holds a
+// component only a GOD file of the page names, served over HTTP like the
+// workspace of a host page, without any game code.
+func TestPrefabGameDataOnly(t *testing.T) {
+	files := fstest.MapFS{
+		"assets.catalog.json":  {Data: []byte(`{"version":0}`)},
+		"global/k.prefab.json": {Data: []byte(knightDoc)},
+	}
+	srv := httptest.NewServer(http.StripPrefix("/assets", http.FileServer(http.FS(files))))
+	defer srv.Close()
+	rec := &recordHost{}
+	var br *bridge.Bridge
+	connect := func(cfg editor.Config) (*bridge.Bridge, bool) { br = bridge.New(cfg, rec); return br, true }
+	page := Page{
+		Stage: StagePrefab, Path: "global/k.prefab.json", AssetBase: srv.URL + "/assets/",
+		Files: []string{"assets.catalog.json", "global/k.prefab.json"}, GOD: []string{hostGOD},
+		Connect: connect,
+	}
+	e, _, err := Build(PrefabGame(), page)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer e.Close()
+	msg, _ := json.Marshal(map[string]string{"type": "document", "text": knightDoc})
+	br.Receive(msg)
+	for range 400 {
+		if err := e.Update(); err != nil {
+			t.Fatal(err)
+		}
+		for _, m := range rec.msgs {
+			if m["type"] == "applied" {
+				if m["error"] != "" {
+					t.Fatalf("applied with error %v", m["error"])
+				}
+				return
+			}
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+	t.Fatalf("no applied message: %v", rec.msgs)
 }

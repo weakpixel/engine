@@ -26,6 +26,9 @@ func Path() string { return os.Getenv(EnvPath) }
 // Files returns nil: a native game lists its own assets.
 func Files() []string { return nil }
 
+// GOD returns nil: a native game registers its own components.
+func GOD() []string { return nil }
+
 // Headless reports whether WEAKPIXEL_HEADLESS is "1": the game runs without
 // a window (see editor/host).
 func Headless() bool { return os.Getenv(EnvHeadless) == "1" }

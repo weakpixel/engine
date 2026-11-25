@@ -90,6 +90,11 @@ Components merge by `group:name` and objects by `group:class`; identical definit
   A cached per-schema flag skips the walk for components without references, so their output is byte-identical to before.
   `Deserialize` is two-phase (check and collect ids, then create every entity before decoding any component) because references can point forward.
   One codec (`DecodeComponent`/`EncodeComponent`) serves `Deserialize`, `Serialize`, Lua and editors.
+- **Data-only components** let an editor open a document without the game's code.
+  `RegisterDataOnly` reads a GOD file and records the components and classes no package registered, with no ECS type, so storage, views and hot paths never see them.
+  `CheckComponents` accepts such a key and checks its value against the GOD schema; `ObjectComponents`, `Bind`, decoding and `Serialize` skip it as they skip any unregistered key.
+  A registered type always wins over a GOD entry, and a key neither registered nor in a GOD file stays an error.
+  A game never calls it; the engine-only prefab stage does ([editor.md](editor.md)).
 - **Prefabs are documents too.**
   A prefab file is a one-object GOD document, so everything that reads documents reads prefabs.
   An instance is expanded into a plain object *before* `Deserialize`'s two phases (a JSON merge patch per component, objects merged key by key, `null` setting null rather than deleting), so ids, references, validation, rollback and error texts need no prefab-specific code.

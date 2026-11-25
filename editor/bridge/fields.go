@@ -80,17 +80,22 @@ func (b *Bridge) fieldSchema(id string, path []string) (*god.TypeSchema, error) 
 		if !ok {
 			return nil, fmt.Errorf("unknown object type %s:%s", o.Group, o.Class)
 		}
-		if c, ok := god.ComponentOf(s, path[0]); ok {
-			ts := c.Schema
-			for _, p := range path[1:] {
-				if ts == nil || ts.Properties[p] == nil {
-					return nil, fmt.Errorf("%s has no field %s", c.Key(), strings.Join(path[1:], "."))
-				}
-				ts = ts.Properties[p]
-			}
-			return ts, nil
+		key, ts := path[0], (*god.TypeSchema)(nil)
+		if c, ok := god.ComponentOf(s, key); ok {
+			ts = c.Schema
+		} else if c, ok := god.DataOnlyComponent(key); ok {
+			// A component only a GOD file names (see god.RegisterDataOnly).
+			ts = c.Schema
+		} else {
+			return nil, fmt.Errorf("%s is not a registered component", key)
 		}
-		return nil, fmt.Errorf("%s is not a registered component", path[0])
+		for _, p := range path[1:] {
+			if ts == nil || ts.Properties[p] == nil {
+				return nil, fmt.Errorf("%s has no field %s", key, strings.Join(path[1:], "."))
+			}
+			ts = ts.Properties[p]
+		}
+		return ts, nil
 	}
 	return nil, fmt.Errorf("no object with id %q", id)
 }

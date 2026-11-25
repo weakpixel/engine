@@ -129,7 +129,6 @@ func main() {
 | `FS` | The game's own assets: a folder on disk (`os.DirFS`) or in-memory extras. An editor build embeds nothing (embedding stays a feature of the game's normal build). In VSCode the workspace's files are read first (over HTTP, so a saved file reloads in place) and these fill in what the workspace lacks; without VSCode they are the assets. Directories are listed from the page's file index (`weakpixelHost.files`, see the design) plus these files, because HTTP cannot list them. |
 | `Config` | The engine config over the FS the host built. The host sets `Tool`. |
 | `Setup` | Adds the game's systems to the engine. Level stage only. |
-| `Prefab` | Sets up rendering for the prefab stage (render layers, post effects). Optional. |
 | `Backdrop`, `NoBackdrop` | What surrounds the edited level, see [stages](#stages). |
 | `Level` | The level key opened when there is no VSCode (`go run -tags editor`), and the default first file. |
 
@@ -142,7 +141,11 @@ The extension tells the page which stage to run (`globalThis.weakpixelHost.stage
 | Stage | Files | Runs |
 | --- | --- | --- |
 | `level` | `*.level.json` | `Game.Setup` and the level's backdrop. The game starts paused; Play runs the game's systems. |
-| `prefab` | `*.prefab.json` | The engine's own stages only: no `Setup`, no levels, no camera rig, no input to the game. The prefab sits on a dark background with a grid of 16 world units and red and green axes at the origin. Play and Step do nothing. `Game.Prefab` can set up rendering. Animations and particles preview. |
+| `prefab` | `*.prefab.json` | The engine's own stages only: no `Setup`, no levels, no camera rig, no input to the game. The prefab sits on a dark background with a grid of 16 world units and red and green axes at the origin. Play and Step do nothing. Animations and particles preview. A host opens it in the engine-only `wpix-editor` build, not in the game's: a component only a GOD file of the project names (see [data-only components](#prefabs-without-the-games-build)) shows and edits from its schema. |
+
+#### Prefabs without the game's build
+
+A prefab's stage runs none of the game's code, so a host builds it from the engine's `tools/wpix-editor` (wasm) instead of the game, and a change in the game's Go code does not rebuild it. The host passes the project's GOD files to the page (`weakpixelHost.god`). A component that only a GOD file names, such as a game's own `game:Armor`, is **data only** there: it is checked against its GOD schema, kept in the file as written, shown and edited in the inspector, and not put into the world, so the prefab preview does not draw or run it. A component key in no GOD file is still an error. Levels keep the game's own build, which runs its systems.
 
 **Backdrop.** A level is edited among its map or world. The host picks the backdrop per file, never spawning the edited document (the session does): for `<name>.level.json` the sibling `<name>.tmj` (loaded alone), else the sibling `<name>.world` (its children's documents still spawn), else, with a library, the package's own level `<pkg>/<pkg>` (loaded with `LoadLevelBase` when `<pkg>/<pkg>.tmj` or `.world` exists, with the other documents). It reloads when the target changes, so a level never shows the previous level's world. A custom `Game.Backdrop` is called for the first file and when the editor opens a file of another package, and it should skip the edited document with `SpawnOptions.SkipDocuments`. A game whose systems load their own world sets `NoBackdrop` (for example a level system that loads and places its own world). A file at the root of the library, or in a package without a map of its own and no sibling map, has no backdrop.
 

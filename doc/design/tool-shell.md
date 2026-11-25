@@ -12,6 +12,7 @@ It is built from the user's module, like the level editor's game, and runs nativ
   `editor/filekind` (standard library only) lists every file kind once: its suffixes (the engine's own formats `.sheet.json`, `.anim.json`, `.fx.json` and the Aseprite exports in lower case only, the rest in any case), whether it is edited and whether it has sound.
   The file name is the only rule; the content is never looked at, as for the engine's loaders.
   `editorapp.Kinds` adds the tool of each kind, its help line and its starter.
+  A kind with `Stage` (the prefab) opens in the level editor's stage over the editor protocol, not in a tool: `editorapp.Kinds` and the tool contract tests skip it, `KindOf` refuses it, and `editorapp.Table` prints it with a `stage` marker.
   An edited kind (sheet, anim, fx) has its own editor; every other kind opens in the preview router of `viewer`, so a `*.sheet.json` has one tool, not an editor and an atlas preview.
   The suffix list lives in its own package because `viewer` routes by it and `editorapp` imports `viewer`.
   `editorapp.Table` prints the table in the form the extension's file lists are compared with.

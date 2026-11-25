@@ -62,23 +62,32 @@ func Path() string { return hostString("path") }
 // Files returns the asset keys of every file in the workspace's asset root
 // (globalThis.weakpixelHost.files), "" entries dropped. HTTP cannot list
 // directories, so this index is what the asset library lists.
-func Files() []string {
+func Files() []string { return stringList("files") }
+
+// stringList reads the array of strings weakpixelHost.key, "" entries dropped.
+func stringList(key string) []string {
 	host := js.Global().Get("weakpixelHost")
 	if host.Type() != js.TypeObject {
 		return nil
 	}
-	v := host.Get("files")
+	v := host.Get(key)
 	if v.Type() != js.TypeObject {
 		return nil
 	}
-	files := make([]string, 0, v.Length())
+	list := make([]string, 0, v.Length())
 	for i := range v.Length() {
 		if s := v.Index(i); s.Type() == js.TypeString && s.String() != "" {
-			files = append(files, s.String())
+			list = append(list, s.String())
 		}
 	}
-	return files
+	return list
 }
+
+// GOD returns the texts of the GOD files of the project
+// (globalThis.weakpixelHost.god), "" entries dropped. A page that opens a
+// prefab without the game's code names its components this way (see
+// god.RegisterDataOnly).
+func GOD() []string { return stringList("god") }
 
 // Headless returns false: a page always has a window.
 func Headless() bool { return false }

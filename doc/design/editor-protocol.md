@@ -5,6 +5,8 @@ The design of the editor around it is in [editor.md](editor.md); the tool shell'
 
 ## Protocol
 
+The page the game runs in also carries fields that are not messages (`weakpixelHost.stage`, `path`, `assetBase`, `files`, `untitled`, and `god`, the texts of the project's GOD files that name the components of a prefab stage without the game's build, see [editor.md](editor.md)); they stay outside the version.
+
 JSON objects with a `"type"`, version 0 (`bridge.Version`, sent in `ready`; it stays 0, with no compatibility code, until the first release).
 Components are named by their key `group:name` ([identity](../guide/ecs/game-object-definition.md#identity)) everywhere: in documents, `edit.component`, the first element of a `field` path and error texts.
 The bridge queues incoming messages and handles them at the start of the next tick, on the game goroutine, because a JavaScript callback can run while the game goroutine is blocked mid-frame.

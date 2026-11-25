@@ -42,8 +42,10 @@ type Kind struct {
 	Untitled func() []byte
 }
 
-// Kinds are the file kinds in the order of [filekind.All]. There is no
-// global registry: a new kind is a line in filekind and one here.
+// Kinds are the kinds of [filekind.All] that open in a tool of the tool
+// shell, in that order: the stage kinds (a prefab) open in the level
+// editor's stage instead and have no tool. There is no global registry: a
+// new kind is a line in filekind and one here.
 var Kinds = []Kind{
 	{Info: info(filekind.Sheet), Tool: "sheet", New: sheetedit.New,
 		Summary: "edit a grid sprite sheet: frame size, margin and spacing over the texture, frame count and the index under the mouse",
@@ -105,6 +107,9 @@ func KindOf(name string) (Kind, error) {
 	if err != nil {
 		return Kind{}, err
 	}
+	if i.Stage {
+		return Kind{}, fmt.Errorf("%s: a %s opens in VSCode or Weakpixel Studio", filepath.Base(name), i.Kind)
+	}
 	for _, k := range Kinds {
 		if k.Kind == i.Kind {
 			return k, nil
@@ -123,16 +128,20 @@ func (k Kind) MissingError(file string) error {
 	return fmt.Errorf("%s does not exist: give --%s <%s> to start a new %s", name, k.Flag, k.FlagValue, k.Noun)
 }
 
-// Table prints the kinds one per line as "<suffixes> <edit|preview>
-// [sound]", the form the VSCode extension's lists are compared with.
+// Table prints every kind of [filekind.All] one per line as "<suffixes>
+// <edit|preview> [stage] [sound]", the form the VSCode extension's lists
+// are compared with.
 func Table() string {
 	var b strings.Builder
-	for _, k := range Kinds {
+	for _, k := range filekind.All {
 		mode := "preview"
 		if k.Edits {
 			mode = "edit"
 		}
 		fmt.Fprintf(&b, "%s %s", strings.Join(k.Suffixes, " "), mode)
+		if k.Stage {
+			b.WriteString(" stage")
+		}
 		if k.Sound {
 			b.WriteString(" sound")
 		}
