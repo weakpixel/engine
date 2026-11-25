@@ -486,3 +486,22 @@ func TestPrefabGameDataOnly(t *testing.T) {
 	}
 	t.Fatalf("no applied message: %v", rec.msgs)
 }
+
+// TestPrefabStageFillsWindow: the prefab stage's logical screen is the
+// window, so no letterbox bars show whatever the game's resolution is.
+func TestPrefabStageFillsWindow(t *testing.T) {
+	files := fstest.MapFS{"assets.catalog.json": {Data: []byte(`{"version":0}`)}}
+	srv := httptest.NewServer(http.StripPrefix("/assets", http.FileServer(http.FS(files))))
+	defer srv.Close()
+	page := Page{Stage: StagePrefab, AssetBase: srv.URL + "/assets/", Files: []string{"assets.catalog.json"}}
+	e, _, err := Build(PrefabGame(), page)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer e.Close()
+	for _, size := range [][2]int{{1280, 720}, {900, 1000}} {
+		if w, h := e.Layout(size[0], size[1]); w != size[0] || h != size[1] {
+			t.Errorf("Layout(%d, %d) = %d x %d, want the window size", size[0], size[1], w, h)
+		}
+	}
+}

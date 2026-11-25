@@ -24,7 +24,7 @@ func PrefabGame() Game {
 			if err != nil {
 				return game.Config{}, err
 			}
-			return game.Config{NoAudio: true, Library: lib, Width: 320, Height: 180, Camera: render.Camera{Zoom: 1}}, nil
+			return game.Config{NoAudio: true, Library: lib, Camera: render.Camera{Zoom: 1}}, nil
 		},
 	}
 }

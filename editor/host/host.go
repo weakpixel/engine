@@ -206,6 +206,10 @@ func Build(g Game, p Page) (*game.Engine, *editor.Session, error) {
 		ecfg.Stage = &editor.Stage{Grid: prefabGrid}
 		cfg.Background = prefabBackground
 		cfg.CameraRig = camera.Rig{}
+		// The stage fills the window like the tool pages do: with
+		// IntegerScale the logical screen is the window itself at scale 1,
+		// so no letterbox bars show whatever the game's own resolution is.
+		cfg.Width, cfg.Height, cfg.IntegerScale = fillWindow, fillWindow, true
 	} else if !g.NoBackdrop {
 		ecfg.OnOpen = b.open
 	}
@@ -371,3 +375,10 @@ func (b *backdrops) exists(key string) bool {
 	_, err := fs.Stat(b.fsys, key)
 	return err == nil
 }
+
+// fillWindow is the logical size a stage is configured with. With
+// IntegerScale the engine picks the largest whole scale that fits that size
+// in the window, which is 1 for any window smaller than this: the logical
+// screen is then the window itself, and the viewport, the mouse and the
+// overlays all work in the same pixels.
+const fillWindow = 1 << 14
