@@ -90,9 +90,12 @@ type inbound struct {
 	// outlines of edit mode, the level's background in edit mode and the
 	// prefab stage's look. Each part is
 	// applied only when present.
-	Snap      *float32      `json:"snap"`
-	Colliders *bool         `json:"colliders"`
-	Stage     *stageSetting `json:"stage"`
+	Snap      *float32 `json:"snap"`
+	Colliders *bool    `json:"colliders"`
+	// Animate lets the level animate in edit mode (default) or freezes it
+	// (Session.SetAnimate).
+	Animate *bool         `json:"animate"`
+	Stage   *stageSetting `json:"stage"`
 	// Background is the level stage's background in edit mode ("#rrggbb",
 	// "" for the game's own).
 	Background *string `json:"background"`

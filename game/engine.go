@@ -118,7 +118,10 @@ type Engine struct {
 	lastUpdate time.Time
 	// elapsed is the simulation time: the sum of the tick durations of all
 	// Updates so far. Draw derives the shader Time uniform from it.
-	elapsed  time.Duration
+	elapsed time.Duration
+	// frozen is set by SetAnimationsFrozen: the anim stage, animated tiles
+	// and the shader time stand still.
+	frozen   bool
 	frameLog *frameLog // nil unless Config.FrameLog is set
 
 	// paused is set for ticks a Tool runs in TickPause; the gates of the
@@ -554,7 +557,9 @@ func (e *Engine) Update() error {
 	e.sched.Run(e.world, dt)
 	e.updateShots()
 	e.ticks++
-	e.elapsed += dt
+	if !e.frozen {
+		e.elapsed += dt
+	}
 	if e.gate != nil {
 		e.noteAssetEvents()
 	}
@@ -616,7 +621,11 @@ func (e *Engine) Draw(screen *ebiten.Image) {
 	}
 	screen.Fill(e.cfg.Background)
 	r := e.Renderer()
-	r.SetTime(shaderTime(e.elapsed, time.Second/time.Duration(e.tps()), alpha))
+	timeAlpha := alpha
+	if e.frozen {
+		timeAlpha = 1 // Time stands at elapsed, not between two ticks
+	}
+	r.SetTime(shaderTime(e.elapsed, time.Second/time.Duration(e.tps()), timeAlpha))
 	r.Draw(screen, e.queue, e.camera, alpha)
 	if len(e.shots.queue) > 0 {
 		// Before the stats overlay, which a capture never contains.

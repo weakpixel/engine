@@ -55,6 +55,13 @@ func (s *System) Run(ctx *system.Context) {
 	s.advance(dt, true)
 }
 
+// RunPaused runs a tick that simulates nothing, as a paused [Clock] does:
+// live particles stay where they are, no emitter spawns, and the pools of
+// the emitters stay alive (a new emitter gets its pool, but no burst). The
+// engine runs it instead of Run while its animations are frozen (an
+// editor's edit mode). It does not allocate once the pools exist.
+func (s *System) RunPaused(*system.Context) { s.advance(0, false) }
+
 // advance runs one tick of dt for every emitter. With step false it only
 // keeps the pools alive (a paused simulation).
 func (s *System) advance(dt float32, step bool) {

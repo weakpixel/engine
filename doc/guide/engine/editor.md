@@ -96,6 +96,8 @@ Work in the view is a mouse move, a button or key held, the wheel, a drag, or a 
 
 `Session.SetRates(r)` sets the rates (`Rates.Check`: `Idle` and `Hidden` 0 or more, `Active` 1 or more; idle equal to active gives a fixed rate), `SetVisible` hides or shows the view (a session starts visible; showing it again counts as work), `TPS()` is the rate of the current state and `Draws()` counts the drawn frames. `Config.FixedRate` turns pacing off: the rate is never changed and every frame is drawn. A headless run (`editor/host.RunHeadless`) sets it, since it ticks on its own clock.
 
+A level with anything that moves on its own (a sprite clip, an animated tile, particles, an item with a shader, a post pass) changes on every tick, so it draws at the idle rate forever. `Session.SetAnimate(false)` stops that: outside Play (edit mode and a stage) the session calls [`Engine.SetAnimationsFrozen(true)`](engine.md#development-tools), so clips and animated tiles keep their frame, particles stand still and emit nothing, and the shader `Time` stays, and an idle view draws no frames. Play always animates. A session starts with `Animate()` true; the bridge sets it from `settings.animate`.
+
 ## Bridge
 
 `editor/bridge` puts the [JSON protocol](../../design/editor-protocol.md#protocol) in front of a session for a host such as the VSCode extension. `bridge.New(cfg, transport)` returns a `*Bridge` (it embeds the `*Session`; set it as `Config.Tool`); `Receive(msg)` queues a message from any goroutine. In a browser, `bridge.ConnectHost(cfg)` connects to the page's host script and returns false when there is none, so a game falls back to a plain session.

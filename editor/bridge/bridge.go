@@ -176,6 +176,9 @@ func (b *Bridge) settings(m inbound) {
 	if m.Colliders != nil {
 		b.SetColliders(*m.Colliders)
 	}
+	if m.Animate != nil {
+		b.SetAnimate(*m.Animate)
+	}
 	if m.Background != nil && !b.InStage() {
 		b.setEditBackground(*m.Background)
 	}

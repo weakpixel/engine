@@ -219,6 +219,8 @@ type Session struct {
 	shift, mod bool
 	// hideColliders turns the collider outlines of edit mode off.
 	hideColliders bool
+	// still freezes the game's animations outside Play (SetAnimate).
+	still bool
 	// alpha caches the visible bounds of sprite frames for picking.
 	alpha *alphaCache
 	// pixel is a white 1x1 image for drawing outlines, made on first use.
