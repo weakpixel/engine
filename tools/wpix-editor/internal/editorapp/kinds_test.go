@@ -1,22 +1,29 @@
 package editorapp
 
 import (
+	"slices"
 	"strings"
 	"testing"
 
 	"github.com/weakpixel/engine/editor/filekind"
 )
 
-// TestKindsCoverFilekind: one entry per file kind, in the same order, with
-// a tool; an edited kind has its own editor, every previewed kind the view
+// toolKinds is filekind.All without the stage kinds.
+func toolKinds() []filekind.Info {
+	return slices.DeleteFunc(slices.Clone(filekind.All), func(i filekind.Info) bool { return i.Stage })
+}
+
+// TestKindsCoverFilekind: one entry per file kind that has a tool, in the
+// same order, with a tool; an edited kind has its own editor, every previewed kind the view
 // router.
 func TestKindsCoverFilekind(t *testing.T) {
-	if len(Kinds) != len(filekind.All) {
-		t.Fatalf("Kinds has %d entries, filekind.All %d", len(Kinds), len(filekind.All))
+	want := toolKinds()
+	if len(Kinds) != len(want) {
+		t.Fatalf("Kinds has %d entries, filekind.All %d without stage kinds", len(Kinds), len(want))
 	}
 	for i, k := range Kinds {
-		if k.Kind != filekind.All[i].Kind {
-			t.Errorf("Kinds[%d] = %s, want %s", i, k.Kind, filekind.All[i].Kind)
+		if k.Kind != want[i].Kind {
+			t.Errorf("Kinds[%d] = %s, want %s", i, k.Kind, want[i].Kind)
 		}
 		if k.New == nil || k.Summary == "" {
 			t.Errorf("%s: no tool or summary", k.Kind)
@@ -41,6 +48,10 @@ func TestKindOf(t *testing.T) {
 		if k, err := KindOf(name); err != nil || k.Tool != tool {
 			t.Errorf("KindOf(%q) = %q, %v; want %q", name, k.Tool, err, tool)
 		}
+	}
+	// A prefab has no tool: it opens in the editor's stage.
+	if _, err := KindOf("a.prefab.json"); err == nil || !strings.Contains(err.Error(), "opens in VSCode or Weakpixel Studio") {
+		t.Errorf("KindOf(a.prefab.json) = %v", err)
 	}
 	if _, err := KindOf("notes.txt"); err == nil || !strings.Contains(err.Error(), "supported: ") {
 		t.Errorf("KindOf(notes.txt) = %v", err)
@@ -67,6 +78,7 @@ func TestTable(t *testing.T) {
 	const want = `.sheet.json edit
 .anim.json edit
 .fx.json edit
+.prefab.json edit stage
 .png .jpg .jpeg preview
 .atlas.json preview
 .ttf .otf preview

@@ -20,6 +20,7 @@ const (
 	Sheet    Kind = "sheet"    // a grid sprite sheet, edited
 	Anim     Kind = "anim"     // an animation definition, edited
 	Fx       Kind = "fx"       // a particle effect, edited
+	Prefab   Kind = "prefab"   // a prefab, edited in the level editor's prefab stage
 	Texture  Kind = "texture"  // an image
 	Atlas    Kind = "atlas"    // a texture atlas with named frames
 	Font     Kind = "font"     // a TrueType or OpenType font
@@ -43,6 +44,10 @@ type Info struct {
 	// Edits is true for a kind that opens in its editor; the others open in
 	// the preview.
 	Edits bool
+	// Stage is true for a kind that opens in the level editor's stage over
+	// the editor protocol (a Game Object document with an inspector), not in
+	// a tool of the tool shell. A stage kind is always edited.
+	Stage bool
 	// Sound is true for a kind whose tool plays sound: its page or window
 	// starts with the audio context open.
 	Sound bool
@@ -53,6 +58,7 @@ var All = []Info{
 	{Kind: Sheet, Suffixes: []string{".sheet.json"}, CaseSensitive: true, Edits: true},
 	{Kind: Anim, Suffixes: []string{".anim.json"}, CaseSensitive: true, Edits: true},
 	{Kind: Fx, Suffixes: []string{".fx.json"}, CaseSensitive: true, Edits: true},
+	{Kind: Prefab, Suffixes: []string{".prefab.json"}, CaseSensitive: true, Edits: true, Stage: true},
 	{Kind: Texture, Suffixes: []string{".png", ".jpg", ".jpeg"}},
 	{Kind: Atlas, Suffixes: []string{".atlas.json"}},
 	{Kind: Font, Suffixes: []string{".ttf", ".otf"}},

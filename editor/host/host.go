@@ -16,6 +16,7 @@ import (
 	"github.com/weakpixel/engine/editor/bridge"
 	"github.com/weakpixel/engine/editor/hostlink"
 	"github.com/weakpixel/engine/game"
+	"github.com/weakpixel/engine/god"
 	"github.com/weakpixel/engine/input"
 	"github.com/weakpixel/engine/tiled"
 	"github.com/weakpixel/engine/tilemap"
@@ -29,7 +30,7 @@ const (
 	// and the level's backdrop is loaded.
 	StageLevel Stage = "level"
 	// StagePrefab edits a prefab alone on a grid: no game systems, no
-	// levels, no game camera rig, and no Play.
+	// Game.Setup, no levels, no game camera rig, and no Play.
 	StagePrefab Stage = "prefab"
 )
 
@@ -54,9 +55,6 @@ type Game struct {
 	// Setup adds the game's systems and state to e. It runs in the level
 	// stage only, after e exists.
 	Setup func(e *game.Engine)
-	// Prefab sets up rendering for the prefab stage (render layers, post
-	// effects) on e. Nil leaves the config's defaults.
-	Prefab func(e *game.Engine)
 	// Backdrop loads what surrounds the level at key (its Tiled map or
 	// world) and returns a function that unloads it, or nil. The host calls
 	// it for the first file in a package (<package>/...) and whenever the
@@ -86,6 +84,12 @@ type Page struct {
 	Stage Stage
 	// Path is the asset key of the first file; "" means Game.Level.
 	Path string
+	// GOD holds the texts of the project's GOD files. Build registers the
+	// components and object classes they name that the program has not
+	// registered as data only (god.RegisterDataOnly), so a prefab that
+	// uses a component of the game opens without the game's code. A file
+	// that does not parse is logged and skipped.
+	GOD []string
 	// Files are the asset keys of the files under AssetBase. The host page
 	// lists them because HTTP cannot list directories.
 	Files []string
@@ -111,6 +115,7 @@ func PageFromHost() Page {
 		Stage:     Stage(hostlink.Stage()),
 		Path:      hostlink.Path(),
 		Files:     hostlink.Files(),
+		GOD:       hostlink.GOD(),
 		AssetBase: base,
 		Headless:  hostlink.Headless(),
 		Connect:   bridge.ConnectHost,
@@ -122,8 +127,11 @@ func PageFromHost() Page {
 //
 // With WEAKPIXEL_HEADLESS=1 there is no window ([Page.Headless]); see
 // [RunHeadless].
-func Run(g Game) error {
-	p := PageFromHost()
+func Run(g Game) error { return RunPage(g, PageFromHost()) }
+
+// RunPage is [Run] for a page the caller built, such as one whose stage the
+// program fixes.
+func RunPage(g Game, p Page) error {
 	connected := false
 	if connect := p.Connect; connect != nil {
 		p.Connect = func(cfg editor.Config) (*bridge.Bridge, bool) {
@@ -174,6 +182,11 @@ func Build(g Game, p Page) (*game.Engine, *editor.Session, error) {
 	if stage != StageLevel && stage != StagePrefab {
 		return nil, nil, fmt.Errorf("host: unknown stage %q", stage)
 	}
+	for i, text := range p.GOD {
+		if err := god.RegisterDataOnly(strings.NewReader(text)); err != nil {
+			log.Printf("host: GOD file %d: %v", i, err)
+		}
+	}
 	fsys, err := assetFS(g, p)
 	if err != nil {
 		return nil, nil, err
@@ -215,11 +228,7 @@ func Build(g Game, p Page) (*game.Engine, *editor.Session, error) {
 		}
 	}
 	e := game.New(cfg)
-	if stage == StagePrefab {
-		if g.Prefab != nil {
-			g.Prefab(e)
-		}
-	} else {
+	if stage != StagePrefab {
 		if g.Setup != nil {
 			g.Setup(e)
 		}

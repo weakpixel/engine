@@ -8,6 +8,8 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 
 	"github.com/weakpixel/asset/httpfs"
+	"github.com/weakpixel/engine/editor/filekind"
+	"github.com/weakpixel/engine/editor/host"
 	"github.com/weakpixel/engine/editor/hostlink"
 	"github.com/weakpixel/engine/editor/toolshell"
 	"github.com/weakpixel/engine/game"
@@ -20,6 +22,10 @@ import (
 // from weakpixelHost.assetBase. The extension draws the panel; there is no
 // renderer and no debugui.
 func main() {
+	if info, err := filekind.Of(hostlink.Path()); err == nil && info.Stage {
+		runStage()
+		return
+	}
 	t, err := editorapp.KindOf(hostlink.Path())
 	if err != nil {
 		log.Fatalf("wpix-editor: %v", err)
@@ -73,5 +79,17 @@ func main() {
 	e.Close()
 	if runErr != nil {
 		log.Fatal(runErr)
+	}
+}
+
+// runStage opens a file of a stage kind (a prefab) in the level editor's
+// stage with the built-in game: no game code runs, so the page needs no
+// build of the game. The components of the game that the engine does not
+// know come from the page's GOD files (weakpixelHost.god) as data only.
+func runStage() {
+	p := host.PageFromHost()
+	p.Stage = host.StagePrefab
+	if err := host.RunPage(host.PrefabGame(), p); err != nil {
+		log.Fatalf("wpix-editor: %v", err)
 	}
 }

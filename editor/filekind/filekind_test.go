@@ -19,6 +19,8 @@ func TestOf(t *testing.T) {
 		{"a.anim.json", Anim, ""},
 		{"a.ANIM.JSON", "", "not a file"},
 		{"a.fx.json", Fx, ""},
+		{"hero.prefab.json", Prefab, ""},
+		{"hero.Prefab.json", "", "not a file"},
 		{"a.atlas.json", Atlas, ""},
 		{"a.Atlas.JSON", Atlas, ""},
 		{"a.otf", Font, ""},

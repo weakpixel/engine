@@ -749,9 +749,10 @@ func encodeComponentMap(world *ecs.World, group, class string, e ecs.Entity, ref
 
 // CheckComponents verifies that raw holds every required component of the
 // object registered under group:class, and that every other key names a
-// registered component type (see [RegisterComponent]): the class sets the
-// minimum of an object, not its limit. All problems are reported, in key
-// order.
+// registered component type (see [RegisterComponent]) or a data-only one
+// (see [RegisterDataOnly]; its value is checked against its GOD schema):
+// the class sets the minimum of an object, not its limit. All problems are
+// reported, in key order.
 func CheckComponents(group, class string, raw map[string]json.RawMessage) error {
 	key := SchemaMeta{Group: group, Class: class}.Key()
 	registry.RLock()
@@ -768,8 +769,10 @@ func CheckComponents(group, class string, raw map[string]json.RawMessage) error 
 			errs = append(errs, fmt.Errorf("object %s: missing required component %s", key, c.Key()))
 		}
 	}
+	dataErrs, accepted := checkDataOnly(key, raw, known)
+	errs = append(errs, dataErrs...)
 	for _, k := range sortedKeys(raw) {
-		if known[k] {
+		if known[k] || accepted[k] {
 			continue
 		}
 		if _, ok := registeredComponent(k); !ok {

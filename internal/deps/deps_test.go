@@ -317,7 +317,9 @@ func TestToolShellDependencies(t *testing.T) {
 		check(pkg, listDeps(t, root+pkg), isDebugUI)
 	}
 	// A tool links neither the level editor nor its bridge: what they share
-	// is in editor/hostlink.
+	// is in editor/hostlink. Only the js/wasm build of the command links
+	// them, for the prefab stage (main_js.go); the native command refuses a
+	// prefab.
 	isLevelEditor := func(dep string) bool {
 		return dep == root+"editor" || dep == root+"editor/bridge" || dep == root+"editor/host"
 	}
@@ -326,10 +328,9 @@ func TestToolShellDependencies(t *testing.T) {
 	wasm := listDepsEnv(t, cmd, "GOOS=js", "GOARCH=wasm")
 	check("js/wasm "+cmd, wasm, isDebugUI)
 	check("js/wasm "+cmd, wasm, isCobra)
-	check("js/wasm "+cmd, wasm, isLevelEditor)
 	check(cmd, listDeps(t, cmd), isLevelEditor)
 	if err := errors.Join(errs...); err != nil {
-		t.Errorf("debugui may only be linked by editor/toolshell/debugpanel and the native editor, Cobra not by the wasm editor, and the tool shell and wpix-editor must not link the level editor (editor, its bridge or its host):\n%v", err)
+		t.Errorf("debugui may only be linked by editor/toolshell/debugpanel and the native editor, Cobra not by the wasm editor, and the tool shell and the native wpix-editor must not link the level editor (editor, its bridge or its host):\n%v", err)
 	}
 }
 

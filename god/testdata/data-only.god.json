@@ -1,0 +1,45 @@
+{
+  "version": 0,
+  "generator": "wpix gen",
+  "package": "example.test/sample",
+  "components": [
+    {
+      "group": "x",
+      "name": "Loot",
+      "schema": {"type": "string"}
+    },
+    {
+      "group": "sample",
+      "name": "Health",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "Cur": {"type": "integer"},
+          "Max": {"type": "integer"},
+          "Kind": {"type": "integer", "x-enum": [{"name": "Flesh", "value": 0}, {"name": "Stone", "value": 1}]}
+        },
+        "required": ["Cur", "Max"]
+      }
+    },
+    {
+      "group": "sample",
+      "name": "Tint",
+      "schema": {
+        "type": "object",
+        "properties": {"Icon": {"type": "string", "format": "asset", "x-asset": "image"}}
+      }
+    }
+  ],
+  "objects": [
+    {
+      "group": "sample",
+      "class": "Mob",
+      "goType": "example.test/sample.Mob",
+      "components": [
+        {"component": "x:Loot", "field": "Loot"},
+        {"component": "sample:Health", "field": "Health"},
+        {"component": "sample:Tint", "field": "Tint", "optional": true}
+      ]
+    }
+  ]
+}
