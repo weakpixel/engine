@@ -13,7 +13,6 @@ The shell it runs on is in [tool-shell.md](tool-shell.md); the editing tools are
   The shader previewer (`.kage`) builds on the texture previewer: the sprite gets the shader and a `Params` value per `+shader:param` marker (a number or slider, toggle, angle in degrees or color widget; four plain numbers without markers), "Enabled" compares with the plain texture, and the texture is the built-in sample (served from the overlay) or any project image.
   A compile error or a marker problem is shown in the panel and sent as an `error` naming the file (and the marker line).
   `Time` is the engine's simulation time, which keeps running under the shell's pause; the values are not saved.
-  A later previewer (M7 bindings) is one more entry in the viewer.
 - **The Tiled previewers load with the engine's loaders and draw objects as overlays.**
   A map (`*.tmj`) and a world (`*.world`) are loaded with `LoadMapSync` and `LoadWorldSync` in the viewer's scope and spawned with `tilemap.Spawn` and `SpawnWorld`, so tile and image layers are the same `TileLayer` entities the game draws (tints, opacity, shaders and parallax as in the game).
   Objects are not entities in the engine, so they are window-space outlines (`viewer/shapes.go`: rect, ellipse as 24 segments, polygon, polyline, a cross for a point, the box of a tile object or text; hit test by box, point-in-polygon, or 5 device-independent pixels for lines and points, where a point's cross has 4 px arms), named with the same label cache and size rules as atlas frames.
@@ -26,7 +25,8 @@ The shell it runs on is in [tool-shell.md](tool-shell.md); the editing tools are
   Tiled files are never written (Tiled is the editor).
 - **Voices and dialogues preview with sound** (`editor/voiceview`, routed by `viewer`).
   A page or window starts with sound when its first file's kind has sound (`filekind.Info.Sound` turns off `game.Config.NoAudio`, natively and in the js/wasm build), because `NoAudio` is fixed when the engine starts and package speech must be installed before the schedule is built.
-  The viewer's `Init` then creates the voice previewer, whose `Init` calls `speech.Install`, and keeps it across files; a viewer that started without sound refuses a voice or a dialogue, so the host reloads the page for it. since the shell pauses the game, `Sync` calls `Speech.Step` with one tick.
+  The viewer's `Init` then creates the voice previewer, whose `Init` calls `speech.Install`, and keeps it across files; a viewer that started without sound refuses a voice or a dialogue, so the host reloads the page for it.
+  Since the shell pauses the game, `Sync` calls `Speech.Step` with one tick.
   A `*.voice.json` speaks the panel's line (text field, speed, Say, Skip, Stop) on an entity with a `speech:Speaker` and a `gfx.Label` but no `Transform`, so the renderer does not draw the label; the tool draws the shown text itself in `Draw`, wrapped once over the whole line so lines do not move while it types (Go Regular at 16 device-independent pixels), and under it a piano roll of the line from `Speech.LineNotes` (time left to right, pitch bottom to top over at least an octave, a color per instrument) with a playhead from `Speech.LinePosition`.
   A `*.dialogue.json` plays in a `speech:DialogueBox` entity with a name label (Next, Restart, Stop; Next after the end plays again), its status line names the line (from `LineStarted`) and the speaker.
   A reloaded voice says the line again; a reloaded dialogue restarts.

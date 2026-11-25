@@ -31,12 +31,12 @@ A stale handle on save is an error, so a key that no longer means anything is ne
 Lua sees the same keys.
 
 Prefabs are also assets (`prefab`): parsed and validated once on a decode worker, bound to the World in `Finish` and spawned many times without JSON ([guide](../guide/engine/game-objects.md#prefabs)).
-A variant's base is an `asset.Dep`, so readiness, reloads and cycles come from the dependency graph.
+A variant's base and every prefab nested in a [multi-object prefab](../guide/engine/game-objects.md#prefabs-with-several-objects) are `asset.Dep`s, so readiness, reloads and cycles come from the dependency graph.
 The art a prefab references is **not** declared as dependencies: a variant's object type, and so its asset fields, is only known once its base is Ready, after `Decode`.
 Instead `Finish` resolves the keys into a scope the prefab owns, which `Unload` releases; the art loads in the background with placeholders, like a level's. A changed base reaches its variants like any dependency: re-finished with `WatchInterval` on, read from their files again when the change came through `Changed` without it (the level editor's case).
 
 Tiled object layers stay map data: nothing turns a Tiled object into a Game Object.
-Game Objects are placed in GOD levels, which the level editor validates and edits with prefabs and overrides; a second, untyped source of objects in Tiled would need its own property mapping and a rule for which file wins (decided 2026-10-17, [tilemaps.md](../guide/engine/tilemaps.md#where-to-place-objects)).
+Game Objects are placed in GOD levels, which the level editor validates and edits with prefabs and overrides; a second, untyped source of objects in Tiled would need its own property mapping and a rule for which file wins ([tilemaps.md](../guide/engine/tilemaps.md#where-to-place-objects)).
 
 ## Hot reload
 
@@ -75,7 +75,6 @@ The code is in `asset/library`, stdlib plus `asset`.
   It loads only what the level references; preloading a package's entries is always an explicit `LoadPackage`, because the entries of a package with several levels include every other level's map.
 - **Auto-mount.**
   `LoadLevel`, `LoadMap` and `LoadLevelBase` call `HoldPackage` on the key's package (packs only, no entries) and start once the packs are mounted, at once for loose files.
-  This removed a v1 limit: `LoadLevel` of a file in an unmounted pack used to fail.
 - **Kinds by file name, loaders by registration.**
   The library maps names to kinds (`KindOf`) but cannot import the Ebiten packages that own the types, so the engine maps kinds to load functions (`SetLoader`), like `asset` and `render`.
 - **Entries from references.**
@@ -125,7 +124,6 @@ The code is in `asset/library`, stdlib plus `asset`.
 The asset system is its own module, standard library only, and imports neither `ecs` nor Ebiten, so it is testable with `fstest.MapFS` and fake loaders and tools never compile a renderer.
 Asset types that need Ebiten (`Texture`, `Sprite`, `Atlas`, `FontSource`, `Font`, `Shader`) live in `render`; clips in `anim`; `Sound` and `Music` in `sound`; the `AssetSystem` that calls `Server.Update` as the first stage of the tick lives in `extract`.
 The library (`asset/library`) stays in the engine because its folder convention, packages and packs are engine policy.
-A change to the asset system merges in its repository first, then a weakpixel PR bumps the module version ([architecture.md](architecture.md#modules)).
 
 ## Not built yet
 
@@ -141,8 +139,5 @@ A change to the asset system merges in its repository first, then a weakpixel PR
 - **Tilemaps beyond v1.**
   Tiled tilesets, maps and worlds load ([tilemaps.md](../guide/engine/tilemaps.md)).
   Not built: embedded single-image tilesets (no key of their own) are rejected, because the asset system gives a child type exactly one parent type (multi-parent children are not built there), so only `render.Atlas` can publish `render.Sprite` children and a `tilemap.Tileset` borrows them from the atlas of the same `*.tsj` key.
-- **Multi-object prefabs**: built on the transform hierarchy ([hierarchy.md](../guide/engine/hierarchy.md)); see [game objects](../guide/engine/game-objects.md#prefabs-with-several-objects).
-  The base of a variant and every nested prefab are asset dependencies of the prefab.
-  The editor side is not built yet.
 - **Per-entity asset lifetime.**
   By design every resolved asset belongs to one scope; deleting an entity releases nothing.

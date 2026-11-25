@@ -17,13 +17,11 @@ The API is in the guide: [input.md](../guide/engine/input.md).
 
 ## Packages
 
-| Package | Imports | Why |
-| --- | --- | --- |
-| `input` | stdlib only | Everything that decides: actions, files, compile, router, evaluation, profiles, rebinding, names, recording. No Ebiten, so the whole logic is tested with `ManualSource` and replayed with `ReplaySource`. The bindings asset (loader, handle, store) is in `input/inputsys`, so this package needs no asset system |
-| `input/ebiteninput` | Ebiten, `input` | The `Source`: polls Ebiten into an `input.Frame`. The only Ebiten import of the input system |
-| `input/inputsys` | `ecs`, `ecs/system`, `asset`, `gfx`, `render`, `input` | ECS and asset glue: `InputSystem` (resource, update), the bindings asset (`RegisterLoaders`, `LoadBindings`, `BindingsStore`) and `TouchControlsExtract` (draw items) |
-
-The proposal put the glue in `gfx`; it moved to `inputsys` because `gfx` is plain-data components and must not import `render`.
+The input system is three packages ([packages.md](packages.md) lists their imports).
+`input` holds everything that decides (actions, files, compile, router, evaluation, profiles, rebinding, names, recording) and imports only the standard library, so the whole logic is tested with `ManualSource` and replayed with `ReplaySource`.
+`input/ebiteninput` is the `Source` that polls Ebiten into an `input.Frame`, the only Ebiten import of the input system.
+`input/inputsys` is the ECS and asset glue: `InputSystem` (resource, update), the bindings asset (`RegisterLoaders`, `LoadBindings`, `BindingsStore`) and `TouchControlsExtract` (draw items).
+The glue is not in `gfx`, because `gfx` is plain-data components and must not import `render`.
 `gfx` only holds the `PlayerSlot` component.
 
 ## Frame, then evaluate
@@ -66,7 +64,7 @@ A profile records overrides keyed by `(mapping, action, class, slot, part)`, not
 Applying it to new defaults (`applyProfile`) rebuilds the effective bindings; an override that no longer fits is skipped and reported, never fatal.
 So a game that changes a default reaches every player who did not touch that action, and a removed action costs a log line.
 
-Slots are numbered per class (`kbm`, `gamepad`, `touch`) because an options screen shows "keyboard 1, keyboard 2, gamepad 1" columns; the proposal's `keyboard` became `kbm` since mouse buttons share it.
+Slots are numbered per class (`kbm`, `gamepad`, `touch`) because an options screen shows "keyboard 1, keyboard 2, gamepad 1" columns; the keyboard class is `kbm` since mouse buttons share it.
 Composite parts are a separate `part` field rather than `move.up`, because action names may contain dots (`ui.move`).
 
 ## Devices and players
@@ -83,7 +81,7 @@ The `input` package itself never imports `god`.
 
 ## Not built yet
 
-- Hot reload of anything but the bindings file: `InputSystem.Watch` follows `Store.Version`, which [asset hot reload](asset-system.md#hot-reload) bumps when the file changes.
+- Hot reload of anything but the bindings file (`InputSystem.Watch` follows the bindings store's `Store.Version`, which [asset hot reload](asset-system.md#hot-reload) bumps).
 - Recording on by default in development builds.
 - A prompt-drawing extract and glyph atlas (names and glyph keys exist).
 - Lua access to the router; text entry.

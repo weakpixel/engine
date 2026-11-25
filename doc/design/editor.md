@@ -53,14 +53,12 @@ Rendering the prefab like the game does (layers, post effects) is the game's `Ga
 **The page names the stage.**
 The extension sets `weakpixelHost.stage` (`level` or `prefab`, by file suffix) and `weakpixelHost.path` (the first file's asset key) beside `assetBase`.
 Ebiten runs one game per process, so a change of stage reloads the page; switching between two files of the same stage uses `open`.
-These page fields are not protocol messages (`bridge.Version` is unchanged).
+These page fields are not protocol messages.
 
 **Listing.**
 HTTP cannot list directories, so the page also sets `weakpixelHost.files`: the asset keys of every file under the asset root, read when the page is made.
 The host lists directories from that index (plus `Game.FS`'s files) and reads the files themselves over HTTP, so the editor build needs no embedded copy of the assets and the library scans the real folder.
 A file created while the editor runs is read at once but joins the library's listing on the next page load.
-Not built: re-scanning the library on `assetsChanged`.
-Page fields, not protocol messages (`bridge.Version` is unchanged).
 
 **Backdrop.**
 `Session.OpenAt` calls `Config.OnOpen` before it opens the document; the host uses it to unload the previous backdrop and load the next one's when the target changes: per file, the sibling `<name>.tmj` (`NoDocuments`), else the sibling `<name>.world` or the package's own level `<pkg>/<pkg>` (`LoadLevelBase`, `SkipDocuments` with the edited file), since the session spawns the edited document itself.
@@ -73,13 +71,24 @@ The game sends the token as the first line, then each message is one JSON object
 Stdin and stdout were rejected because games print to stdout, and extra file descriptors because `exec.Cmd.ExtraFiles` does not exist on Windows.
 When the host closes the connection the bridge quits the engine at its next tick.
 A headless run (`host.RunHeadless`) calls `Engine.Update` on a ticker without `ebiten.RunGame`, with no sound and a manual input source; since nothing is drawn, a `screenshot` is never answered, which the host must know.
-This is a transport only: no message or field changed, and `bridge.Version` is unchanged.
+This is a transport only: the messages are the same.
 The first user is `wpix mcp` ([tools.md](../guide/tools.md#the-game)), whose host side is `tools/internal/mcpserver`.
 It cannot import `bridge` (Ebiten), so it repeats the message shapes and a test checks the constants.
 
 **A round trip is a `status`.**
 The bridge handles queued messages at the start of a tick and answers them in order, so the `status` answer to a `status` sent after a request says that the game handled the request and that every answer to it arrived.
 The MCP server sends one after each request (and twice, to know that a `step` ran).
+
+## Attached objects in the viewport
+
+A part's `Transform`, and that of any object with `hierarchy:Parent`, is derived by the hierarchy stage, so the handles edit its `Local` instead.
+A gesture sets the live `Transform` as for any object (so the art follows the cursor), then `syncLocal` converts the field it changes (`Pos` for a move, `Rot` for a rotate, `Scale` for a scale) with `hierarchy.LocalOf(parent's Transform, world)`; the other `Local` fields and `Entity` are untouched.
+The finished gesture is one `Edit` with component `hierarchy:Parent` and the whole component (the entity as an id), instead of `gfx:Transform`; for a prefab instance or one of its parts it is the override against the prefab (`Part` set for a part), so the file gets `children.<part>["hierarchy:Parent"]` with only the changed fields.
+A click selects the part under the cursor; Alt+click selects its instance root.
+When a selected object has a selected ancestor, a move skips it (it follows the ancestor).
+A selected attached object gets a dotted line to its parent.
+A multi-object `*.prefab.json` opens in the prefab stage like any prefab: its document has several objects, the hierarchy stage runs, and the same handles edit the `Local` in the prefab document.
+Esc does not cancel a drag.
 
 ## Applying a document
 
@@ -121,7 +130,8 @@ The bridge's `open` message calls it, so a shell switches files without reloadin
 ## Not built yet
 
 - A start zoom for the prefab stage, and a prefab shown in the context of a level.
-- Listing the workspace's files over HTTP, so that files created in VSCode are in the asset library without a rebuild.
+- Re-scanning the asset library on `assetsChanged`, so that a file created in VSCode joins the library's listing without a page reload.
+- Re-parenting an object in the viewport.
 - Snapping in the inspector, label and anim-box picking, per-axis scale handles, rotating or scaling several objects at once.
 - Editing several selected objects at once in the inspector.
 - Running the extension's own tests inside VSCode (`@vscode/test-electron`): only the VSCode-free parts and the webview page are tested automatically.

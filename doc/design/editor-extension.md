@@ -6,7 +6,7 @@ The editor's design is in [editor.md](editor.md), the messages in [editor-protoc
 ## The extension
 
 The extension is the separate repository [weakpixel/weakpixel-engine-vscode](https://github.com/weakpixel/weakpixel-engine-vscode) (TypeScript, no bundler).
-The protocol above is versioned together: `bridge.Version` here and `PROTOCOL_VERSION` in its `src/controller.ts`; a mismatch makes the extension refuse the game.
+The [protocol](editor-protocol.md) is versioned together: `bridge.Version` here and `PROTOCOL_VERSION` in its `src/controller.ts`; a mismatch makes the extension refuse the game.
 `docEdits.ts` and `controller.ts` hold the logic and import nothing from `vscode`, so `node --test` covers them; `levelEditor.ts` (the `CustomTextEditorProvider`), `build.ts` (the wasm build as a VSCode task) and `outline.ts` (the TreeView) are thin VSCode glue.
 Document edits are computed with `jsonc-parser` `modify` at a JSON path, so a drag or an inspector change is a one-line diff that keeps the file's formatting.
 
@@ -25,22 +25,9 @@ Keys typed in it stop at the inspector so neither the game nor VSCode keybinding
 
 **Level names.**
 A level may carry a top-level `name` like a prefab (`Level.Name()`, `Session.Name()`).
-The extension is meant to list levels by it, with the path as fallback, via a `prefabLabel`-style helper; that change is planned in the extension repository and needs no protocol change.
-
-**Attached objects in the viewport.**
-A part's `Transform`, and that of any object with `hierarchy:Parent`, is derived by the hierarchy stage, so the handles edit its `Local` instead.
-A gesture sets the live `Transform` as for any object (so the art follows the cursor), then `syncLocal` converts the field it changes (`Pos` for a move, `Rot` for a rotate, `Scale` for a scale) with `hierarchy.LocalOf(parent's Transform, world)`; the other `Local` fields and `Entity` are untouched.
-The finished gesture is one `Edit` with component `hierarchy:Parent` and the whole component (the entity as an id), instead of `gfx:Transform`; for a prefab instance or one of its parts it is the override against the prefab (`Part` set for a part), so the file gets `children.<part>["hierarchy:Parent"]` with only the changed fields.
-A click selects the part under the cursor; Alt+click selects its instance root.
-When a selected object has a selected ancestor, a move skips it (it follows the ancestor).
-A selected attached object gets a dotted line to its parent.
-`bridge.Version` stays 0.
-A multi-object `*.prefab.json` opens in the prefab stage like any prefab: its document has several objects, the hierarchy stage runs, and the same handles edit the `Local` in the prefab document.
-Esc does not cancel a drag.
-Re-parenting in the editor is not built.
+The extension lists levels and prefabs by it, with the path as fallback (`prefabLabel` in `src/prefabs.ts`); the game's document parser accepts the key and ignores it.
 
 **Prefabs in the extension.**
-A prefab is listed by its top-level `name` (file name as fallback); the game's document parser accepts the key and ignores it, so `bridge.Version` did not change.
 `src/prefabs.ts` repeats the engine's merge (its cases are the shared fixture `god/testdata/merge-patch.json`, copied to the extension's `test/fixtures/`) and resolves variant chains by reading prefab files from the asset root.
 The inspector gets an instance merged, with its own overrides: overridden fields are marked and have a revert button, a committed field is written as an override at its path (a field inside an array writes the whole array, which overrides replace), and removing a component the prefab has writes `null`.
 The custom editor also opens `*.prefab.json`: a prefab is a GOD document, so the game opens it like a level.

@@ -50,13 +50,12 @@ It is built from the user's module, like the level editor's game, and runs nativ
   A dropdown with `Field.List` rows (`Field.AsList`) is a list: `debugpanel` draws a label, then a scrollable panel of that many rows (fewer when there are fewer options) with one button per option, the selected one marked `> `, and a click sets the option index like the dropdown does.
   Lists put a `(none)` option first when the selection can be cleared.
   `Check` rejects `List` on any other widget.
-  The JSON gains only `side` and `list`, which the extension ignores (one column, a list stays a dropdown), so the protocol and `bridge.Version` are unchanged.
+  The JSON gains only `side` and `list`, which the extension ignores (one column, a list stays a dropdown).
 - **Three document backends.**
-  A `MemoryDocument` is an untitled document with the undo stack of `FileDocument` (shared code), no file and no host; it is dirty from the start and `Shell.Create` turns it into a `FileDocument`.
-- **Two document backends.**
   A `DocumentTool` edits a text file through `Shell.Edit(text)` with the bytes of its format's encoder; the shell never diffs.
   `FileDocument` (native) keeps its own undo stack, saves with Ctrl/Cmd+S, marks the title dirty, reloads a file changed on disk when it has no unsaved edits and reports the conflict in the status line when it has.
   `HostDocument` (VSCode) sends `edit` and gets `document` back, ignoring the echo of its last edit, as `Session` does; VSCode owns undo and save.
+  `MemoryDocument` is an untitled document with the undo stack of `FileDocument` (shared code), no file and no host; it is dirty from the start and `Shell.Create` turns it into a `FileDocument`.
 - **One document model.**
   `toolshell.Model[F]` is the model of a tool whose state is one decoded file: `File`, an `Encode` func and `Emit` (the tool passes `Shell.Edit`).
   `Model.Do(edit)` runs a change on `File`, encodes it and emits the text, so one change is one document edit.
@@ -78,7 +77,7 @@ The page fields are `path` (the file's asset key), `untitled` (bool), `assetBase
 With `untitled` true the file has no name on disk yet and opens as an untitled document from its kind's untitled text; only a particle effect can be untitled (VSCode's "New Particle Effect" sends `path` `untitled.fx.json`), and its `ready` has `path` `""`.
 These are page fields, not messages, so `hostlink.Version` stays 0.
 A level editor page and a tool page never share a game, so message types may repeat.
-`bridge.Version` is sent in `ready`.
+`hostlink.Version` is sent in `ready` (`bridge.Version` is the same constant).
 
 | Direction | Type | Fields | Meaning |
 | --- | --- | --- | --- |
