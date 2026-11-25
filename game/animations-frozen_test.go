@@ -179,3 +179,30 @@ func TestFrameChangedFrozen(t *testing.T) {
 		})
 	}
 }
+
+// TestFrozenTickNoAllocs: a frozen tick with particles, and FrameChanged on
+// it, allocate nothing (hot paths are 0 allocs/op).
+func TestFrozenTickNoAllocs(t *testing.T) {
+	if testing.CoverMode() != "" || raceEnabled {
+		t.Skip("instrumentation allocates")
+	}
+	g := &gateTool{draw: true}
+	e := New(Config{NoAudio: true, Tool: g, Width: 64, Height: 32, Input: InputConfig{Source: &input.ManualSource{}},
+		FS: fxFiles(fxfile.Emitter{Rate: 600, LifeMin: 5, LifeMax: 5, SpeedMax: 20, Max: 300})})
+	defer e.Close()
+	spawnEmitter(t, e)
+	e.Post().Passes = []render.Pass{{Params: [4]float32{1}}}
+	for range 60 {
+		e.Update()
+	}
+	e.SetAnimationsFrozen(true)
+	screen := ebiten.NewImage(8, 8)
+	e.Update()
+	e.Draw(screen)
+	if n := testing.AllocsPerRun(20, func() {
+		e.Update()
+		e.FrameChanged()
+	}); n != 0 {
+		t.Fatalf("allocs per frozen tick = %v, want 0", n)
+	}
+}

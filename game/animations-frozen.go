@@ -27,6 +27,10 @@ func (e *Engine) AnimationsFrozen() bool { return e.frozen }
 type stillClock struct {
 	inner system.Runner
 	on    *bool
+	// still is the zero-delta copy of the stage's context. It lives here,
+	// not on the stack: passed to an interface method, a local copy would
+	// escape and allocate on every frozen tick.
+	still system.Context
 }
 
 func (s *stillClock) Init(ctx *system.Context) {
@@ -41,9 +45,9 @@ func (s *stillClock) Run(ctx *system.Context) {
 		return
 	}
 	// A copy: the next runners of the stage see the real delta.
-	still := *ctx
-	still.Time.Delta = 0
-	s.inner.Run(&still)
+	s.still = *ctx
+	s.still.Time.Delta = 0
+	s.inner.Run(&s.still)
 }
 
 // stillParticles runs the particle simulation, or only keeps its pools
