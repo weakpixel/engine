@@ -1,95 +1,80 @@
 # Weakpixel Engine
 
-A 2D game engine for Go: the Engine Runtime on Ebiten (module `github.com/weakpixel/engine`, repository weakpixel/engine, Go 1.27, MIT) on top of the archetype-based Entity Component System of module `github.com/weakpixel/ecs` (repository weakpixel/ecs), plus a code generator that turns `// +game:*` annotated structs into typed "Game Object" schemas and a JSON definition (GOD).
+A 2D game engine for Go: the Engine Runtime on Ebiten (module `github.com/weakpixel/engine`, Go 1.27, MIT) on top of the Weakpixel ECS (`github.com/weakpixel/ecs`), plus a generator that turns `// +game:*` annotated structs into typed Game Object schemas and a JSON definition (GOD).
 
 ## The docs are the spec
 
-All documentation lives in `doc/` ([doc/README.md](doc/README.md) is the map). `doc/guide/` is end-user documentation and describes the intended public API and behavior: implement against it. `doc/design/` explains how things are built and why, and lists what is not built yet. Every topic has one home; link to it instead of repeating it.
+`doc/` holds all documentation ([doc/README.md](doc/README.md) is the map). `doc/guide/` is the public API and behavior: implement against it. `doc/design/` is how and why, plus what is not built yet; [doc/design/README.md](doc/design/README.md) lists every page with its status, so read that table and then only the page you need. Every topic has one home; link to it.
 
-- If the code and a doc disagree, don't silently pick one. Fix the code, or if the doc is wrong or underspecified, update the doc in the same change and say so.
-- Behavior the docs leave open (for example the exact `: <detail>` suffix of a panic, or whether `Each` checks the revision after `yield` returns false): decide, implement, test, and **add it to the doc**.
-- Panic messages in the doc's panic table are API. Tests assert them with `strings.Contains`.
+- Code and a doc disagree: fix the code, or fix the doc in the same change and say so. Never silently pick one.
+- Behavior the docs leave open: decide, implement, test, and add it to the doc.
+- Panic messages in a doc's panic table are API; tests assert them with `strings.Contains`.
 
 ## Layout
 
-Packages, modules and the dependency rules are in [doc/design/architecture.md](doc/design/architecture.md); [doc/design/README.md](doc/design/README.md) lists every design page with what it covers and its status. Read that table, then only the page for the area you touch. Where to look first:
-
-| Area | Code | Skill or doc |
+| Area | Code | Read |
 | --- | --- | --- |
-| ECS core, systems, arity-N API | not here: module `github.com/weakpixel/ecs` (repository weakpixel/ecs, its own CLAUDE.md and skills) | [ECS guide](https://github.com/weakpixel/ecs/blob/main/doc/README.md) |
-| Game Objects, GOD, prefabs | `tools/wpix`, `tools/internal/{gen,goddoc}`, `god`, `testdata/gametypes`, `tools/internal/gen/testdata/extmod` (uses engine components) | `game-object-gen` |
-| Asset system | not here: module `github.com/weakpixel/asset` (repository weakpixel/asset: packages `asset` and `httpfs`, its own CLAUDE.md and skills) | [asset guide](https://github.com/weakpixel/asset/blob/main/doc/guide.md), [engine side](doc/guide/engine/assets.md) |
-| Engine Runtime | packages at the repository root: `game`, `gfx`, `render`, `extract`, `asset/library`, `assetkind`, `anim`, `tiled`, `tilemap`, `sound`, `input`, `camera`, `prefab`, `resolver`, `particles`, `tween`, `room`, `speech` | [doc/guide/engine/](doc/guide/engine/README.md) |
-| Web builds | `web`, `httpfs` (asset module) | [web.md](doc/guide/engine/web.md) |
-| Level editor, tool shell | `editor`, `editor/bridge`, `editor/hostlink`, `editor/host`, `editor/toolshell`, `editor/filekind`, `editor/viewer`, `editor/viewkit`, `editor/voiceview`, `editor/animedit`, `editor/fxedit`, `tools/wpix-editor` | [editor.md](doc/design/editor.md), [editor-protocol.md](doc/design/editor-protocol.md), [tool-shell.md](doc/design/tool-shell.md) |
-| Benchmarks | `bench/` (`god` results, `engine-baseline.txt` for the engine packages) | [architecture.md](doc/design/architecture.md#cross-cutting-conventions) |
+| Packages, modules, dependency rules | everything | [architecture.md](doc/design/architecture.md), [packages.md](doc/design/packages.md) |
+| Game Objects, GOD, prefabs | `god`, `tools/wpix`, `tools/internal/{gen,goddoc}`, `testdata/gametypes`, `tools/internal/gen/testdata/extmod` | skill `game-object-gen` |
+| Engine Runtime | root packages: `game`, `gfx`, `render`, `extract`, `asset/library`, `assetkind`, `anim`, `tiled`, `tilemap`, `sound`, `input`, `camera`, `prefab`, `resolver`, `particles`, `tween`, `room`, `speech`, ... | [doc/guide/engine/](doc/guide/engine/README.md) |
+| Web builds | `web` | [web.md](doc/guide/engine/web.md) |
+| Level editor, tools | `editor/...`, `tools/wpix-editor` | [editor.md](doc/design/editor.md), [editor-protocol.md](doc/design/editor-protocol.md), [tool-shell.md](doc/design/tool-shell.md) |
+| Benchmarks | `bench/` | [architecture.md](doc/design/architecture.md#cross-cutting-conventions) |
 
-The ECS core is its own repository: an ECS change merges in weakpixel/ecs first, then an engine PR bumps `github.com/weakpixel/ecs` in the root and `extmod` `go.mod` files. Work on both with an untracked `go.work` (`go work init . ../ecs`), never a committed `replace`. The asset system (weakpixel/asset) and the voice library (weakpixel/voice) are their own repositories in the same way: a change merges there first, then an engine PR bumps the version in `go.mod` (`go mod tidy` updates the indirect lines); add `../asset` or `../voice` to the `go.work`. Those repositories never name the engine. Don't edit the module cache.
+Other repositories:
 
-The demo games and the Lua bindings (weakpixel/contrib, `lua/`) build on this module from other repositories; nothing here imports them, and the docs don't name the demos.
+- **weakpixel/ecs, weakpixel/asset, weakpixel/voice** are their own modules and never name the engine. A change merges there first; then an engine PR bumps the version (`go.mod`, and `extmod` for ECS; `go mod tidy`). Work across them with an untracked `go.work` (`go work init . ../ecs`), never a committed `replace`, and never edit the module cache.
+- **weakpixel-engine-vscode** hosts the editor: `bridge.Version` here equals `PROTOCOL_VERSION` in its `src/controller.ts`, and a protocol change merges here first.
+- **The demos and weakpixel/contrib** (Lua in `lua/`) build on this module; nothing here imports them, and the docs don't name the demos.
+- `god`, [generator.go.tpl](tools/internal/gen/generator.go.tpl) and generated Game Object code use the ECS API: an ECS change that breaks them updates them in the same change.
 
-The VSCode extension is its own repository, weakpixel/weakpixel-engine-vscode. The protocol version must match there: `bridge.Version` here, `PROTOCOL_VERSION` in its `src/controller.ts`.
+## Workflow
 
-`god`, [tools/internal/gen/generator.go.tpl](tools/internal/gen/generator.go.tpl) and generated Game Object code consume the `ecs` API. Don't change `ecs` in ways that break them without updating them in the same change.
-
-## Workflow: /plan → /implement
-
-Non-trivial work goes through `/plan <request>` (writes one plan file in `plan/` or the plan folder the project instructions or memory name, auto approved, no code changes) and then `/implement [plan-slug]` (carries it out step by step, ticks steps as their checks pass, logs deviations, sets the status `draft` → `ready` → `in-progress` → `done` or `blocked`). The skills hold the details.
-
-- The plan file is the record of the work: keep it current so an interrupted session can resume from it alone.
-- During `/implement` the plan's scope wins. Changes to scope, the public API or a recorded decision need the user's OK and an update to the plan first.
-- Small, obvious requests (a typo, a one-line fix, a question) don't need a plan.
+Non-trivial work goes through `/plan <request>` (one plan file in the plan folder the project names, else `plan/`; no code) and `/implement [plan-slug]` (step by step, ticking steps as their checks pass, logging deviations, status `draft` → `ready` → `in-progress` → `done` or `blocked`). The plan file is the record: keep it current. During `/implement` the plan's scope wins; changes to scope, public API or a recorded decision need the user's OK first. Small, obvious requests need no plan.
 
 ## Commands
 
 ```bash
-make all                      # generate, fmt, build, test, vet, then the display tests (test-ebiten)
-make wasm-build               # explicit js/wasm cross-build, plus the editor test game with -tags editor
-make wasm-test                # non-Ebiten js/wasm tests under Node
-go test ./god/...       # Game Object runtime
-go test ./tools/internal/gen/...       # generator
-go vet ./...
-make bench name=<label>       # god benchmarks -> bench/<label>.txt
-make benchcmp new=<label>     # benchstat vs bench/baseline.txt
+make all                 # generate, fmt, build, test, vet, then the display tests (test-ebiten); headless: xvfb-run -a make all
+make wasm-build          # js/wasm cross-build, plus the editor test game with -tags editor
+make wasm-test           # non-Ebiten js/wasm tests under Node
+go test ./god/... ./tools/internal/gen/... ./internal/deps/
+make bench name=<label>  # god benchmarks -> bench/<label>.txt; make benchcmp new=<label>
 ```
 
-While iterating, run only the tests of the packages you changed, and send long command output to a file and read the failures from it. Run `make all` once before calling a task done, and add explicit WASM targets only when the touched code or docs affect browser or js/wasm behavior. A change isn't done if `make all` leaves generated-file changes uncommitted.
+While iterating, run only the tests of the packages you changed, with long output in a file. Run `make all` once before calling a task done (WASM targets only when browser behavior is touched); a change isn't done while `make all` leaves generated files uncommitted.
 
 ## Hard rules
 
-- **Never commit build outputs** (executables, `*.test` from `go test -c`, `.wasm`, anything over 1 MB that is generated). `go build` without `-o` inside a main package directory (for example `tools/wpix-editor`) writes the binary right there: build with `-o build/<name>` (`build/` is ignored) or use `go vet` / `go build ./... ` (which writes nothing). Before every commit run `git status --short` and `git diff --cached --stat`, and unstage anything you did not mean to add; stage files by name, not with `git add -A` or `git add .`. `.gitignore` covers the usual suspects but is not a substitute for looking.
-- **Never hand-edit a generated file** (a package's Game-Object `zz__gen.go`, or a GOD file: `godspecs/*.god.json`, `zz__gen.god.json`). Change the generator or template and regenerate.
-- **No demo assets in tests or docs.** Tests use generated test data: `testdata/assets` (an asset library drawn in code, size-guarded) and `testdata/gametypes`, never snapshots of game art. The docs under `doc/` and the README don't name or link the demo games (`TestDocsDoNotNameExamples` in `internal/deps`); snippets use neutral sample names.
-- **One module.** `./...` covers everything. `godspecs/` holds the GOD files of the engine's own packages (committed; the MCP server and games read them from the module); anything else generates into `build/god` by default.
-- **Dependency direction:** `god` imports `ecs` (`github.com/weakpixel/ecs`) and the standard library only (the module also holds Ebiten, so this is a package rule, enforced by `go test ./internal/deps/`). The ECS module knows nothing about this repository. `golang.org/x/tools` is allowed only in `tools/internal/gen` (and so in `tools/wpix`, which links it).
-- **Ebiten stays in its packages.** Ebiten may be imported only in `render`, `sound`, `input/ebiteninput`, `game` and `editor`, and outside the Engine Runtime only by `tools/wpix-editor` and tests of `tools/internal/anim`; debugui only in `editor/toolshell/debugpanel` and `tools/wpix-editor/internal/native`; `anim/animfile` and `tiled` are stdlib only (`asset/library` imports only the stdlib and the asset module `github.com/weakpixel/asset`, which is stdlib only itself), `input` imports only the stdlib (panics start with `input: `; its bindings asset is in `input/inputsys`), `gfx` imports neither Ebiten nor `render` (it imports `ecs` and `god` only through its generated Game Object code), and `render` never imports `ecs`. Pixel-reading tests need a display and sit behind the `ebitentest` build tag.
-- **Cobra only under `tools/`.** The command-line tools are Cobra command trees; the conventions are in [architecture.md](doc/design/architecture.md#cross-cutting-conventions) and the shared exit codes and helpers in `tools/internal/cli`. `ecs`, the Engine Runtime and `internal` never import Cobra, nor does the js/wasm build of `wpix-editor` (`internal/deps` checks it).
-- **Generated Game Object code may only use exported `ecs` API.** It must compile from other modules (see `extmod`).
-- **Panics, not errors**, for programmer errors. `god` panics with `god: ` and returns errors for bad input data. The ECS rules (`ecs: ` panics, single-goroutine `World`, 0-alloc hot paths) live in the ECS repository.
-- **Hot paths are 0 allocs/op** here too: generated Game Object views, the extract systems, `Renderer.Draw`, asset `Store.Get` ([architecture.md](doc/design/architecture.md#cross-cutting-conventions)). Enforce this with `testing.AllocsPerRun` tests, not by eye.
+- **No build outputs in git** (binaries, `*.test`, `.wasm`, generated files over 1 MB). Build with `-o build/<name>` or `go build ./...`; never `go build` bare inside a main package. Before every commit run `git status --short` and `git diff --cached --stat`, and stage files by name.
+- **Never hand-edit generated files** (`zz__gen.go`, `godspecs/*.god.json`, `zz__gen.god.json`): change the generator or template and regenerate.
+- **No demo assets in tests or docs.** Tests use `testdata/assets` (drawn in code, size-guarded) and `testdata/gametypes`; docs use neutral sample names (`TestDocsDoNotNameExamples`).
+- **One module.** `./...` covers everything. `godspecs/` holds the engine's own GOD files; other GOD output goes to `build/god`.
+- **Import rules, enforced by `go test ./internal/deps/`:**
+  - `god` imports only the ECS and the stdlib; `golang.org/x/tools` only in `tools/internal/gen`.
+  - Ebiten only in `render`, `sound`, `input/ebiteninput`, `game`, `editor`, `tools/wpix-editor` and tests of `tools/internal/anim`; debugui only in `editor/toolshell/debugpanel` and `tools/wpix-editor/internal/native`.
+  - stdlib only: `input` (panics start `input: `), `anim/animfile`, `tiled`; `asset/library` adds only the asset module.
+  - `gfx` imports neither Ebiten nor `render`; `render` never imports `ecs`.
+  - Cobra only under `tools/` and never in the js/wasm build of `wpix-editor`; shared CLI helpers in `tools/internal/cli`.
+  - Pixel-reading tests need a display and use the `ebitentest` build tag.
+- **Generated Game Object code uses exported ECS API only**: it must compile from other modules (`extmod`).
+- **Panics for programmer errors, errors for bad input.** `god` panics start with `god: `.
+- **Hot paths are 0 allocs/op** (generated views, extract systems, `Renderer.Draw`, asset `Store.Get`), enforced with `testing.AllocsPerRun` tests.
 
-## Code quality
+## Code quality and conventions
 
-- **Readability first.** Prefer clear names, small functions and straightforward control flow. If an optimization makes code harder to follow, it must earn its place with a benchmark (`make bench`, `make benchcmp`).
-- **Model the domain; don't build a god object.** Give each concept its own type, and its own file or package when that fits (for example a component registry, entity slots/generations, archetypes and columns, the resource store). `World` composes these parts and delegates to them. Don't pile every field and method onto `World` or another master struct. New unexported packages go under an `internal/` folder of the area they serve.
-- **Document the public API.** Every exported identifier gets a Go doc comment that states what it does, its contract (preconditions, ownership, pointer validity, cost) and which panics it can raise.
-- **Explain performance tricks inline.** When code relies on something non-obvious for speed or 0 allocs (unsafe pointer arithmetic, swap-remove, cached indices, avoiding a closure or interface conversion to prevent escapes, preallocation, bounds-check hints), add a short comment saying what the trick is and why it's needed, so a reader doesn't "simplify" it away.
-
-## Conventions (match the existing code)
-
-- File names are kebab-case: `type-schema.go`, `schema-registry.go`, `schema-registry_test.go`.
-- Doc comment on every exported identifier and on non-obvious unexported ones. Comments explain *why* or describe a contract. Comment density is moderate, as in `god`.
-- Collect all validation errors and report them together (`errors.Join`, generator diags with `file:line:col`). Don't stop at the first error.
-- Tests use the standard `testing` package only (no testify). Prefer table-driven tests with `t.Run`, and use a `mustPanic(t, want, f)` helper that matches a substring (see [god/schema-registry_test.go](god/schema-registry_test.go)).
-- Use modern Go: `iter.Seq2`, range-over-func, `for i := range n`, `reflect.TypeFor[T]()`, `slices`/`maps`.
-- Keep generated code thin. Put the logic in hand-written, tested unexported helpers that the generated code calls.
+- Readability first: clear names, small functions, plain control flow. An optimization that hurts readability needs a benchmark (`make bench`, `make benchcmp`).
+- Model the domain: each concept gets its own type, and its own file or package where it fits; no god object. New unexported packages go under the area's `internal/`.
+- Every exported identifier has a doc comment with its contract (preconditions, ownership, pointer validity, cost) and its panics. Comments explain why. Explain performance tricks inline so nobody "simplifies" them away.
+- Collect all validation errors (`errors.Join`, generator diags with `file:line:col`).
+- File names are kebab-case (`schema-registry_test.go`). Tests use the standard `testing` package, table-driven with `t.Run`, and `mustPanic(t, want, f)` (see [god/schema-registry_test.go](god/schema-registry_test.go)).
+- Modern Go: `iter.Seq2`, range-over-func, `for i := range n`, `reflect.TypeFor[T]()`, `slices`, `maps`. Generated code stays thin and calls tested hand-written helpers.
 
 ## Skills
 
 | Skill | Use when |
 | --- | --- |
-| `plan` | User runs `/plan`: write `plan/<slug>.plan.md` |
-| `implement` | User runs `/implement`: carry out a plan file |
-| `engine-status` | Checking what is built, partial or not started in an area, or what to do next |
-| `game-object-gen` | Working on `wpix gen` (`tools/internal/gen`), its template or tests, `testdata/gametypes`, `extmod`, GOD JSON, `god` |
-| `doc-writer` | Any documentation has to be written or updated (runs on Haiku) |
+| `plan`, `implement` | The user runs `/plan` or `/implement` |
+| `engine-status` | Checking what is built, partial or not started, or what to do next |
+| `game-object-gen` | `wpix gen`, its template or tests, `testdata/gametypes`, `extmod`, GOD JSON, `god` |
+| `doc-writer` | Any documentation change (runs on Haiku) |
