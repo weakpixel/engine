@@ -12,7 +12,7 @@ All documentation lives in `doc/` ([doc/README.md](doc/README.md) is the map). `
 
 ## Layout
 
-Packages, modules and the dependency rules are in [doc/design/architecture.md](doc/design/architecture.md); per-area status is in [doc/design/README.md](doc/design/README.md). Read the page for the area you touch, not the whole doc set. Where to look first:
+Packages, modules and the dependency rules are in [doc/design/architecture.md](doc/design/architecture.md); [doc/design/README.md](doc/design/README.md) lists every design page with what it covers and its status. Read that table, then only the page for the area you touch. Where to look first:
 
 | Area | Code | Skill or doc |
 | --- | --- | --- |
@@ -21,7 +21,7 @@ Packages, modules and the dependency rules are in [doc/design/architecture.md](d
 | Asset system | not here: module `github.com/weakpixel/asset` (repository weakpixel/asset: packages `asset` and `httpfs`, its own CLAUDE.md and skills) | [asset guide](https://github.com/weakpixel/asset/blob/main/doc/guide.md), [engine side](doc/guide/engine/assets.md) |
 | Engine Runtime | packages at the repository root: `game`, `gfx`, `render`, `extract`, `asset/library`, `assetkind`, `anim`, `tiled`, `tilemap`, `sound`, `input`, `camera`, `prefab`, `resolver`, `particles`, `tween`, `room`, `speech` | [doc/guide/engine/](doc/guide/engine/README.md) |
 | Web builds | `web`, `httpfs` (asset module) | [web.md](doc/guide/engine/web.md) |
-| Level editor, tool shell | `editor`, `editor/bridge`, `editor/hostlink`, `editor/host`, `editor/toolshell`, `editor/filekind`, `editor/viewer`, `editor/viewkit`, `editor/voiceview`, `editor/animedit`, `editor/fxedit`, `tools/wpix-editor` | [doc/design/editor.md](doc/design/editor.md) |
+| Level editor, tool shell | `editor`, `editor/bridge`, `editor/hostlink`, `editor/host`, `editor/toolshell`, `editor/filekind`, `editor/viewer`, `editor/viewkit`, `editor/voiceview`, `editor/animedit`, `editor/fxedit`, `tools/wpix-editor` | [editor.md](doc/design/editor.md), [editor-protocol.md](doc/design/editor-protocol.md), [tool-shell.md](doc/design/tool-shell.md) |
 | Benchmarks | `bench/` (`god` results, `engine-baseline.txt` for the engine packages) | [architecture.md](doc/design/architecture.md#cross-cutting-conventions) |
 
 The ECS core is its own repository: an ECS change merges in weakpixel/ecs first, then an engine PR bumps `github.com/weakpixel/ecs` in the root and `extmod` `go.mod` files. Work on both with an untracked `go.work` (`go work init . ../ecs`), never a committed `replace`. The asset system (weakpixel/asset) and the voice library (weakpixel/voice) are their own repositories in the same way: a change merges there first, then an engine PR bumps the version in `go.mod` (`go mod tidy` updates the indirect lines); add `../asset` or `../voice` to the `go.work`. Those repositories never name the engine. Don't edit the module cache.
@@ -32,18 +32,12 @@ The VSCode extension is its own repository, weakpixel/weakpixel-engine-vscode. T
 
 `god`, [tools/internal/gen/generator.go.tpl](tools/internal/gen/generator.go.tpl) and generated Game Object code consume the `ecs` API. Don't change `ecs` in ways that break them without updating them in the same change.
 
-Implementation order and the definition of done for each phase are in the `ecs-roadmap` skill. Load it when starting or resuming implementation work.
-
 ## Workflow: /plan → /implement
 
-Non-trivial work goes through two steps, each triggered by the user:
+Non-trivial work goes through `/plan <request>` (writes one plan file in `plan/` or the plan folder the project instructions or memory name, auto approved, no code changes) and then `/implement [plan-slug]` (carries it out step by step, ticks steps as their checks pass, logs deviations, sets the status `draft` → `ready` → `in-progress` → `done` or `blocked`). The skills hold the details.
 
-1. **`/plan <request>`** writes `plan/<plan-slug>.plan.md` (or the plan folder the project instructions or project memory name) (auto approve writing the plan file!) and nothing else (no code changes). The plan records the goal, spec references, decisions, scope, ordered steps with verify commands, acceptance criteria and open questions. 
-2. **`/implement [plan-slug]`** carries out the selected plan step by step. It ticks steps in the plan file as their checks pass, logs deviations and follow-ups in the plan, and sets the status (`draft` → `ready` → `in-progress` → `done` or `blocked`).
-
-- `plan/` is the record of the work. Keep plan files up to date while implementing so an interrupted session can resume from the file alone.
-- During `/implement`, the plan's scope wins. Changes to scope, the public API or a recorded decision need the user's OK and an update to the plan first.
-- Roadmap phases (`ecs-roadmap`) are the usual unit of planning. Large phases become several linked plans.
+- The plan file is the record of the work: keep it current so an interrupted session can resume from it alone.
+- During `/implement` the plan's scope wins. Changes to scope, the public API or a recorded decision need the user's OK and an update to the plan first.
 - Small, obvious requests (a typo, a one-line fix, a question) don't need a plan.
 
 ## Commands
@@ -96,6 +90,6 @@ While iterating, run only the tests of the packages you changed, and send long c
 | --- | --- |
 | `plan` | User runs `/plan`: write `plan/<slug>.plan.md` |
 | `implement` | User runs `/implement`: carry out a plan file |
-| `ecs-roadmap` | Starting or resuming implementation: phase order, current status check, definition of done |
+| `engine-status` | Checking what is built, partial or not started in an area, or what to do next |
 | `game-object-gen` | Working on `wpix gen` (`tools/internal/gen`), its template or tests, `testdata/gametypes`, `extmod`, GOD JSON, `god` |
 | `doc-writer` | Any documentation has to be written or updated (runs on Haiku) |

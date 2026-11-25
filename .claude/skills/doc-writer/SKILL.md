@@ -24,6 +24,7 @@ Write documentation for the Weakpixel engine. This skill runs on the Haiku model
 - **Design pages** explain why, and record what is planned but not built. Link to the guide for signatures; do not copy the API.
 - **Go doc comments**: every exported identifier gets one stating what it does, its contract (preconditions, ownership, pointer validity, cost) and which panics it can raise. Start with the identifier's name. Explain non-obvious performance tricks inline.
 - **New pages** are added to the tables in [doc/README.md](../../../doc/README.md) (and [doc/design/README.md](../../../doc/design/README.md) for design pages).
+- **Design pages stay small.** One topic per page, at most 16 KB, one sentence per line (`TestDesignPageBudget` in `internal/deps`). A topic that outgrows its page moves to a page of its own with a row in [doc/design/README.md](../../../doc/design/README.md); links point to the page, not to a section of a long page.
 - Never hand-edit generated files (`godspecs/*.god.json`, a package's `zz__gen.go`, `zz__gen.god.json`, `zz_gen_*`). Generated docs come from `wpix doc`; change the generator and regenerate.
 
 ## Style

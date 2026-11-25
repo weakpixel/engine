@@ -1,9 +1,9 @@
 ---
-name: ecs-roadmap
-description: Use to check ECS implementation status, sequencing, or what's next; cross-check design docs, code, and plan files.
+name: engine-status
+description: Use to check what is built, partial or not started in an area of the Weakpixel engine, or what to do next; cross-checks the design README, plan files and code.
 ---
 
-# Weakpixel engine implementation roadmap
+# Weakpixel engine status
 
 The docs in `doc/` are the spec (see CLAUDE.md). Use this skill to identify current work, not as a second status ledger.
 
@@ -11,8 +11,8 @@ The docs in `doc/` are the spec (see CLAUDE.md). Use this skill to identify curr
 
 Before advising what to implement next:
 
-- Read `doc/design/README.md` for the current built/not-built summary, then the relevant design page and guide sections.
-- Read `plan/*.plan.md` status and unchecked steps; resume existing work rather than proposing it again.
+- Read `doc/design/README.md` for the built/not-built summary, then only the one design page for the area and the guide section it links.
+- Read the Status line of each plan (`grep -m1 Status` over the plan folder) and open only the related plans; resume existing work rather than proposing it again.
 - Check the relevant code and tests when a status is unclear or a plan's verification needs confirming. Don't infer current state from this skill or an old checklist.
 
 For a status report, summarize the relevant area as built, partial, or not started, citing the design page and any active plan.

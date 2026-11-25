@@ -98,7 +98,7 @@ Work in the view is a mouse move, a button or key held, the wheel, a drag, or a 
 
 ## Bridge
 
-`editor/bridge` puts the [JSON protocol](../../design/editor.md#protocol) in front of a session for a host such as the VSCode extension. `bridge.New(cfg, transport)` returns a `*Bridge` (it embeds the `*Session`; set it as `Config.Tool`); `Receive(msg)` queues a message from any goroutine. In a browser, `bridge.ConnectHost(cfg)` connects to the page's host script and returns false when there is none, so a game falls back to a plain session.
+`editor/bridge` puts the [JSON protocol](../../design/editor-protocol.md#protocol) in front of a session for a host such as the VSCode extension. `bridge.New(cfg, transport)` returns a `*Bridge` (it embeds the `*Session`; set it as `Config.Tool`); `Receive(msg)` queues a message from any goroutine. In a browser, `bridge.ConnectHost(cfg)` connects to the page's host script and returns false when there is none, so a game falls back to a plain session.
 
 ## Making a game editable in VSCode
 
@@ -146,7 +146,7 @@ The extension tells the page which stage to run (`globalThis.weakpixelHost.stage
 
 ## wpix-editor
 
-`wpix-editor` opens one file in a window, without VSCode, and shows its tool's panel in two columns over the viewport. The file name picks the kind, and every kind has one tool: a kind that can be edited opens its editor, any other kind opens its preview. There are no modes and no tool names on the command line. The design is in [editor.md#tools](../../design/editor.md#tools).
+`wpix-editor` opens one file in a window, without VSCode, and shows its tool's panel in two columns over the viewport. The file name picks the kind, and every kind has one tool: a kind that can be edited opens its editor, any other kind opens its preview. There are no modes and no tool names on the command line. The design is in [tool-shell.md](../../design/tool-shell.md).
 
 ```sh
 go tool wpix-editor assets/player/idle.png

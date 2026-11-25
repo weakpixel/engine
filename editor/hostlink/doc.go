@@ -9,5 +9,5 @@
 // Both the level editor's bridge (editor/bridge) and the tool shell
 // (editor/toolshell, tools/wpix-editor) build on it. It imports
 // only the standard library, so a tool links neither the bridge nor the
-// level editor. See doc/design/editor.md#protocol.
+// level editor. See doc/design/editor-protocol.md#protocol.
 package hostlink

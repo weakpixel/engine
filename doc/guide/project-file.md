@@ -37,7 +37,7 @@
 | `editor.game` | VSCode extension | Directory of the package the editor builds to WebAssembly (the one with the [editor `main`](engine/editor.md#making-a-game-editable-in-vscode)) | The nearest directory with a `package main` at or above the opened file |
 | `editor.tags` | VSCode extension | Build tags of that build, an array | `["editor"]` |
 | `editor.snap` | VSCode extension | Grid in world units that dragged objects snap to; 0 is off. Alt ignores it while dragging. | 0 |
-| `editor.screenshots` | VSCode extension | Folder the extension saves [screenshots](engine/engine.md#screenshots) of the level editor and the tool panels into, relative to this file; the editor build never writes files itself (see the [protocol](../design/editor.md#protocol)) | `screenshots` |
+| `editor.screenshots` | VSCode extension | Folder the extension saves [screenshots](engine/engine.md#screenshots) of the level editor and the tool panels into, relative to this file; the editor build never writes files itself (see the [protocol](../design/editor-protocol.md#protocol)) | `screenshots` |
 | `editor.prefab.background` | VSCode extension | Background of the [prefab stage](engine/editor.md#stages) as `#rrggbb` | `#24242a` |
 | `editor.prefab.grid` | VSCode extension | Grid step of the prefab stage in world units; 0 draws no grid | 16 |
 | `editor.rate.idle`, `editor.rate.active`, `editor.rate.hidden` | Editor hosts | Tick rates of the editor build's [pacing](engine/editor.md#pacing): while nothing happens in edit mode, while you work in the view, while the view is hidden (0 stops ticks) | 10, 60, 0 |

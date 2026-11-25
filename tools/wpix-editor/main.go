@@ -15,7 +15,7 @@
 // Natively it opens a window with the tool's panel drawn by debugui. Built for
 // js/wasm (GOOS=js GOARCH=wasm) it runs inside the VSCode extension's webview
 // (main_js.go), which draws the panel as HTML and talks to the tool over the
-// page's weakpixelHost (see doc/design/editor.md#tools). The wasm build never
+// page's weakpixelHost (see doc/design/tool-shell.md#tools). The wasm build never
 // links Cobra or debugui, so a game module that builds it needs no new go.sum
 // entries.
 //

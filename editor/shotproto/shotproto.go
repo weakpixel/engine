@@ -2,7 +2,7 @@
 // share, the level editor's bridge and the tool shell: a host asks for a
 // capture with a "screenshot" request, the game answers with a
 // "screenshot" message that carries the PNG. See
-// doc/design/editor.md#protocol.
+// doc/design/editor-protocol.md#protocol.
 //
 // Under an editor the game never writes a file: [Sink] sends every capture
 // to the host, which decides where it goes. A capture the game took itself

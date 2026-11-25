@@ -806,4 +806,4 @@ With [asset hot reload](assets.md#hot-reload) on (`Config.WatchInterval`, or a h
 | `Renderer.DrawFinal(screen, offscreen, geoM)` | `render` | The final pass, for `ebiten.FinalScreenDrawer`. `game.Engine` calls it. |
 | `Renderer.Stats().PostPasses` | `render` | Post passes that ran, the final pass included. |
 
-How it is built and why: [design/engine-renderer.md](../../design/engine-renderer.md#shaders).
+How it is built and why: [design/engine-renderer.md](../../design/render-effects.md#shaders).
