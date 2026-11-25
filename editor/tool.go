@@ -47,6 +47,7 @@ func (s *Session) Tick(e *game.Engine) game.TickMode {
 	if s.pace != nil {
 		s.pace.begin()
 	}
+	e.SetAnimationsFrozen(s.still && !s.play)
 	if s.play {
 		s.paceTick(false)
 		if !s.paused {
@@ -329,6 +330,17 @@ func (s *Session) SetColliders(show bool) { s.hideColliders = !show }
 
 // Colliders reports whether the collider outlines of edit mode are on.
 func (s *Session) Colliders() bool { return !s.hideColliders }
+
+// SetAnimate lets the level move on its own in edit mode and in a [Stage]
+// (on, the default), or freezes it there: with it off, the session calls
+// game.Engine.SetAnimationsFrozen while not in Play, so sprite clips,
+// animated tiles, particles and the shader Time stand still and an idle
+// view draws no frames (see [game.DrawGate]). Play always animates. It
+// takes effect at the next tick.
+func (s *Session) SetAnimate(on bool) { s.still = !on }
+
+// Animate reports what [Session.SetAnimate] set last.
+func (s *Session) Animate() bool { return !s.still }
 
 // DrawFinal implements [game.Tool]: it draws the [Stage] grid and, in edit
 // mode, the collider outlines, the markers of objects without art, the

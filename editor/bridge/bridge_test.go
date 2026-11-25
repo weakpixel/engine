@@ -441,6 +441,22 @@ func TestSettingsColliders(t *testing.T) {
 	}
 }
 
+// TestSettingsAnimate: the animate part freezes the animations of edit mode
+// and lets them run again; a message without it keeps the choice.
+func TestSettingsAnimate(t *testing.T) {
+	f := newFixture(t)
+	f.recv(`{"type":"settings","animate":false}`)
+	f.recv(`{"type":"settings","snap":8}`)
+	if f.b.Animate() || !f.e.AnimationsFrozen() {
+		t.Error("animations run after settings animate:false")
+	}
+	f.recv(`{"type":"settings","animate":true}`)
+	f.recv(`{"type":"settings","snap":8}`)
+	if !f.b.Animate() || f.e.AnimationsFrozen() {
+		t.Error("animations frozen after settings animate:true")
+	}
+}
+
 // TestSettingsKeepsParts: a settings message changes only the parts it has,
 // and the stage part is ignored by a level session.
 func TestSettingsKeepsParts(t *testing.T) {

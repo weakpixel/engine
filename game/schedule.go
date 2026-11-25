@@ -154,10 +154,12 @@ func (e *Engine) buildSchedule() {
 	s.AddRunner(e.hierarchySys)
 	s.AddStage("anim")
 	particleSys := particles.NewSystem(w, particles.EffectStoreOf(e.assets))
-	s.AddRunner(anim.NewAnimationSystem(w), particleSys)
+	// Frozen animations (SetAnimationsFrozen) run these still.
+	s.AddRunner(&stillClock{inner: anim.NewAnimationSystem(w), on: &e.frozen},
+		&stillParticles{inner: particleSys, on: &e.frozen})
 	s.AddStage("render-prepare", extract.ResetQueue)
 	s.AddRunner(
-		tilemap.NewTilemapExtract(w),
+		&stillClock{inner: tilemap.NewTilemapExtract(w), on: &e.frozen}, // animated tiles
 		extract.NewSpriteExtract(w),
 		extract.NewNineSliceExtract(w),
 		particles.NewExtract(w, particleSys),
