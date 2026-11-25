@@ -48,7 +48,6 @@ A level is edited among the game: its systems run in edit mode if they opt in ([
 A prefab used to open the same way, so it sat at (0, 0) in the middle of a world, with the hero, the camera rig's bounds and a Play that ran the whole game around it.
 The prefab stage starts none of the game's systems and no levels, resets the camera rig, paints a neutral background and draws a grid and the origin over the picture (`editor.Stage`, drawn in `DrawFinal` in window pixels).
 Play and Step are no-ops.
-The `Game.Prefab` hook is gone: the stage runs no game code, so it needs nothing from the game.
 
 **The page names the stage.**
 The extension sets `weakpixelHost.stage` (`level` or `prefab`, by file suffix) and `weakpixelHost.path` (the first file's asset key) beside `assetBase`.
