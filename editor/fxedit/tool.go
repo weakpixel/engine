@@ -113,8 +113,6 @@ type Tool struct {
 	grabbed     bool
 	lastGrab    int
 	prevBtn     uint8
-	onBar       bool
-	bar         *toolshell.Toolbar
 	imagesSig   string
 }
 
@@ -127,13 +125,7 @@ var (
 
 // New returns the fx tool.
 func New() toolshell.Tool {
-	return &Tool{speed: defaultSpeed, lastRev: -1, bar: &toolshell.Toolbar{Buttons: []toolshell.ToolbarButton{
-		{Icon: "move", Hint: "Put the emitter back at the origin"},
-		{Icon: "burst", Hint: "Burst (click in the viewport)"},
-		{Icon: "pause", Hint: "Play or pause (Enter)"},
-		{Icon: "step", Hint: "Step one tick (.)"},
-		{Icon: "restart", Hint: "Restart (R)"},
-	}}}
+	return &Tool{speed: defaultSpeed, lastRev: -1}
 }
 
 // Check reports whether the tool can open the file at asset key. An empty key
@@ -269,37 +261,13 @@ func (t *Tool) Update(s *toolshell.Shell) {
 	t.prevBtn = m.Buttons
 	panning := s.PanHeld()
 	switch {
-	case down && !wasDown && t.bar.Over(s, m.X, m.Y):
-		t.onBar = true
-		if i, ok := t.bar.At(s, m.X, m.Y); ok {
-			t.press(i)
-		}
 	case down && !wasDown && !panning:
 		t.pointerDown(s, m)
-	case down && t.grabbed && !t.onBar:
+	case down && t.grabbed:
 		t.moveEmitter(s.MouseWorld())
 	}
 	if !down {
-		t.grabbed, t.onBar = false, false
-	}
-	if t.bar.Over(s, m.X, m.Y) {
-		ebiten.SetCursorShape(ebiten.CursorShapePointer)
-	}
-}
-
-// press runs the toolbar button i.
-func (t *Tool) press(i int) {
-	switch i {
-	case 0:
-		t.moveEmitter(gfx.Vec2{})
-	case 1:
-		t.st.Burst = true
-	case 2:
-		t.togglePlay()
-	case 3:
-		t.step()
-	case 4:
-		t.st.Restart = true
+		t.grabbed = false
 	}
 }
 
@@ -381,10 +349,6 @@ func (t *Tool) Sync(s *toolshell.Shell) {
 	}
 	st.Live, st.Max = c.Live, st.Capacity()
 	t.syncBackground(s)
-	t.bar.Buttons[2].Icon = "pause"
-	if t.clock.Paused {
-		t.bar.Buttons[2].Icon = "play"
-	}
 }
 
 // publish serves the model as the preview effect. The first time it starts
@@ -556,12 +520,11 @@ func (t *Tool) Set(id string, v json.RawMessage) error {
 }
 
 // Draw implements [toolshell.Tool]: the emitter cross, the spawn shape and
-// the direction cone in window pixels, then the toolbar.
+// the direction cone in window pixels.
 func (t *Tool) Draw(s *toolshell.Shell, screen ebiten.FinalScreen) {
 	if t.st == nil {
 		return
 	}
-	t.bar.Draw(s, screen, func(i int) bool { return false })
 	if t.st.Loaded {
 		t.overlays(s, screen)
 	}

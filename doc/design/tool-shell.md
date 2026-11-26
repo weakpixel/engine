@@ -47,7 +47,6 @@ It is built from the user's module, like the level editor's game, and runs nativ
   The left panel is hidden when the window is under 800 UI pixels (its sections join the right one) or the tool has no left section; the status line is at the bottom of the right panel, or of the left one when there is no right section.
   The `wpix-editor` tools turn on the screenshot hotkey ([`game.DevScreenshotKey`](../guide/engine/engine.md#hotkey-and-environment-variables): F12, F9 in a browser) next to the Screenshot button of the view section.
   Tab (a shell shortcut, which tools must not bind) hides both: the renderer is neither updated nor drawn and the insets count as 0.
-  `Toolbar` is one row of icon buttons centered at the top of the free area, so it follows the insets and Tab.
   A dropdown with `Field.List` rows (`Field.AsList`) is a list: `debugpanel` draws a label, then a scrollable panel of that many rows (fewer when there are fewer options) with one button per option, the selected one marked `> `, and a click sets the option index like the dropdown does.
   Lists put a `(none)` option first when the selection can be cleared.
   `Check` rejects `List` on any other widget.

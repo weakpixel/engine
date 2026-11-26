@@ -37,9 +37,3 @@ These are linked by `wpix` and `wpix-editor`, never by a game.
 | [github.com/hajimehoshi/bitmapfont/v4](https://github.com/hajimehoshi/bitmapfont) | Apache-2.0 (code) | debugui's font; its embedded bitmap fonts carry their own licenses (OFL-1.1, Baekmuk, M+ Bitmap, public domain), listed in that module |
 | [github.com/pierrec/lz4/v4](https://github.com/pierrec/lz4) | BSD-3-Clause | used by bitmapfont |
 | [github.com/google/go-cmp](https://github.com/google/go-cmp) | BSD-3-Clause | tests only |
-
-## Files in this repository
-
-| Files | License |
-| --- | --- |
-| `editor/toolshell/icons/*.svg` and the PNGs rendered from them | [Tabler Icons](https://github.com/tabler/tabler-icons), MIT, Copyright (c) 2020-2026 Paweł Kuna ([editor/toolshell/icons/LICENSE](editor/toolshell/icons/LICENSE)) |

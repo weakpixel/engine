@@ -542,7 +542,7 @@ func (s *Shell) PanelsHidden() bool { return s.hidden }
 
 // FreeRect returns the area of the window between the left and right panels
 // in window pixels, where a tool places what must not sit under a panel
-// (the toolbar) and where Fit frames the content. It is the whole window
+// and where Fit frames the content. It is the whole window
 // when the panels are hidden or there is no renderer (the VSCode build).
 func (s *Shell) FreeRect() image.Rectangle {
 	win := s.e.LogicalToWindow(gfx.Vec2{X: float32(s.screenSize().X), Y: float32(s.screenSize().Y)})

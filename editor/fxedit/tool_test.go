@@ -167,16 +167,6 @@ func TestBurstClickResetsTime(t *testing.T) {
 	if tm := r.emitter().Time; tm > 0.05 {
 		t.Errorf("Time = %v after a click, want a restarted cycle", tm)
 	}
-	// A click on the toolbar does not burst.
-	r.src.Frame.Mouse = input.MouseFrame{}
-	r.tick(30)
-	bx, by := r.tool.bar.Origin(r.s)
-	r.src.Frame.Mouse = input.MouseFrame{X: bx + 5, Y: by + 5, Buttons: 1} // the move button
-	before := r.emitter().Time
-	r.tick(1)
-	if r.emitter().Time < before {
-		t.Error("a toolbar click restarted the effect")
-	}
 }
 
 func TestClockControls(t *testing.T) {
