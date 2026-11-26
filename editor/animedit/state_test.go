@@ -90,9 +90,18 @@ func TestPanelContent(t *testing.T) {
 	if f, _ := p.Find("clip.sel"); len(f.Options) != 2 || f.Options[1] != "run" {
 		t.Errorf("clip options = %v", f.Options)
 	}
-	// Only idle is unlisted: an info line in the problems.
-	if f, ok := p.Find("problem.0"); !ok || !strings.Contains(string(f.Value), `tag \"idle\" is not listed`) {
-		t.Errorf("problem.0 = %v %v", f, ok)
+	// Only idle is unlisted: an info finding, which needs no change and is
+	// not a problem.
+	if s.Findings[0].Level != animfile.LevelInfo || !strings.Contains(s.Findings[0].Msg, `tag "idle" is not listed`) {
+		t.Errorf("findings = %v", s.Findings)
+	}
+	if _, ok := p.Find("problem.0"); ok {
+		t.Error("an info finding is shown as a problem")
+	}
+	for _, sec := range p.Sections {
+		if sec.ID == "problems" {
+			t.Error("a Problems section with only info findings")
+		}
 	}
 	if _, ok := p.Find("box.x"); ok {
 		t.Error("box fields shown with no box selected")
@@ -384,15 +393,15 @@ func TestPanelSides(t *testing.T) {
 	if want := []string{"playback", "boxlist", "view"}; !slices.Equal(left, want) {
 		t.Errorf("left = %v, want %v", left, want)
 	}
-	if want := []string{"file", "clip", "problems"}; !slices.Equal(right, want) {
-		t.Errorf("right without a selection = %v, want %v (no box section)", right, want)
+	if want := []string{"file", "clip"}; !slices.Equal(right, want) {
+		t.Errorf("right without a selection = %v, want %v (no box section, no problems: only an info finding)", right, want)
 	}
 	s.Sel = &BoxRef{Body: true}
 	p := s.panel()
 	if err := p.Check(); err != nil {
 		t.Fatal(err)
 	}
-	if _, right = sides(p); !slices.Equal(right, []string{"file", "clip", "box", "problems"}) {
+	if _, right = sides(p); !slices.Equal(right, []string{"file", "clip", "box"}) {
 		t.Errorf("right with a box = %v", right)
 	}
 	for _, id := range []string{"clip.sel", "box.sel"} {
