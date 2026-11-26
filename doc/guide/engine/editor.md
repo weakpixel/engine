@@ -246,7 +246,7 @@ The left panel has Emitters (the list of emitters, Add, Duplicate, Delete, Move 
 | Left and Right | Previous and next frame (as `,` `.`) |
 | `X` | Flip H preview |
 
-The left panel has Playback (the clip list, play, frame, flip, tool), the Boxes list and View; the right panel has File (default clip, pivot, body), Clip (loop, fps, speed, own pivot, the duration of the shown frame), Box (the selected box's kind, id, frame range and rect, Copy to this frame, Extend to this frame, Delete; shown only with a box selected) and Problems: the findings of `wpix anim validate`. A box needs a pivot, so the first box tool use without one asks for it. A document that does not parse (an edit in a text editor, say) stays on screen dimmed and is never overwritten.
+The left panel has Playback (the clip list, play, frame, flip, tool), the Boxes list and View; the right panel has File (default clip, pivot, body), Clip (loop, fps, speed, own pivot, the duration of the shown frame), Box (the selected box's kind, id, frame range and rect, Copy to this frame, Extend to this frame, Delete; shown only with a box selected) and Problems: the errors and warnings of `wpix anim validate` (its info notes need no change and are left out). A box needs a pivot, so the first box tool use without one asks for it. A document that does not parse (an edit in a text editor, say) stays on screen dimmed and is never overwritten.
 
 ### The sheet tool
 

@@ -269,15 +269,18 @@ func (s *State) boxFields(c *animfile.Clip) []toolshell.Field {
 	return append(fields, toolshell.Button("box.delete", "Delete box"))
 }
 
+// problemsSection lists the errors and warnings of the findings. Info
+// findings need no change, so they are not problems and stay out of it.
 func (s *State) problemsSection() (toolshell.Section, bool) {
-	if len(s.Findings) == 0 {
-		return toolshell.Section{}, false
-	}
 	sec := toolshell.Section{ID: "problems", Label: "Problems"}
-	for i, f := range s.Findings {
-		sec.Fields = append(sec.Fields, toolshell.Label(fmt.Sprintf("problem.%d", i), strings.ToUpper(string(f.Level)), f.Msg))
+	for _, f := range s.Findings {
+		if f.Level == animfile.LevelInfo {
+			continue
+		}
+		id := fmt.Sprintf("problem.%d", len(sec.Fields))
+		sec.Fields = append(sec.Fields, toolshell.Label(id, strings.ToUpper(string(f.Level)), f.Msg))
 	}
-	return sec, true
+	return sec, len(sec.Fields) > 0
 }
 
 // Set applies a changed widget. It returns an error for a value the format

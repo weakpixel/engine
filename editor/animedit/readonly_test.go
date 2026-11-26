@@ -26,7 +26,7 @@ func testExportOpensReadOnly(t *testing.T, key string) {
 	if err := p.Check(); err != nil {
 		t.Fatal(err)
 	}
-	if left, right := sides(p); !slices.Equal(left, []string{"playback", "view"}) || !slices.Equal(right, []string{"export", "problems"}) {
+	if left, right := sides(p); !slices.Equal(left, []string{"playback", "view"}) || !slices.Equal(right, []string{"export"}) {
 		t.Errorf("sides: left %v right %v", left, right)
 	}
 	for _, id := range []string{"clip.sel", "play", "frame", "flip", "export.mode", "export.clips"} {
