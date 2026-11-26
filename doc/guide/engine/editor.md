@@ -225,7 +225,7 @@ The preview (the `view` tool) shows every kind that is not edited, with the engi
 | --- | --- |
 | Click in the viewport | Burst: the cycle starts again |
 | Drag the cross, double click it | Move the emitter (to try `Local`); put it back at the origin. The position is never written |
-| `Enter`, `.`, `R` | Play and pause, step one tick, restart (also the toolbar; icons from [Tabler Icons](https://github.com/tabler/tabler-icons), MIT, `editor/toolshell/icons/LICENSE`) |
+| `Enter`, `.`, `R` | Play and pause, step one tick, restart (also in the panel) |
 
 The left panel has Emitters (the list of emitters, Add, Duplicate, Delete, Move up and down, Mute, Solo, Reset), Preview (play, step, speed 0.1× to 2×, scrub, overlays, checker and image backgrounds) and View. The right panel has Effect (preset and Apply preset, Keep image and shader, the live particle count, Restart), Emitter (the selected emitter's name and layer), Look (image, shader and its parameters, blend, layer, color, change over life, scale, fades), Emission, Shape, Motion (angles in degrees, the direction a -180..180 slider, min/max pairs that never cross, drag never below 0), Advanced (seed, Local), Save as and Problems. A field appears only when it acts: Loop needs a Duration, the radius a circle (radius, width and height are 0..256 pixel sliders). A typed number is kept inside the field's bounds. Choosing a preset only picks it; Apply preset replaces the whole effect in one undoable edit: every other emitter is removed. A single-emitter preset keeps the shader and a project image you picked on the selected emitter; a preset marked "(N emitters)" brings its own. The Emitters section's Reset removes all emitters and starts over with one default emitter. The shader picker also offers built-in shaders: Burn (`fx-builtin/burn.kage`) burns particles away along a glowing edge instead of fading them; the tint's alpha is the part not burned yet, so let it run from opaque to transparent over the life (the Burning scraps preset shows it). Save as copies a built-in shader next to the effect like a built-in image. The shader's parameters are labelled sliders, toggles and colors when its source has [`+shader:param` markers](shaders.md#parameter-markers) and four plain numbers otherwise.
 
@@ -235,7 +235,7 @@ The left panel has Emitters (the list of emitters, Add, Duplicate, Delete, Move 
 
 | Key | Does |
 | --- | --- |
-| `S`, `P`, `H`, `U`, `B` | Select, pivot, hit box, hurt box, body tool (also the toolbar at the top center of the viewport and the panel's Tool list; icons from [Tabler Icons](https://github.com/tabler/tabler-icons), MIT, `editor/toolshell/icons/LICENSE`) |
+| `S`, `P`, `H`, `U`, `B` | Select, pivot, hit box, hurt box, body tool (also the panel's Tool list) |
 | Click, drag (select) | Pick the topmost box of the frame, move it; the eight handles resize it |
 | Click-drag (hit, hurt, body) | Draw a box. A hit or hurt box drawn on frame n covers frame n only |
 | Click or drag (pivot) | Place the pivot of the clip (its own, if it has one) or of the file |

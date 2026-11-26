@@ -45,8 +45,6 @@ type Tool struct {
 	setVer   uint32
 	prevBtn  uint8
 	framed   bool
-	bar      *toolshell.Toolbar
-	onBar    bool // the press in progress started on the toolbar
 	// scope holds the clip set; nil is the global scope.
 	scope *asset.Scope
 }
@@ -59,13 +57,13 @@ var (
 )
 
 // New returns the anim tool.
-func New() toolshell.Tool { return &Tool{bar: newToolbar()} }
+func New() toolshell.Tool { return &Tool{} }
 
 // NewPreview returns the tool for the preview of an Aseprite export, which
 // switches files: it loads the clip set into scope, which the caller
 // releases, and [Tool.Close] removes its entity.
 func NewPreview(scope *asset.Scope) *Tool {
-	return &Tool{bar: newToolbar(), scope: scope}
+	return &Tool{scope: scope}
 }
 
 // Close removes the entity Open spawned. The preview calls it before it
@@ -182,27 +180,15 @@ func (t *Tool) Update(s *toolshell.Shell) {
 	p := t.fileSpace(s.MouseWorld())
 	var err error
 	switch {
-	case down && !wasDown && t.bar.Over(s, m.X, m.Y):
-		t.onBar = true
-		if k, ok := t.toolButtonAt(s, m.X, m.Y); ok {
-			st.Tool = k
-		}
 	case down && !wasDown && !panning:
 		err = st.PointerDown(p, t.tolerance(s))
-	case down && st.Drag != nil && !t.onBar:
+	case down && st.Drag != nil:
 		st.PointerMove(p)
 	case !down && st.Drag != nil:
 		err = st.PointerUp(p)
 	}
 	if err != nil {
 		s.ReportError(err)
-	}
-	if !down {
-		t.onBar = false
-	}
-	if t.bar.Over(s, m.X, m.Y) {
-		ebiten.SetCursorShape(ebiten.CursorShapePointer)
-		return
 	}
 	t.cursor(s, p)
 }
@@ -476,9 +462,6 @@ func (t *Tool) Draw(s *toolshell.Shell, screen ebiten.FinalScreen) {
 	}
 	if st.Pivot() != nil || (st.Drag != nil && st.Drag.Kind == DragPivot) {
 		t.cross(s, screen, at, scale(colPivot, fade))
-	}
-	if !st.ReadOnly {
-		t.drawToolbar(s, screen)
 	}
 }
 
